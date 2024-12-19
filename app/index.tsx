@@ -8,10 +8,13 @@ export default function App() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="px-5">
-        <Text className="text-4xl font-bold text-hardGreen text-center mb-6">
-          FoodSmart
-        </Text>
-
+        <View className="flex items-center justify-center mb-6 px-4">
+          <Image
+            source={require("@/assets/images/FoodSmart.png")}
+            className="w-full h-34"
+            resizeMode="contain"
+          />
+        </View>
         <View className="flex items-center justify-center mb-6">
           <Image
             source={require("@/assets/images/logo.png")}
@@ -19,21 +22,21 @@ export default function App() {
             resizeMode="contain"
           />
         </View>
-
-        <Text className="text-lg text-hardGreen text-center mb-8">
+        <Text className="text-lg text-black text-center mb-8">
           “Discover the nutrition behind your food in a snap!”
         </Text>
-
         <View className="flex items-center">
           <LinearGradient
-            colors={["#A2D38C", "#4E8F54"]}
+            colors={["#AAAAAA", "#000000"]}
             style={{ borderRadius: 12, marginTop: 16 }}
           >
             <TouchableOpacity
               onPress={() => router.push("/(auth)/login")}
               className="items-center py-4 px-8 rounded-lg shadow-lg"
             >
-              <Text className="text-white text-lg font-bold">Get Started</Text>
+              <Text className="text-zinc-800 text-lg font-bold">
+                Get Started
+              </Text>
             </TouchableOpacity>
           </LinearGradient>
         </View>
