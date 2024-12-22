@@ -31,8 +31,14 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env* 
 
 # typescript
 *.tsbuildinfo
 
 app-example
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
