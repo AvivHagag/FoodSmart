@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 export default function Profile() {
   return (
-    <View className="bg-lightGreen w-full h-full">
+    <View className="bg-white w-full h-full">
       <Text>Profile Page 222</Text>
     </View>
   );
