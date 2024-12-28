@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from extensions import mongo, bcrypt, jwt
 from routes.register import register_bp
 from routes.login import login_bp
+from routes.detect import detect_bp
+
 
 load_dotenv()
 app = Flask(__name__)
@@ -18,6 +20,8 @@ jwt.init_app(app)
 
 app.register_blueprint(register_bp)
 app.register_blueprint(login_bp)
+app.register_blueprint(detect_bp)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5002)
