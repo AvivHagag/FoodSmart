@@ -18,3 +18,6 @@ jwt.init_app(app)
 
 app.register_blueprint(register_bp)
 app.register_blueprint(login_bp)
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5002)
