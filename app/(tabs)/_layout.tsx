@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useRouter } from "expo-router";
+import { useGlobalContext } from "../context/authprovider";
 import { View, Text, ColorValue } from "react-native";
 import { Tabs } from "expo-router";
 import { Home, History, Search, User, Camera } from "lucide-react-native";
@@ -43,6 +45,19 @@ const tabs: Tab[] = [
 ];
 
 const TabsLayout: React.FC = () => {
+  const router = useRouter();
+  const { isLogged, loading } = useGlobalContext();
+
+  useEffect(() => {
+    if (!loading && !isLogged) {
+      router.replace("/(auth)/login");
+    }
+  }, [isLogged, loading]);
+
+  if (loading) {
+    return null;
+  }
+
   return (
     <View className="flex-1 w-full">
       <Tabs

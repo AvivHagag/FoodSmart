@@ -10,55 +10,41 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   Keyboard,
+  ActivityIndicator,
+  StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
-import { BASE_URL } from "@/constants/constants";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useGlobalContext } from "../context/authprovider";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
+  const { login } = useGlobalContext();
 
   const handleLogin = async () => {
     if (!email || !password) {
       setErrorMessage("Please enter both email and password.");
       return;
     }
-
     try {
-      const response = await fetch(`${BASE_URL}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to login. Please try again.");
+      const success = await login(email, password);
+      if (!success) {
+        setErrorMessage("Invalid credentials. Try again.");
+      } else {
+        router.replace("/(tabs)/home");
       }
-      await AsyncStorage.setItem("token", data.token);
-      router.push("/home");
     } catch (error: any) {
       setErrorMessage(error.message);
     }
   };
 
   return (
-    <View className="flex-1 relative">
-      <Image
-        source={require("@/assets/images/wall5.jpg")}
-        className="absolute inset-0 w-full h-full"
-        resizeMode="cover"
-      />
-      <View className="mt-24">
-        <Text className="text-6xl font-bold text-black text-center mb-2">
-          Login
-        </Text>
-      </View>
+    <View className="flex-1 bg-gray-100">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -66,29 +52,45 @@ export default function LoginScreen() {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
-            contentContainerClassName="flex-grow justify-center px-4"
+            contentContainerClassName="flex-grow items-center mt-32 px-4"
             keyboardShouldPersistTaps="handled"
             className="flex-1"
           >
             <View className="w-full max-w-md mx-auto">
-              <BlurView
-                intensity={60}
-                tint="light"
-                className="p-6 bg-white/40 rounded-lg border border-gray-800"
-              >
-                <Text className="text-xl font-semibold text-black text-center mb-8">
-                  Enter your login information
+              <View className="items-center mb-8">
+                {/* <View className="h-16 w-16 bg-white/50 rounded-full justify-center items-center">
+                  <View className="h-12 w-12 bg-gray-200 rounded-full" /> */}
+                {/* </View> */}
+                <Image
+                  source={require("@/assets/images/Logo1.png")}
+                  className="w-64 h-24"
+                  resizeMode="contain"
+                />
+              </View>
+
+              <View className="space-y-2 text-center mb-8">
+                <Text className="text-2xl font-semibold text-black">
+                  Sign in to your account
                 </Text>
+                <Text className="text-sm text-gray-700">
+                  Enter your email and password to access your account
+                </Text>
+              </View>
+
+              <View className="bg-white/90 p-6 rounded-lg shadow-md">
                 {errorMessage ? (
-                  <Text className="text-red-500 mb-4 text-center">
+                  <Text className="text-red-500 text-center mb-4">
                     {errorMessage}
                   </Text>
                 ) : null}
 
                 <View className="mb-4">
+                  <Text className="text-sm font-medium text-gray-700 mb-2">
+                    Email
+                  </Text>
                   <TextInput
-                    className="border border-gray-700 rounded-lg px-4 py-3 text-black bg-white/80"
-                    placeholder="Email"
+                    className="h-12 bg-gray-100 border border-gray-300 rounded-md px-4"
+                    placeholder="m@example.com"
                     placeholderTextColor="#999"
                     onChangeText={setEmail}
                     autoCapitalize="none"
@@ -97,39 +99,63 @@ export default function LoginScreen() {
                   />
                 </View>
 
-                <View className="mb-4 relative">
+                <View className="mb-4">
+                  <View className="flex-row justify-between mb-2">
+                    <Text className="text-sm font-medium text-gray-700">
+                      Password
+                    </Text>
+                    <TouchableOpacity onPress={() => alert("Reset password")}>
+                      <Text className="text-sm text-blue-600">
+                        Forgot password?
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                   <TextInput
-                    className="border border-gray-700 rounded-lg px-4 py-3 text-black bg-white/80"
-                    placeholder="Password"
+                    className="h-12 bg-gray-100 border border-gray-300 rounded-md px-4"
+                    placeholder="Enter your password"
                     placeholderTextColor="#999"
                     secureTextEntry
                     onChangeText={setPassword}
                     value={password}
                   />
-                  <TouchableOpacity className="absolute right-4 top-3">
-                    <Text className="text-gray-800 text-sm underline">
-                      Forgot your password?
-                    </Text>
-                  </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity
-                  className="border border-black rounded-lg py-3 mt-4 items-center bg-white/60"
                   onPress={handleLogin}
+                  disabled={isLoading}
+                  style={styles.buttonContainer}
+                  className={isLoading ? "opacity-50" : ""}
                 >
-                  <Text className="text-black text-base font-bold">Log in</Text>
-                </TouchableOpacity>
+                  {/* Gradient Background */}
+                  <LinearGradient
+                    colors={["#3B82F6", "#8B5CF6"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={StyleSheet.absoluteFillObject}
+                  />
 
-                <View className="items-center mt-6">
-                  <TouchableOpacity
+                  {/* Button Content */}
+                  {isLoading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text className="text-white font-semibold text-base">
+                      Log in
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              <View className="mt-6 text-center">
+                <Text className="text-sm text-gray-700">
+                  Don&apos;t have an account?{" "}
+                  <Text
+                    className="text-blue-600 underline"
                     onPress={() => router.push("/(auth)/register")}
                   >
-                    <Text className="text-gray-800 underline text-base">
-                      New here? Join now
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </BlurView>
+                    Sign up
+                  </Text>
+                </Text>
+              </View>
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
@@ -137,3 +163,13 @@ export default function LoginScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  buttonContainer: {
+    height: 48,
+    borderRadius: 12,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

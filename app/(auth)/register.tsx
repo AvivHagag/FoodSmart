@@ -1,10 +1,20 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
-import { BASE_URL } from "@/constants/constants";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { useRouter } from "expo-router";
+import { useGlobalContext } from "../context/authprovider";
 
 interface RegisterScreenProps {
-  navigation: any; // Adjust this type if using a typed navigator
+  navigation: any;
 }
 
 const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
@@ -13,6 +23,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const [confirmation, setConfirmation] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const { register } = useGlobalContext();
   const router = useRouter();
 
   const handleRegister = async () => {
@@ -22,21 +33,13 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       setErrorMessage("Passwords do not match");
       return;
     }
-
     try {
-      const response = await fetch(`${BASE_URL}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data: { message?: string; error?: string } = await response.json();
-      if (response.ok && data.message) {
-        setMessage(data.message);
-        // Optionally navigate to login screen:
-        // navigation.navigate('Login');
+      const success = await register(username, password);
+      if (success) {
+        console.log("Registration successful! You can log in now.");
+        router.replace("/(auth)/login");
       } else {
-        setErrorMessage(data.error || "Registration failed");
+        setErrorMessage("Registration failed or user already exists");
       }
     } catch (err: unknown) {
       setErrorMessage("Network error. Please try again.");
@@ -44,71 +47,95 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Register</Text>
-      {message ? <Text style={styles.success}>{message}</Text> : null}
-      {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        onChangeText={setUsername}
-        autoCapitalize="none"
-        value={username}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        onChangeText={setPassword}
-        secureTextEntry
-        value={password}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        onChangeText={setConfirmation}
-        secureTextEntry
-        value={confirmation}
-      />
-      <Button title="Register" onPress={handleRegister} />
-      <Text style={styles.link} onPress={() => router.push("/(auth)/login")}>
-        Already have an account? Login
-      </Text>
+    <View className="flex-1 bg-gray-100">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            contentContainerClassName="flex-grow justify-center px-4"
+            keyboardShouldPersistTaps="handled"
+          >
+            <View className="w-full max-w-md mx-auto">
+              <View className="items-center mb-8">
+                <View className="h-16 w-16 bg-white/50 rounded-full justify-center items-center">
+                  <View className="h-12 w-12 bg-gray-200 rounded-full" />
+                </View>
+              </View>
+
+              <Text className="text-2xl font-bold text-center text-black mb-4">
+                Register
+              </Text>
+
+              {message ? (
+                <Text className="text-green-500 text-center mb-4">
+                  {message}
+                </Text>
+              ) : null}
+              {errorMessage ? (
+                <Text className="text-red-500 text-center mb-4">
+                  {errorMessage}
+                </Text>
+              ) : null}
+
+              <View className="mb-4">
+                <TextInput
+                  className="h-12 bg-white border border-gray-300 rounded-md px-4"
+                  placeholder="Username"
+                  placeholderTextColor="#999"
+                  onChangeText={setUsername}
+                  autoCapitalize="none"
+                  value={username}
+                />
+              </View>
+
+              <View className="mb-4">
+                <TextInput
+                  className="h-12 bg-white border border-gray-300 rounded-md px-4"
+                  placeholder="Password"
+                  placeholderTextColor="#999"
+                  secureTextEntry
+                  onChangeText={setPassword}
+                  value={password}
+                />
+              </View>
+
+              <View className="mb-4">
+                <TextInput
+                  className="h-12 bg-white border border-gray-300 rounded-md px-4"
+                  placeholder="Confirm Password"
+                  placeholderTextColor="#999"
+                  secureTextEntry
+                  onChangeText={setConfirmation}
+                  value={confirmation}
+                />
+              </View>
+
+              <TouchableOpacity
+                className="h-12 bg-blue-600 rounded-md justify-center items-center"
+                onPress={handleRegister}
+              >
+                <Text className="text-white font-semibold text-base">
+                  Register
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="mt-6"
+                onPress={() => router.push("/(auth)/login")}
+              >
+                <Text className="text-sm text-center text-blue-600 underline">
+                  Already have an account? Login
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </View>
   );
 };
 
 export default RegisterScreen;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  input: {
-    borderWidth: 1,
-    marginBottom: 10,
-    padding: 10,
-    borderRadius: 5,
-  },
-  success: {
-    color: "green",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  error: {
-    color: "red",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  link: {
-    marginTop: 20,
-    color: "blue",
-    textAlign: "center",
-  },
-});
