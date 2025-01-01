@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 detect_bp = Blueprint('detect_bp', __name__)
-model = YOLO('yolov8s-oiv7.pt')
+model = YOLO('best.pt')
 @detect_bp.route('/detect', methods=['POST'])
 def detect():
     try:

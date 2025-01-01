@@ -15,7 +15,7 @@ const CameraScreen: React.FC = () => {
 
   const openCamera = async () => {
     try {
-      // Request camera permissions
+
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
@@ -25,7 +25,6 @@ const CameraScreen: React.FC = () => {
         return;
       }
 
-      // Launch the camera
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -33,13 +32,11 @@ const CameraScreen: React.FC = () => {
         quality: 1,
       });
 
-      // Check if the operation was canceled
       if (result.canceled) {
         console.log("User canceled the camera");
         return;
       }
 
-      // Handle the captured image
       if (result.assets && result.assets.length > 0) {
         const imageUri = result.assets[0].uri;
         console.log("Captured image URI:", imageUri);
