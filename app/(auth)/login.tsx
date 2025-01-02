@@ -14,7 +14,6 @@ import {
   StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { BlurView } from "expo-blur";
 import { useGlobalContext } from "../context/authprovider";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -58,9 +57,6 @@ export default function LoginScreen() {
           >
             <View className="w-full max-w-md mx-auto">
               <View className="items-center mb-8">
-                {/* <View className="h-16 w-16 bg-white/50 rounded-full justify-center items-center">
-                  <View className="h-12 w-12 bg-gray-200 rounded-full" /> */}
-                {/* </View> */}
                 <Image
                   source={require("@/assets/images/Logo1.png")}
                   className="w-64 h-24"
@@ -126,15 +122,12 @@ export default function LoginScreen() {
                   style={styles.buttonContainer}
                   className={isLoading ? "opacity-50" : ""}
                 >
-                  {/* Gradient Background */}
                   <LinearGradient
                     colors={["#3B82F6", "#8B5CF6"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={StyleSheet.absoluteFillObject}
                   />
-
-                  {/* Button Content */}
                   {isLoading ? (
                     <ActivityIndicator color="white" />
                   ) : (
@@ -146,7 +139,7 @@ export default function LoginScreen() {
               </View>
 
               <View className="mt-6 text-center">
-                <Text className="text-sm text-gray-700">
+                <Text className="text-center text-sm text-gray-700">
                   Don&apos;t have an account?{" "}
                   <Text
                     className="text-blue-600 underline"

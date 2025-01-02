@@ -7,14 +7,11 @@ login_bp = Blueprint('login_bp', __name__)
 @login_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    print(data)
     email = data.get('email')
     password = data.get('password')
-    print(email)
-    print(password)
     if not email or not password:
         return jsonify({"error": "email and password are required"}), 400
-
+    email = email.lower()
     user = mongo.db.users.find_one({"email": email})
     if not user or not bcrypt.check_password_hash(user['password'], password):
         return jsonify({"error": "Invalid username or password"}), 401

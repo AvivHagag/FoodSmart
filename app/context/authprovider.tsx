@@ -55,7 +55,6 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setIsLogged(true);
           setUser({ token });
         }
-        console.log("user:", user);
       } catch (error) {
         console.log("Error reading token from storage:", error);
       } finally {
@@ -88,13 +87,6 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    console.log(
-      "Attempting login with email:",
-      email,
-      "and password:",
-      password
-    );
-
     try {
       const response = await axios.post(`${BASE_URL}/login`, {
         email: email,
@@ -108,8 +100,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await AsyncStorage.setItem("token", token);
       const storedToken = await AsyncStorage.getItem("token");
       setIsLogged(true);
-      setUser({ token: storedToken ? storedToken : "null", email });
-
+      setUser({ token: storedToken ? storedToken : "null", email: email });
       return true;
     } catch (error: any) {
       console.log(

@@ -25,7 +25,6 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [confirmation, setConfirmation] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -161,7 +160,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               </View>
 
               <View className="mt-6 text-center">
-                <Text className="text-sm text-gray-700">
+                <Text className="text-center text-sm text-gray-700">
                   Already have an account?{" "}
                   <Text
                     className="text-blue-600 underline"
