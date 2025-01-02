@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, Alert, FlatList } from "react-native";
+import { View, Text, Alert, FlatList, Button } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect } from "@react-navigation/native";
 import { BASE_URL } from "@/constants/constants";
@@ -13,9 +13,20 @@ const CameraScreen: React.FC = () => {
   const [detectedObjects, setDetectedObjects] = useState<DetectionResult[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const openImagePickerOptions = () => {
+    Alert.alert(
+      "Choose an Option",
+      "Would you like to take a picture or select one from your gallery?",
+      [
+        { text: "Take a Picture", onPress: openCamera },
+        { text: "Choose from Gallery", onPress: openGallery },
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
+  };
+
   const openCamera = async () => {
     try {
-
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
@@ -44,6 +55,40 @@ const CameraScreen: React.FC = () => {
       }
     } catch (error) {
       console.error("Error opening camera:", error);
+    }
+  };
+
+  const openGallery = async () => {
+    try {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissions Required",
+          "Sorry, we need gallery permissions to make this work!"
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      if (result.canceled) {
+        console.log("User canceled selecting from gallery");
+        return;
+      }
+
+      if (result.assets && result.assets.length > 0) {
+        const imageUri = result.assets[0].uri;
+        console.log("Selected image URI:", imageUri);
+        sendImageToBackend(imageUri);
+      }
+    } catch (error) {
+      console.error("Error opening gallery:", error);
     }
   };
 
@@ -81,7 +126,7 @@ const CameraScreen: React.FC = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-      openCamera();
+      openImagePickerOptions();
     }, [])
   );
 
@@ -102,9 +147,12 @@ const CameraScreen: React.FC = () => {
           )}
         />
       ) : (
-        <Text className="text-base text-gray-500">
-          Take a picture to detect objects.
-        </Text>
+        <View className="items-center">
+          <Text className="text-base text-gray-500 mb-4">
+            Take a picture or select one from your gallery to detect objects.
+          </Text>
+          <Button title="Open Image Options" onPress={openImagePickerOptions} />
+        </View>
       )}
     </View>
   );

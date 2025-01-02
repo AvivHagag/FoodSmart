@@ -7,13 +7,14 @@ register_bp = Blueprint('register_bp', __name__)
 def register():
     data = request.get_json()
     username = data.get('username')
+    email = data.get('email')
     password = data.get('password')
 
-    if not username or not password:
+    if not email or not username or not password:
         return jsonify({"error": "Username and password are required"}), 400
-
+    email = email.lower()
     # Check if user already exists
-    existing_user = mongo.db.users.find_one({"username": username})
+    existing_user = mongo.db.users.find_one({"email": email})
     if existing_user:
         return jsonify({"error": "User already exists"}), 409
 
@@ -22,6 +23,7 @@ def register():
 
     # Create the user
     new_user = {
+        "email": email,
         "username": username,
         "password": hashed_password
     }

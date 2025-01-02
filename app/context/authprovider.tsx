@@ -18,7 +18,11 @@ interface GlobalContextProps {
   isLogged: boolean;
   user: User | null;
   loading: boolean;
-  register: (email: string, password: string) => Promise<boolean>;
+  register: (
+    username: string,
+    email: string,
+    password: string
+  ) => Promise<boolean>;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
@@ -62,11 +66,13 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const register = async (
+    username: string,
     email: string,
     password: string
   ): Promise<boolean> => {
     try {
-      const response = await axios.post(`${BASE_URL}/login`, {
+      const response = await axios.post(`${BASE_URL}/register`, {
+        username,
         email,
         password,
       });
@@ -91,7 +97,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       const response = await axios.post(`${BASE_URL}/login`, {
-        username: email,
+        email: email,
         password,
       });
       const { token } = response.data;
