@@ -12,6 +12,7 @@ import { BASE_URL } from "@/constants/constants";
 interface User {
   token?: string;
   email?: string;
+  username?: string;
 }
 
 interface GlobalContextProps {
@@ -50,10 +51,11 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const checkToken = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
-        if (token) {
+        const userString = await AsyncStorage.getItem("user");
+        if (userString) {
+          const parsedUser = JSON.parse(userString);
           setIsLogged(true);
-          setUser({ token });
+          setUser(parsedUser);
         }
       } catch (error) {
         console.log("Error reading token from storage:", error);
@@ -92,15 +94,25 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email: email,
         password,
       });
-      const { token } = response.data;
+      const { token, username } = response.data;
       if (!token) {
         console.log("No token received from server.");
         return false;
       }
-      await AsyncStorage.setItem("token", token);
-      const storedToken = await AsyncStorage.getItem("token");
+      await AsyncStorage.setItem(
+        "user",
+        JSON.stringify({
+          token,
+          email,
+          username,
+        })
+      );
       setIsLogged(true);
-      setUser({ token: storedToken ? storedToken : "null", email: email });
+      setUser({
+        token,
+        email,
+        username,
+      });
       return true;
     } catch (error: any) {
       console.log(

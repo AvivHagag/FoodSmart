@@ -1,14 +1,14 @@
 import { View, Text, SafeAreaView } from "react-native";
 import React from "react";
 
-const History = () => {
+const Statistics = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View>
-        <Text className="text-2xl text-center">History</Text>
+        <Text className="text-2xl text-center">Statistics</Text>
       </View>
     </SafeAreaView>
   );
 };
 
-export default History;
+export default Statistics;

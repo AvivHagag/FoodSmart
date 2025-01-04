@@ -3,7 +3,13 @@ import { useRouter } from "expo-router";
 import { useGlobalContext } from "../context/authprovider";
 import { View, Text, ColorValue } from "react-native";
 import { Tabs } from "expo-router";
-import { Home, History, Search, User, Camera } from "lucide-react-native";
+import {
+  Home,
+  History,
+  ChartNoAxesCombined,
+  User,
+  Camera,
+} from "lucide-react-native";
 
 type IconComponent = React.FC<{
   size?: string | number;
@@ -23,9 +29,9 @@ const tabs: Tab[] = [
     OutlineIcon: Home,
   },
   {
-    name: "search",
-    title: "Search",
-    OutlineIcon: Search,
+    name: "statistics",
+    title: "Statistics",
+    OutlineIcon: ChartNoAxesCombined,
   },
   {
     name: "camera",

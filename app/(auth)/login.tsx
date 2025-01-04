@@ -26,10 +26,15 @@ export default function LoginScreen() {
   const { login } = useGlobalContext();
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      setErrorMessage("Please enter both email and password.");
+    if (!email) {
+      setErrorMessage("Please enter Email");
       return;
     }
+    if (!password) {
+      setErrorMessage("Please enter Password");
+      return;
+    }
+    setIsLoading(true);
     try {
       const success = await login(email, password);
       if (!success) {
@@ -40,6 +45,7 @@ export default function LoginScreen() {
     } catch (error: any) {
       setErrorMessage(error.message);
     }
+    setIsLoading(true);
   };
 
   return (
@@ -115,21 +121,23 @@ export default function LoginScreen() {
                     value={password}
                   />
                 </View>
-
                 <TouchableOpacity
                   onPress={handleLogin}
                   disabled={isLoading}
-                  style={styles.buttonContainer}
-                  className={isLoading ? "opacity-50" : ""}
+                  style={
+                    isLoading
+                      ? styles.buttonContainerClicked
+                      : styles.buttonContainer
+                  }
                 >
                   <LinearGradient
-                    colors={["#3B82F6", "#8B5CF6"]}
+                    colors={["#0EA5E9", "#000000"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={StyleSheet.absoluteFillObject}
                   />
                   {isLoading ? (
-                    <ActivityIndicator color="white" />
+                    <ActivityIndicator size="small" color="#000" />
                   ) : (
                     <Text className="text-white font-semibold text-base">
                       Log in
@@ -159,6 +167,14 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   buttonContainer: {
+    height: 48,
+    borderRadius: 12,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonContainerClicked: {
+    opacity: 0.5,
     height: 48,
     borderRadius: 12,
     overflow: "hidden",
