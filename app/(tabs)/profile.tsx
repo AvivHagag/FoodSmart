@@ -4,7 +4,6 @@ import { useGlobalContext } from "../context/authprovider";
 
 const Profile = () => {
   const { logout, user } = useGlobalContext();
-  console.log(user);
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="bg-white flex-1 w-full p-4">

@@ -25,6 +25,16 @@ export default function LoginScreen() {
   const router = useRouter();
   const { login } = useGlobalContext();
 
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    setErrorMessage("");
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    setErrorMessage("");
+  };
+
   const handleLogin = async () => {
     if (!email) {
       setErrorMessage("Please enter Email");
@@ -45,7 +55,7 @@ export default function LoginScreen() {
     } catch (error: any) {
       setErrorMessage(error.message);
     }
-    setIsLoading(true);
+    setIsLoading(false);
   };
 
   return (
@@ -94,7 +104,7 @@ export default function LoginScreen() {
                     className="h-12 bg-gray-100 border border-gray-300 rounded-md px-4"
                     placeholder="m@example.com"
                     placeholderTextColor="#999"
-                    onChangeText={setEmail}
+                    onChangeText={handleEmailChange}
                     autoCapitalize="none"
                     value={email}
                     keyboardType="email-address"
@@ -117,7 +127,7 @@ export default function LoginScreen() {
                     placeholder="Enter your password"
                     placeholderTextColor="#999"
                     secureTextEntry
-                    onChangeText={setPassword}
+                    onChangeText={handlePasswordChange}
                     value={password}
                   />
                 </View>
