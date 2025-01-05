@@ -1,17 +1,16 @@
-import React, { useState } from "react";
+// camera.tsx
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  Alert,
-  Button,
   Image,
-  ImageSourcePropType,
   ScrollView,
   SafeAreaView,
   ActivityIndicator,
+  Alert,
+  TouchableOpacity,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import { useFocusEffect } from "@react-navigation/native";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "@/constants/constants";
 
 interface DetectionResult {
@@ -20,90 +19,20 @@ interface DetectionResult {
 }
 
 const CameraScreen: React.FC = () => {
+  const router = useRouter();
+  const { imageUri } = useLocalSearchParams<{ imageUri: string }>();
+  console.log(imageUri);
   const [detectedObjects, setDetectedObjects] = useState<DetectionResult[]>([]);
-  const [imagePick, setImagePick] = useState<ImageSourcePropType>();
   const [loading, setLoading] = useState(false);
 
-  const openImagePickerOptions = () => {
-    Alert.alert(
-      "Choose an Option",
-      "Would you like to take a picture or select one from your gallery?",
-      [
-        { text: "Take a Picture", onPress: openCamera },
-        { text: "Choose from Gallery", onPress: openGallery },
-        { text: "Cancel", style: "cancel" },
-      ]
-    );
-  };
-
-  const openCamera = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permissions Required",
-          "Sorry, we need camera permissions to make this work!"
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
-
-      if (result.canceled) {
-        console.log("User canceled the camera");
-        return;
-      }
-
-      if (result.assets && result.assets.length > 0) {
-        const imageUri = result.assets[0].uri;
-        setImagePick({ uri: imageUri });
-        console.log("Captured image URI:", imageUri);
-        sendImageToBackend(imageUri);
-      }
-    } catch (error) {
-      console.error("Error opening camera:", error);
+  useEffect(() => {
+    if (imageUri) {
+      sendImageToBackend(imageUri);
+    } else {
+      Alert.alert("No Image", "No image URI was provided.");
+      router.back();
     }
-  };
-
-  const openGallery = async () => {
-    try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permissions Required",
-          "Sorry, we need gallery permissions to make this work!"
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
-
-      if (result.canceled) {
-        console.log("User canceled selecting from gallery");
-        return;
-      }
-
-      if (result.assets && result.assets.length > 0) {
-        const imageUri = result.assets[0].uri;
-        setImagePick({ uri: imageUri });
-        console.log("Selected image URI:", imageUri);
-        sendImageToBackend(imageUri);
-      }
-    } catch (error) {
-      console.error("Error opening gallery:", error);
-    }
-  };
+  }, [imageUri]);
 
   const sendImageToBackend = async (uri: string) => {
     setLoading(true);
@@ -137,67 +66,63 @@ const CameraScreen: React.FC = () => {
     }
   };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      openImagePickerOptions();
-    }, [])
-  );
-
-  function calculateAverageConfidence(items: DetectionResult[]) {
+  const calculateAverageConfidence = (items: DetectionResult[]) => {
     if (!items.length) return 0;
     const total = items.reduce((acc, item) => acc + item.confidence, 0);
     return (total / items.length) * 100;
-  }
+  };
+
   const averageConfidence = calculateAverageConfidence(detectedObjects);
+
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1 bg-gray-100">
       <View className="flex-1 px-4">
         {loading ? (
-          <View className="flex justify-center">
+          <View className="flex-1 justify-center items-center">
             <ActivityIndicator size="large" color="#000" />
-            <Text className="text-lg font-bold text-center text-gray-600">
-              Processing...
-            </Text>
+            <Text className="text-lg font-semibold mt-4">Processing...</Text>
           </View>
         ) : detectedObjects.length > 0 ? (
           <ScrollView
             contentContainerStyle={{ alignItems: "center", padding: 16 }}
+            className="flex-1"
           >
-            <Text className="text-2xl text-center mb-2">Result</Text>
-            <View className="w-full max-w-sm bg-white rounded-xl shadow-md overflow-hidden">
+            <Text className="text-2xl font-bold text-center mb-4">Result</Text>
+            <View className="w-full max-w-md bg-white rounded-xl shadow-lg p-4">
               <View className="mb-6 items-center">
                 <Image
-                  source={imagePick}
+                  source={{ uri: imageUri }}
                   className="w-full h-48 rounded-lg border border-gray-300"
                   resizeMode="cover"
                 />
               </View>
 
-              <Text className="text-lg font-semibold text-gray-800 mt-4 ml-4">
+              <Text className="text-lg font-semibold text-gray-800 mb-2">
                 Recognized Items
               </Text>
-              <View className="flex-row flex-wrap px-4 mt-2">
+              <View className="flex-row flex-wrap mb-4">
                 {detectedObjects.map((item, idx) => (
                   <View
                     key={idx}
-                    className="bg-blue-50 rounded-full px-3 py-1 mr-2 mb-2"
+                    className="bg-blue-100 rounded-full px-3 py-1 mr-2 mb-2"
                   >
-                    <Text className="text-blue-600 text-sm font-medium">
+                    <Text className="text-blue-700 text-sm font-medium">
                       {item.label}
                     </Text>
                   </View>
                 ))}
               </View>
 
-              <Text className="text-lg font-semibold text-gray-800 mt-4 ml-4">
+              <Text className="text-lg font-semibold text-gray-800 mb-2">
                 Estimated Nutrition
               </Text>
-              <View className="border border-gray-300 border-dashed rounded-lg p-3 mx-4 mt-2">
+              <View className="border border-gray-300 border-dashed rounded-lg p-3 mb-4">
                 <Text className="text-gray-500 text-center">
                   Coming soon...
                 </Text>
               </View>
-              <View className="bg-green-100 rounded-t-lg py-3 mt-4">
+
+              <View className="bg-green-100 rounded-t-lg py-3">
                 <Text className="text-green-700 font-semibold text-center">
                   Recognition Confidence: {averageConfidence.toFixed(2)}%
                 </Text>
@@ -205,14 +130,18 @@ const CameraScreen: React.FC = () => {
             </View>
           </ScrollView>
         ) : (
-          <View className="items-center">
+          <View className="flex-1 justify-center items-center px-4">
             <Text className="text-base text-gray-500 mb-4 text-center">
-              Take a picture or select one from your gallery to detect objects.
+              No image or recognition results found.
             </Text>
-            <Button
-              title="Open Image Options"
-              onPress={openImagePickerOptions}
-            />
+            <TouchableOpacity
+              className="bg-blue-500 rounded-full py-3 px-6"
+              onPress={() => router.back()}
+            >
+              <Text className="text-white text-center font-medium">
+                Go Back
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
