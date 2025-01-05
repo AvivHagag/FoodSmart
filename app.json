@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "animalsnap",
-    "slug": "animalsnap",
+    "name": "FoodSmart",
+    "slug": "FoodSmart",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

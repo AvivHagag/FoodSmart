@@ -21,7 +21,6 @@ interface DetectionResult {
 const CameraScreen: React.FC = () => {
   const router = useRouter();
   const { imageUri } = useLocalSearchParams<{ imageUri: string }>();
-  console.log(imageUri);
   const [detectedObjects, setDetectedObjects] = useState<DetectionResult[]>([]);
   const [loading, setLoading] = useState(false);
 

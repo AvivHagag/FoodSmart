@@ -112,7 +112,6 @@ const TabsLayout: React.FC = () => {
 
       if (result.assets && result.assets.length > 0) {
         const imageUri = result.assets[0].uri;
-        console.log("Captured image URI:", imageUri);
         navigateToCamera(imageUri);
       }
     } catch (error) {
@@ -145,7 +144,6 @@ const TabsLayout: React.FC = () => {
 
       if (result.assets && result.assets.length > 0) {
         const imageUri = result.assets[0].uri;
-        console.log("Selected image URI:", imageUri);
         navigateToCamera(imageUri);
       }
     } catch (error) {
