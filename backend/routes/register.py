@@ -36,8 +36,6 @@ def register():
     except DuplicateKeyError as e:
         if 'email' in str(e):
             return jsonify({"error": "Email already exists"}), 409
-        elif 'fullname' in str(e):
-            return jsonify({"error": "fullname already exists"}), 409
         else:
             return jsonify({"error": "A duplicate key error occurred"}), 409
 
