@@ -15,6 +15,10 @@ def login():
     user = mongo.db.users.find_one({"email": email})
     if not user or not bcrypt.check_password_hash(user['password'], password):
         return jsonify({"error": "Invalid username or password"}), 401
-    username = user.get('username')
+    user.pop('password', None)
+    user['_id'] = str(user['_id'])
     access_token = create_access_token( identity={"email": email})
-    return jsonify({"token": access_token,"username": username}), 200
+    return jsonify({
+        "token": access_token,
+        "user": user 
+    }), 200

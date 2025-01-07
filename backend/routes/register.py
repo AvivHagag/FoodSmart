@@ -1,32 +1,44 @@
 from flask import Blueprint, jsonify, request
 from extensions import mongo, bcrypt
+from datetime import datetime
+from pymongo.errors import DuplicateKeyError
 
 register_bp = Blueprint('register_bp', __name__)
 
 @register_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    username = data.get('username')
+    fullname = data.get('fullname')
     email = data.get('email')
     password = data.get('password')
 
-    if not email or not username or not password:
-        return jsonify({"error": "Username and password are required"}), 400
-    email = email.lower()
-    # Check if user already exists
-    existing_user = mongo.db.users.find_one({"email": email})
-    if existing_user:
-        return jsonify({"error": "User already exists"}), 409
+    if not email or not fullname or not password:
+        return jsonify({"error": "fullname, email, and password are required"}), 400
 
-    # Hash the user's password
+    email = email.lower()
+
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
-    # Create the user
     new_user = {
         "email": email,
-        "username": username,
-        "password": hashed_password
+        "fullname": fullname,
+        "password": hashed_password,
+        "createdAt": datetime.utcnow(),  
+        "age": None,                    
+        "weight": None,                 
+        "height": None,                 
+        "image": None,                  
+        "gender": None                  
     }
-    mongo.db.users.insert_one(new_user)
+
+    try:
+        mongo.db.users.insert_one(new_user)
+    except DuplicateKeyError as e:
+        if 'email' in str(e):
+            return jsonify({"error": "Email already exists"}), 409
+        elif 'fullname' in str(e):
+            return jsonify({"error": "fullname already exists"}), 409
+        else:
+            return jsonify({"error": "A duplicate key error occurred"}), 409
 
     return jsonify({"message": "User created successfully"}), 201

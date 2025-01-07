@@ -10,9 +10,27 @@ import axios from "axios";
 import { BASE_URL } from "@/constants/constants";
 
 interface User {
+  _id: string;
+  email: string;
+  fullname: string;
+  createdAt?: string;
+  age?: number | null;
+  weight?: number | null;
+  height?: number | null;
+  image?: string | null;
+  gender?: string | null;
+}
+
+interface RegisterResponse {
+  success: boolean;
+  message: string | null;
+}
+
+interface LoginResponse {
+  success: boolean;
+  error?: string;
   token?: string;
-  email?: string;
-  username?: string;
+  user?: any;
 }
 
 interface GlobalContextProps {
@@ -20,11 +38,11 @@ interface GlobalContextProps {
   user: User | null;
   loading: boolean;
   register: (
-    username: string,
     email: string,
+    fullname: string,
     password: string
-  ) => Promise<boolean>;
-  login: (email: string, password: string) => Promise<boolean>;
+  ) => Promise<RegisterResponse>;
+  login: (email: string, password: string) => Promise<LoginResponse>;
   logout: () => Promise<void>;
 }
 
@@ -36,8 +54,17 @@ const GlobalContext = createContext<GlobalContextProps>({
   isLogged: false,
   user: null,
   loading: true,
-  register: async () => false,
-  login: async () => false,
+  register: async (email: string, fullname: string, password: string) => {
+    return { success: false, message: "Default implementation" };
+  },
+  login: async (email: string, password: string) => {
+    return {
+      success: false,
+      error: "Default login implementation",
+      token: undefined,
+      user: undefined,
+    };
+  },
   logout: async () => {},
 });
 
@@ -51,81 +78,95 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const checkToken = async () => {
       try {
+        const token = await AsyncStorage.getItem("token");
+        const email = await AsyncStorage.getItem("email");
         const userString = await AsyncStorage.getItem("user");
-        if (userString) {
+        if (token && email && userString) {
           const parsedUser = JSON.parse(userString);
           setIsLogged(true);
-          setUser(parsedUser);
+          setUser({
+            ...parsedUser,
+          });
+        } else {
+          setIsLogged(false);
+          setUser(null);
         }
       } catch (error) {
-        console.log("Error reading token from storage:", error);
+        console.log("Error reading data from storage:", error);
+        setIsLogged(false);
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
+
     checkToken();
   }, []);
 
   const register = async (
-    username: string,
     email: string,
+    fullname: string,
     password: string
-  ): Promise<boolean> => {
+  ): Promise<RegisterResponse> => {
     try {
       const response = await axios.post(`${BASE_URL}/register`, {
-        username,
         email,
+        fullname,
         password,
       });
       console.log("Register response:", response.data);
-      return true;
+      return { success: true, message: null };
     } catch (error: any) {
-      console.log(
-        "Register error:",
-        error.response?.data || error.message || error
-      );
-      return false;
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        "An unexpected error occurred";
+      console.log("Register error:", errorMessage);
+      return { success: false, message: errorMessage };
     }
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<LoginResponse> => {
     try {
       const response = await axios.post(`${BASE_URL}/login`, {
         email: email,
         password,
       });
-      const { token, username } = response.data;
-      if (!token) {
-        console.log("No token received from server.");
-        return false;
+      const { token, user } = response.data;
+      if (!token || !user) {
+        console.log(
+          "Invalid response from server. Missing token or user data."
+        );
+        return { success: false, error: "Invalid response from server." };
       }
-      await AsyncStorage.setItem(
-        "user",
-        JSON.stringify({
-          token,
-          email,
-          username,
-        })
-      );
+      await AsyncStorage.setItem("token", token);
+      await AsyncStorage.setItem("email", email);
+      await AsyncStorage.setItem("user", JSON.stringify(user));
       setIsLogged(true);
       setUser({
-        token,
         email,
-        username,
+        ...user,
       });
-      return true;
+      return { success: true, token, user };
     } catch (error: any) {
-      console.log(
-        "Login error:",
-        error.response?.data || error.message || error
-      );
-      return false;
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        "An unexpected error occurred.";
+      console.log("Login error:", errorMessage);
+
+      return { success: false, error: errorMessage };
     }
   };
 
   const logout = async (): Promise<void> => {
     try {
       await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("email");
+      await AsyncStorage.removeItem("user");
       setIsLogged(false);
       setUser(null);
     } catch (error) {

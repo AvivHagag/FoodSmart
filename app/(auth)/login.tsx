@@ -46,16 +46,18 @@ export default function LoginScreen() {
     }
     setIsLoading(true);
     try {
-      const success = await login(email, password);
+      const { success, error } = await login(email, password);
       if (!success) {
-        setErrorMessage("Invalid credentials. Try again.");
+        setErrorMessage(error || "Invalid credentials. Try again.");
       } else {
         router.replace("/(tabs)/home");
       }
-    } catch (error: any) {
-      setErrorMessage(error.message);
+    } catch (err: any) {
+      setErrorMessage("An unexpected error occurred. Please try again.");
+      console.error("Login error:", err);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (

@@ -186,7 +186,6 @@ const TabsLayout: React.FC = () => {
     });
   };
 
-  // Function to toggle the modal
   const toggleModal = () => {
     if (isModalVisible) {
       closeModal();
