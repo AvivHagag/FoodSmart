@@ -17,12 +17,8 @@ import { useGlobalContext } from "../context/authprovider";
 import { Image } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-interface RegisterScreenProps {
-  navigation: any;
-}
-
-const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
-  const [username, setUsername] = useState<string>("");
+export default function RegisterScreen() {
+  const [fullname, setfullname] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [message, setMessage] = useState<string>("");
@@ -31,8 +27,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const { register } = useGlobalContext();
   const router = useRouter();
 
-  const handleUserNameChange = (text: string) => {
-    setUsername(text);
+  const handlefullnameChange = (text: string) => {
+    setfullname(text);
     setErrorMessage("");
   };
   const handleEmailChange = (text: string) => {
@@ -45,31 +41,57 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     setErrorMessage("");
   };
 
+  const isValidPassword = (password: string): boolean => {
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d).{7,}$/;
+    return passwordRegex.test(password);
+  };
+
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleRegister = async () => {
-    if (!username) {
+    if (!email) {
+      setErrorMessage("Please enter Email");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setErrorMessage("Please enter a valid Email address");
+      return;
+    }
+    if (!fullname) {
       setErrorMessage("Please enter User Name");
       return;
     }
-    if (!email) {
-      setErrorMessage("Please enter Email");
+    const nameParts = fullname.trim().split(/\s+/);
+    if (nameParts.length < 2) {
+      setErrorMessage("Please enter both your first and last name.");
       return;
     }
     if (!password) {
       setErrorMessage("Please enter Password");
       return;
     }
+    if (!isValidPassword(password)) {
+      setErrorMessage(
+        "Password must be at least 7 characters long and include at least one letter and one number"
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const success = await register(username, email, password);
+      const { success, message } = await register(email, fullname, password);
       if (success) {
         setMessage("Registration successful! You can log in now.");
         router.replace("/(auth)/login");
       } else {
-        setErrorMessage("Registration failed or user already exists");
+        setErrorMessage(message || "Registration failed");
       }
-      setIsLoading(false);
     } catch (err: unknown) {
       setErrorMessage("Network error. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -119,20 +141,6 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 
                 <View className="mb-4">
                   <Text className="text-sm font-medium text-gray-700 mb-2">
-                    Username
-                  </Text>
-                  <TextInput
-                    className="h-12 bg-gray-100 border border-gray-300 rounded-md px-4"
-                    placeholder="Enter your username"
-                    placeholderTextColor="#999"
-                    onChangeText={handleUserNameChange}
-                    autoCapitalize="none"
-                    value={username}
-                  />
-                </View>
-
-                <View className="mb-4">
-                  <Text className="text-sm font-medium text-gray-700 mb-2">
                     Email
                   </Text>
                   <TextInput
@@ -143,6 +151,20 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                     autoCapitalize="none"
                     keyboardType="email-address"
                     value={email}
+                  />
+                </View>
+
+                <View className="mb-4">
+                  <Text className="text-sm font-medium text-gray-700 mb-2">
+                    Name
+                  </Text>
+                  <TextInput
+                    className="h-12 bg-gray-100 border border-gray-300 rounded-md px-4"
+                    placeholder="Enter your first and last name"
+                    placeholderTextColor="#999"
+                    onChangeText={handlefullnameChange}
+                    autoCapitalize="none"
+                    value={fullname}
                   />
                 </View>
 
@@ -203,9 +225,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       </KeyboardAvoidingView>
     </View>
   );
-};
-
-export default RegisterScreen;
+}
 
 const styles = StyleSheet.create({
   buttonContainer: {

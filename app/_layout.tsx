@@ -2,11 +2,10 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
 import React, { useEffect } from "react";
-import { StyleSheet, View, Text } from "react-native";
-import { Slot, Stack, useRouter } from "expo-router";
+import { StatusBar } from "react-native";
+import { Stack, useRouter } from "expo-router";
 import "../global.css";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { StatusBar } from "expo-status-bar";
 import AuthProvider, { useGlobalContext } from "./context/authprovider";
 
 SplashScreen.preventAutoHideAsync();
@@ -36,6 +35,7 @@ export default function RootLayout() {
     <>
       <AuthProvider>
         <Stack>
+          <StatusBar barStyle="dark-content" />
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
