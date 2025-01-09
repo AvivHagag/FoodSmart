@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   Animated,
+  StatusBar,
 } from "react-native";
 import { Tabs } from "expo-router";
 import {
@@ -196,6 +197,7 @@ const TabsLayout: React.FC = () => {
 
   return (
     <View className="flex-1 w-full">
+      <StatusBar barStyle="dark-content" />
       <Tabs
         screenOptions={{
           headerShown: false,

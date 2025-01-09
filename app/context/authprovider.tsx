@@ -19,6 +19,10 @@ interface User {
   height?: number | null;
   image?: string | null;
   gender?: string | null;
+  activityLevel?: string | null;
+  goal?: string | null;
+  bmi?: string | null;
+  tdee?: string | null;
 }
 
 interface RegisterResponse {

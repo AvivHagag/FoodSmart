@@ -1,7 +1,16 @@
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
-import { Settings, ChevronRight, LogOut, Bell } from "lucide-react-native";
+import {
+  Settings,
+  ChevronRight,
+  LogOut,
+  Headset,
+  UserRoundPen,
+  MessageCircle,
+} from "lucide-react-native";
 import AvatarImage from "./avatar";
+import { useRouter } from "expo-router";
+import { BottomSpace } from "../bottom-space";
 
 interface MenuItem {
   icon: JSX.Element;
@@ -20,11 +29,17 @@ interface Usertype {
   height?: number | null;
   image?: string | null;
   gender?: string | null;
+  activityLevel?: string | null;
+  goal?: string | null;
+  bmi?: string | null;
+  tdee?: string | null;
 }
 
 interface ProfileScreenProps {
   user: Usertype;
   logout: () => Promise<void>;
+  setUserEditProfile: Dispatch<SetStateAction<boolean>>;
+  setAccountEditProfile: Dispatch<SetStateAction<boolean>>;
 }
 
 function calculateUsageDays(createdAt: string | undefined): number {
@@ -43,19 +58,32 @@ function calculateUsageDays(createdAt: string | undefined): number {
   return daysDifference;
 }
 
-export default function ProfileScreen({ user, logout }: ProfileScreenProps) {
+export default function ProfileScreen({
+  user,
+  logout,
+  setUserEditProfile,
+  setAccountEditProfile,
+}: ProfileScreenProps) {
   const daysUsingApp = calculateUsageDays(user.createdAt);
-
+  const router = useRouter();
   const menuItems: MenuItem[] = [
     {
-      icon: <Settings color={"#3b82f6"} />,
-      label: "Settings",
-      onClick: () => console.log("Settings clicked"),
+      icon: <UserRoundPen color={"#3b82f6"} />,
+      label: "Edit Personal Info",
+      onClick: () => setUserEditProfile(true),
     },
     {
-      icon: <Bell color={"#3b82f6"} />,
-      label: "Notifications",
-      value: "3 new",
+      icon: <Settings color={"#3b82f6"} />,
+      label: "Account",
+      onClick: () => setAccountEditProfile(true),
+    },
+    {
+      icon: <Headset color={"#6b7280"} />,
+      label: "Contact Support",
+    },
+    {
+      icon: <MessageCircle color={"#6b7280"} />,
+      label: "Get Help",
     },
     {
       icon: <LogOut color={"#ef4444"} />,
@@ -116,36 +144,73 @@ export default function ProfileScreen({ user, logout }: ProfileScreenProps) {
           </View>
         </View>
       </View>
-
+      <View
+        className="mt-4"
+        style={{
+          margin: "auto",
+          justifyContent: "center",
+          width: "92%",
+          height: 0.5,
+          backgroundColor: "#9ca3af",
+        }}
+      />
       <View className="mt-6 space-y-2 px-4">
         {menuItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={item.onClick}
-            className="flex-row items-center justify-between rounded-xl bg-white p-4"
-          >
-            <View className="flex-row items-center gap-3">
-              {item.icon}
-              <Text
-                className={`font-medium ${
-                  item.label === "Log out" ? "text-red-500" : "text-gray-700"
-                }`}
+          <View key={index}>
+            {item.label !== "Log out" ? (
+              <TouchableOpacity
+                onPress={item.onClick}
+                className="flex-row items-center justify-between rounded-xl p-4"
               >
-                {item.label}
-              </Text>
-            </View>
-            <View className="flex-row items-center gap-2">
-              {item.value && (
-                <Text className="text-sm text-gray-500">{item.value}</Text>
-              )}
-              <ChevronRight
-                className="text-gray-400"
-                color={`${item.label === "Log out" ? "#ef4444" : "#3b82f6"}`}
-              />
-            </View>
-          </TouchableOpacity>
+                <View className="flex-row items-center gap-3">
+                  {item.icon}
+                  <Text
+                    className={`font-medium ${
+                      item.label === "Log out"
+                        ? "text-red-500"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    {item.label}
+                  </Text>
+                </View>
+                <View className="flex-row items-center gap-2">
+                  {item.value && (
+                    <Text className="text-sm text-gray-500">{item.value}</Text>
+                  )}
+                  <ChevronRight
+                    className="text-gray-400"
+                    color={`${item.icon.props.color}`}
+                  />
+                </View>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={item.onClick}
+                className="mx-auto flex-row items-center justify-between rounded-xl mt-4 p-4 border"
+                style={{
+                  borderColor: "#f87171",
+                  width: "90%",
+                }}
+              >
+                <View className="flex-row items-center mx-auto">
+                  {item.icon}
+                  <Text
+                    className={`font-medium ml-1 ${
+                      item.label === "Log out"
+                        ? "text-red-500"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    {item.label}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
         ))}
       </View>
+      <BottomSpace />
     </ScrollView>
   );
 }
