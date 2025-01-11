@@ -93,8 +93,8 @@ export default function ProfileScreen({
   ];
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      <View className="bg-white px-4 pb-6 pt-12">
+    <ScrollView className="flex-1 bg-white">
+      <View className="bg-gwhite px-4 pb-6 pt-12">
         <View className="flex-row items-center">
           {user.image ? (
             <Image

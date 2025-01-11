@@ -8,7 +8,7 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import { ChevronDown, ChevronLeft } from "lucide-react-native";
+import { ChevronDown } from "lucide-react-native";
 import RNPickerSelect from "react-native-picker-select";
 import { BottomSpace } from "../bottom-space";
 import Title from "../title";
@@ -102,22 +102,17 @@ export default function EditPersonalInfoScreen({
     ]);
   };
 
+  const handleBackBottom = () => {
+    setUserEditProfile(false);
+  };
+
   const handleChangePhoto = () => {
     Alert.alert("Change Photo", "Image picker functionality not implemented.");
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50 px-4 pt-6">
-      <View className="flex-row items-center justify-between mb-6">
-        <TouchableOpacity onPress={() => setUserEditProfile(false)}>
-          <ChevronLeft size={24} color="#4B5563" />
-        </TouchableOpacity>
-        {/* <Title text={"Edit Personal Info"} /> */}
-        <Text className="text-2xl font-semibold text-gray-900">
-          Edit Personal Info
-        </Text>
-        <View />
-      </View>
+    <ScrollView className="flex-1 bg-white px-4">
+      <Title text={"Edit Personal Info"} backBottom={handleBackBottom} />
 
       <View className="gap-3">
         <View className="bg-white rounded-lg shadow p-4">

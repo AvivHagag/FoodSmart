@@ -11,7 +11,7 @@ const Profile = () => {
   const [accountEditProfile, setAccountEditProfile] = useState<boolean>(false);
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
+    <SafeAreaView className="flex-1 bg-white">
       {user && !userEditProfile && !accountEditProfile && (
         <ProfileScreen
           user={user}

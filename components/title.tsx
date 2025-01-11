@@ -1,45 +1,43 @@
 import React from "react";
-import {
-  Text,
-  StyleSheet,
-  TextProps,
-  StyleProp,
-  TextStyle,
-} from "react-native";
-import MaskedView from "@react-native-masked-view/masked-view";
-import { LinearGradient } from "expo-linear-gradient";
+import { Text, StyleSheet, View, TouchableOpacity } from "react-native";
+import { ChevronLeft } from "lucide-react-native";
 
-interface GradientTitleProps {
+interface TitleProps {
   text: string;
-  style?: object;
+  backBottom: () => void;
 }
 
-interface TitleProps extends TextProps {
-  text: string;
-  style?: StyleProp<TextStyle>;
-}
-
-const Title: React.FC<TitleProps> = ({ text, style, ...rest }) => {
+const Title: React.FC<TitleProps> = ({ text, backBottom }) => {
   return (
-    <MaskedView maskElement={<Text style={[styles.title, style]}>{text}</Text>}>
-      <LinearGradient
-        colors={["#000000", "#000000"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1.1 }}
-      >
-        <Text style={[styles.title, style, { opacity: 0 }]}>{text}</Text>
-      </LinearGradient>
-    </MaskedView>
+    <View style={styles.container}>
+      <TouchableOpacity onPress={backBottom} style={styles.leftButton}>
+        <ChevronLeft size={24} color="#000000" />
+      </TouchableOpacity>
+      <Text style={styles.title}>{text}</Text>
+      <View style={styles.placeholder} />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 24,
+  },
+  leftButton: {
+    flex: 1,
+  },
   title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#000",
+    flex: 2,
     textAlign: "center",
-    marginBottom: 16,
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#1F2937",
+  },
+  placeholder: {
+    flex: 1,
   },
 });
 
