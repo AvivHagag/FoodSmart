@@ -35,7 +35,7 @@ export default function RootLayout() {
     <>
       <AuthProvider>
         <Stack>
-          <StatusBar barStyle="dark-content" />
+          <StatusBar barStyle="default" />
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
