@@ -1,6 +1,5 @@
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import "react-native-reanimated";
 import React, { useEffect } from "react";
 import { StatusBar } from "react-native";
 import { Stack, useRouter } from "expo-router";
