@@ -11,7 +11,7 @@ import { Card } from "../ui/card";
 
 export function DashboardScreen() {
   return (
-    <View className="flex-1 px-4 py-2">
+    <View className="flex-1 py-2">
       <Card className="mb-4 flex flex-row items-center justify-center p-6 shadow-md">
         <View className="flex-1">
           <Text className="mb-2 font-bold" style={{ fontSize: 40 }}>
