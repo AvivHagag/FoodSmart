@@ -13,6 +13,9 @@ import {
 import { KeyRound, Pencil, Trash2, TriangleAlert } from "lucide-react-native";
 import AvatarImage from "./avatar";
 import Title from "../title";
+import { useGlobalContext } from "@/app/context/authprovider";
+import { useNavigation } from "@react-navigation/native";
+import { BASE_URL } from "@/constants/constants";
 
 interface Usertype {
   _id: string;
@@ -43,10 +46,11 @@ export default function EditBasicInfo({
 }: EditBasicInfoProps) {
   const [fullname, setFullname] = useState<string>(user.fullname);
   const [email, setEmail] = useState<string>(user.email);
-  const [image, setImage] = useState<string | null>(
-    user.image ? user.image : null
-  );
+  const [image, setImage] = useState<string | null>(user.image ? user.image : null);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+
+  const { logout } = useGlobalContext();
+  const navigation = useNavigation();
 
   const handleSave = () => {
     if (!fullname.trim()) {
@@ -68,11 +72,10 @@ export default function EditBasicInfo({
 
     // TODO: Implement the updateUser logic, e.g., API call to update user data
 
-    // Provide feedback to the user
     Alert.alert("Success", "Your personal information has been updated.", [
       {
         text: "OK",
-        // onPress: () => setAccountEditProfile(false),
+        // Optionally, close the edit view here
       },
     ]);
   };
@@ -89,21 +92,34 @@ export default function EditBasicInfo({
     setIsDeleteModalVisible(false);
   };
 
-  const confirmDeleteAccount = () => {
-    // TODO: Implement account deletion logic here
-    Alert.alert(
-      "Account Deleted",
-      "Your account has been successfully deleted.",
-      [
-        {
-          text: "OK",
-          onPress: () => {
-            setIsDeleteModalVisible(false);
-            // Navigate the user to the login screen or another appropriate screen
-          },
+  const confirmDeleteAccount = async () => {
+    try {
+      console.log(user)
+      const response = await fetch(`${BASE_URL}/api/delete_user`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ]
-    );
+        body: JSON.stringify({ userID: user._id }),
+      });
+
+      if (response.ok) {
+        setIsDeleteModalVisible(false);
+        Alert.alert("Account Deleted", "Your account has been successfully deleted.", [
+          {
+            text: "OK",
+            onPress: async () => {
+              await logout();
+            },
+          },
+        ]);
+      } else {
+        const errorData = await response.json();
+        Alert.alert("Error", errorData.message || "Something went wrong.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to delete account.");
+    }
   };
 
   return (
@@ -129,7 +145,6 @@ export default function EditBasicInfo({
             paddingVertical: 2,
             bottom: 0,
             right: "32%",
-            transform: [{ translateX: 0 }, { translateY: 0 }],
           }}
         >
           <View className="flex-row justify-center items-center">
@@ -203,8 +218,7 @@ export default function EditBasicInfo({
               Confirm Deletion
             </Text>
             <Text className="text-gray-700 mb-6">
-              Are you sure you want to delete your account? This action cannot
-              be undone.
+              Are you sure you want to delete your account? This action cannot be undone.
             </Text>
             <View className="flex-row justify-start gap-3">
               <TouchableOpacity
@@ -261,7 +275,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
     backgroundColor: "#EF4444",
-    color: "#FFFFFF",
   },
   modalBackdrop: {
     flex: 1,
