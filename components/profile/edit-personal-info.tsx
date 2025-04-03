@@ -5,13 +5,14 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { ChevronDown } from "lucide-react-native";
 import RNPickerSelect from "react-native-picker-select";
 import { BottomSpace } from "../bottom-space";
 import Title from "../title";
+import { BASE_URL } from "@/constants/constants";
 
 interface Usertype {
   _id: string;
@@ -70,36 +71,93 @@ export default function EditPersonalInfoScreen({
   );
   const [goal, setGoal] = useState<string | null>(user.goal || "maintain");
 
-  const handleSave = () => {
-    // if (!fullname.trim()) {
-    //   Alert.alert("Validation Error", "Full name is required.");
-    //   return;
-    // }
-    // if (!email.trim()) {
-    //   Alert.alert("Validation Error", "Email is required.");
-    //   return;
-    // }
+  const [errors, setErrors] = useState<{
+    age?: string;
+    weight?: string;
+    height?: string;
+  }>({});
+
+  const handleSave = async () => {
+    if (!age.trim()) {
+      setErrors({ age: "Age is required." });
+      return;
+    }
+    const parsedAge = parseInt(age, 10);
+    if (isNaN(parsedAge) || parsedAge <= 0) {
+      setErrors({ age: "Please enter a valid age." });
+      return;
+    }
+    if (parsedAge < 13 || parsedAge > 120) {
+      setErrors({ age: "Age must be between 13 and 120." });
+      return;
+    }
+
+    if (!weight.trim()) {
+      setErrors({ weight: "Weight is required." });
+      return;
+    }
+    const parsedWeight = parseFloat(weight);
+    if (isNaN(parsedWeight) || parsedWeight <= 0) {
+      setErrors({ weight: "Please enter a valid weight." });
+      return;
+    }
+    if (parsedWeight < 30 || parsedWeight > 300) {
+      setErrors({ weight: "Weight must be between 30kg and 300kg." });
+      return;
+    }
+
+    if (!height.trim()) {
+      setErrors({ height: "Height is required." });
+      return;
+    }
+    const parsedHeight = parseFloat(height);
+    if (isNaN(parsedHeight) || parsedHeight <= 0) {
+      setErrors({ height: "Please enter a valid height." });
+      return;
+    }
+    if (parsedHeight < 100 || parsedHeight > 250) {
+      setErrors({ height: "Height must be between 100cm and 250cm." });
+      return;
+    }
+
+    setErrors({});
 
     const updatedUser: Usertype = {
       ...user,
-      age: age ? parseInt(age) : null,
-      weight: weight ? parseFloat(weight) : null,
-      height: height ? parseFloat(height) : null,
+      age: parsedAge,
+      weight: parsedWeight,
+      height: parsedHeight,
       gender,
       activityLevel,
       goal,
-      // Optionally, recalculate BMI and TDEE here or on the backend
     };
 
-    // TODO: Implement the updateUser logic, e.g., API call to update user data
-
-    // Provide feedback to the user
-    Alert.alert("Success", "Your personal information has been updated.", [
-      {
-        text: "OK",
-        onPress: () => setUserEditProfile(false),
-      },
-    ]);
+    try {
+      const response = await fetch(`${BASE_URL}/api/update_user`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedUser),
+      });
+      if (response.ok) {
+        Alert.alert(
+          "Success",
+          "Your personal information has been updated.",
+          [
+            {
+              text: "OK",
+              onPress: () => setUserEditProfile(false),
+            },
+          ]
+        );
+      } else {
+        const errorData = await response.json();
+        Alert.alert("Error", errorData.message || "Something went wrong.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to update personal information.");
+    }
   };
 
   const handleBackBottom = () => {
@@ -127,11 +185,17 @@ export default function EditPersonalInfoScreen({
             <Text className="text-sm font-medium text-gray-700 mb-1">Age</Text>
             <TextInput
               value={age}
-              onChangeText={setAge}
+              onChangeText={(text) => {
+                setAge(text);
+                if (errors.age) {
+                  setErrors((prev) => ({ ...prev, age: undefined }));
+                }
+              }}
               placeholder="Enter your age"
               keyboardType="number-pad"
               className="mt-1 p-3 border border-gray-300 rounded-lg bg-white"
             />
+            {errors.age && <Text style={styles.errorText}>{errors.age}</Text>}
           </View>
 
           <View className="flex-row justify-between">
@@ -141,11 +205,19 @@ export default function EditPersonalInfoScreen({
               </Text>
               <TextInput
                 value={weight}
-                onChangeText={setWeight}
+                onChangeText={(text) => {
+                  setWeight(text);
+                  if (errors.weight) {
+                    setErrors((prev) => ({ ...prev, weight: undefined }));
+                  }
+                }}
                 placeholder="Enter your weight"
                 keyboardType="decimal-pad"
                 className="mt-1 p-3 border border-gray-300 rounded-lg bg-white"
               />
+              {errors.weight && (
+                <Text style={styles.errorText}>{errors.weight}</Text>
+              )}
             </View>
 
             <View className="w-1/2 ml-2">
@@ -154,11 +226,19 @@ export default function EditPersonalInfoScreen({
               </Text>
               <TextInput
                 value={height}
-                onChangeText={setHeight}
+                onChangeText={(text) => {
+                  setHeight(text);
+                  if (errors.height) {
+                    setErrors((prev) => ({ ...prev, height: undefined }));
+                  }
+                }}
                 placeholder="Enter your height"
                 keyboardType="decimal-pad"
                 className="mt-1 p-3 border border-gray-300 rounded-lg bg-white"
               />
+              {errors.height && (
+                <Text style={styles.errorText}>{errors.height}</Text>
+              )}
             </View>
           </View>
 
@@ -262,4 +342,10 @@ const styles = StyleSheet.create({
     top: 10,
     right: 12,
   },
+  errorText: {
+    color: "red",
+    marginTop: 4,
+    fontSize: 12,
+  },
 });
+

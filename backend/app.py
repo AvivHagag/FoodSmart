@@ -6,7 +6,9 @@ from extensions import mongo, bcrypt, jwt
 from routes.register import register_bp
 from routes.login import login_bp
 from routes.detect import detect_bp
-
+from routes.update_user import update_user_bp
+from routes.update_password import update_password_bp
+from routes.delete_user import delete_user_bp  
 
 load_dotenv()
 app = Flask(__name__)
@@ -21,7 +23,9 @@ jwt.init_app(app)
 app.register_blueprint(register_bp)
 app.register_blueprint(login_bp)
 app.register_blueprint(detect_bp)
-
+app.register_blueprint(update_user_bp)
+app.register_blueprint(update_password_bp)
+app.register_blueprint(delete_user_bp)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5002)
