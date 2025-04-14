@@ -1,4 +1,3 @@
-// camera.tsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -12,7 +11,8 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "@/constants/constants";
-
+import FOOD_DATA from '../data/foods.json';
+import FoodItem from '../../components/FoodItem';
 interface DetectionResult {
   label: string;
   confidence: number;
@@ -64,6 +64,11 @@ const CameraScreen: React.FC = () => {
       setLoading(false);
     }
   };
+  const aggregatedDetections = detectedObjects.reduce((acc: Record<string, number>, item) => {
+    acc[item.label] = (acc[item.label] || 0) + 1;
+    return acc;
+  }, {});
+
 
   const calculateAverageConfidence = (items: DetectionResult[]) => {
     if (!items.length) return 0;
@@ -81,11 +86,8 @@ const CameraScreen: React.FC = () => {
             <ActivityIndicator size="large" color="#000" />
             <Text className="text-lg font-semibold mt-4">Processing...</Text>
           </View>
-        ) : detectedObjects.length > 0 ? (
-          <ScrollView
-            contentContainerStyle={{ alignItems: "center", padding: 16 }}
-            className="flex-1"
-          >
+        ) : Object.keys(aggregatedDetections).length > 0 ? (
+          <ScrollView contentContainerStyle={{ alignItems: 'center', padding: 16 }} className="flex-1">
             <Text className="text-2xl font-bold text-center mb-4">Result</Text>
             <View className="w-full max-w-md bg-white rounded-xl shadow-lg p-4">
               <View className="mb-6 items-center">
@@ -95,31 +97,33 @@ const CameraScreen: React.FC = () => {
                   resizeMode="cover"
                 />
               </View>
-
-              <Text className="text-lg font-semibold text-gray-800 mb-2">
-                Recognized Items
-              </Text>
-              <View className="flex-row flex-wrap mb-4">
-                {detectedObjects.map((item, idx) => (
-                  <View
-                    key={idx}
-                    className="bg-blue-100 rounded-full px-3 py-1 mr-2 mb-2"
-                  >
-                    <Text className="text-blue-700 text-sm font-medium">
-                      {item.label}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-
-              <Text className="text-lg font-semibold text-gray-800 mb-2">
-                Estimated Nutrition
-              </Text>
-              <View className="border border-gray-300 border-dashed rounded-lg p-3 mb-4">
-                <Text className="text-gray-500 text-center">
-                  Coming soon...
-                </Text>
-              </View>
+              
+              {Object.keys(aggregatedDetections).map((label) => {
+                const foodData = FOOD_DATA.foods.find((food: any) => food.name === label);
+                if (!foodData) {
+                  return (
+                    <View key={label} className="bg-red-100 p-4 rounded-lg mb-2">
+                      <Text className="text-red-700">No nutrition info for {label}</Text>
+                    </View>
+                  );
+                }
+                return (
+                  <FoodItem
+                    key={label}
+                    name={foodData.name}
+                    initialCount={aggregatedDetections[label]}
+                    unit={foodData.unit}
+                    nutrition={{
+                      cal: foodData.cal,
+                      protein: foodData.protein,
+                      fat: foodData.fat,
+                      carbohydrates: foodData.carbohydrates,
+                    }}
+                    piece_avg_weight={foodData.piece_avg_weight}
+                    avg_gram={foodData.avg_gram}
+                  />
+                );
+              })}
 
               <View className="bg-green-100 rounded-t-lg py-3">
                 <Text className="text-green-700 font-semibold text-center">
