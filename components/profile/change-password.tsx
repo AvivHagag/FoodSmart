@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { KeyRound, Eye, EyeOff } from "lucide-react-native";
 import Title from "../title";
+import { BASE_URL } from "@/constants/constants";
 
 interface ChangePasswordProps {
   userID: string;
@@ -21,47 +22,76 @@ export default function ChangePassword({
   userID,
   handlePasswordOpen,
 }: ChangePasswordProps) {
-  const [showCurrentPassword, setShowCurrentPassword] =
-    useState<boolean>(false);
-  const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState<boolean>(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState<string>("");
-  const [newPassword, setNewPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [errors, setErrors] = useState<{
+    currentPassword?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+  }>({});
+
+  const isValidPassword = (password: string): boolean => {
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d).{7,}$/;
+    return passwordRegex.test(password);
+  };
 
   const handleSubmit = async () => {
     if (!currentPassword.trim()) {
-      Alert.alert("Validation Error", "Current password is required.");
+      setErrors({ currentPassword: "Current password is required." });
       return;
     }
     if (!newPassword.trim()) {
-      Alert.alert("Validation Error", "New password is required.");
+      setErrors({ newPassword: "New password is required." });
+      return;
+    }
+    if (!isValidPassword(newPassword)) {
+      setErrors({
+        newPassword:
+          "Password must be at least 7 characters long and include both letters and numbers.",
+      });
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert("Validation Error", "Passwords do not match.");
+      setErrors({ confirmPassword: "Passwords do not match." });
       return;
     }
 
+    setErrors({});
+
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const response = await fetch(`${BASE_URL}/api/update_password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          userID,
+        }),
+      });
 
-      // On success
-      Alert.alert("Success", "Your password has been updated.", [
-        { text: "OK", onPress: handlePasswordOpen },
-      ]);
-
-      // Reset form
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      if (response.ok) {
+        Alert.alert("Success", "Your password has been updated.", [
+          { text: "OK", onPress: handlePasswordOpen },
+        ]);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      } else {
+        const errorData = await response.json();
+        Alert.alert("Error", errorData.message || "Something went wrong.");
+      }
     } catch (error) {
-      // On error
-      Alert.alert("Error", "Something went wrong. Please try again.");
+      Alert.alert("Error", "Failed to update password. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +99,7 @@ export default function ChangePassword({
 
   return (
     <ScrollView className="flex-1 bg-white p-4">
-      <Title text={"Change Password"} backBottom={handlePasswordOpen} />
+      <Title text="Change Password" backBottom={handlePasswordOpen} />
 
       <View className="mx-auto">
         <View className="mb-6">
@@ -98,41 +128,32 @@ export default function ChangePassword({
           <Text className="text-2xl font-semibold text-gray-900 mr-2">
             Change Your Password
           </Text>
-          <Text
-            className="mb-2"
-            style={{
-              fontSize: 28,
-            }}
-          >
-            🔐
-          </Text>
+          <Text style={{ fontSize: 28 }}>🔐</Text>
         </View>
         <Text className="text-gray-500 mb-4">
           Please enter your current password and choose a new one
         </Text>
 
         <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-1">
+          <Text className="text-sm font-medium mb-1" >
             Current Password
           </Text>
           <View className="relative">
             <TextInput
               value={currentPassword}
-              onChangeText={setCurrentPassword}
+              onChangeText={(text) => {
+                setCurrentPassword(text);
+                if (errors.currentPassword) {
+                  setErrors((prev) => ({ ...prev, currentPassword: undefined }));
+                }
+              }}
               placeholder="Enter current password"
               secureTextEntry={!showCurrentPassword}
               className="w-full p-3 border border-gray-300 rounded-lg bg-white"
-              accessibilityLabel="Current Password"
             />
             <TouchableOpacity
               onPress={() => setShowCurrentPassword(!showCurrentPassword)}
-              style={styles.absolutePosition}
-              accessibilityLabel={
-                showCurrentPassword
-                  ? "Hide current password"
-                  : "Show current password"
-              }
-              accessibilityRole="button"
+              style={styles.eyeIconPosition}
             >
               {showCurrentPassword ? (
                 <EyeOff size={20} color="#6B7280" />
@@ -141,29 +162,31 @@ export default function ChangePassword({
               )}
             </TouchableOpacity>
           </View>
+          {errors.currentPassword && (
+            <Text style={styles.errorText}>{errors.currentPassword}</Text>
+          )}
         </View>
 
-        {/* New Password */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-1">
+          <Text className="text-sm font-medium mb-1">
             New Password
           </Text>
           <View className="relative">
             <TextInput
               value={newPassword}
-              onChangeText={setNewPassword}
+              onChangeText={(text) => {
+                setNewPassword(text);
+                if (errors.newPassword) {
+                  setErrors((prev) => ({ ...prev, newPassword: undefined }));
+                }
+              }}
               placeholder="Enter new password"
               secureTextEntry={!showNewPassword}
               className="w-full p-3 border border-gray-300 rounded-lg bg-white"
-              accessibilityLabel="New Password"
             />
             <TouchableOpacity
               onPress={() => setShowNewPassword(!showNewPassword)}
-              style={styles.absolutePosition}
-              accessibilityLabel={
-                showNewPassword ? "Hide new password" : "Show new password"
-              }
-              accessibilityRole="button"
+              style={styles.eyeIconPosition}
             >
               {showNewPassword ? (
                 <EyeOff size={20} color="#6B7280" />
@@ -172,31 +195,31 @@ export default function ChangePassword({
               )}
             </TouchableOpacity>
           </View>
+          {errors.newPassword && (
+            <Text style={styles.errorText}>{errors.newPassword}</Text>
+          )}
         </View>
 
-        {/* Confirm New Password */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-1">
+          <Text className="text-sm font-medium mb-1" >
             Confirm New Password
           </Text>
           <View className="relative">
             <TextInput
               value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                if (errors.confirmPassword) {
+                  setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                }
+              }}
               placeholder="Confirm new password"
               secureTextEntry={!showConfirmPassword}
               className="w-full p-3 border border-gray-300 rounded-lg bg-white"
-              accessibilityLabel="Confirm New Password"
             />
             <TouchableOpacity
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              style={styles.absolutePosition}
-              accessibilityLabel={
-                showConfirmPassword
-                  ? "Hide confirm password"
-                  : "Show confirm password"
-              }
-              accessibilityRole="button"
+              style={styles.eyeIconPosition}
             >
               {showConfirmPassword ? (
                 <EyeOff size={20} color="#6B7280" />
@@ -205,15 +228,16 @@ export default function ChangePassword({
               )}
             </TouchableOpacity>
           </View>
+          {errors.confirmPassword && (
+            <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+          )}
         </View>
 
         <TouchableOpacity
           onPress={handleSubmit}
           className="w-full bg-blue-500 rounded-lg p-4 items-center"
           disabled={isLoading}
-          style={isLoading ? styles.Clicked : styles.NotClicked}
-          accessibilityLabel="Update Password"
-          accessibilityRole="button"
+          style={isLoading ? styles.clicked : styles.notClicked}
         >
           {isLoading ? (
             <View className="flex-row items-center">
@@ -234,15 +258,20 @@ export default function ChangePassword({
 }
 
 const styles = StyleSheet.create({
-  absolutePosition: {
+  eyeIconPosition: {
     position: "absolute",
-    right: 12, // 3 * 4 (React Native uses pixel values)
-    top: 12, // 3 * 4
+    top: 12,
+    right: 12,
   },
-  Clicked: {
+  clicked: {
     opacity: 0.5,
   },
-  NotClicked: {
+  notClicked: {
     opacity: 1,
+  },
+  errorText: {
+    color: "red",
+    marginTop: 4,
+    fontSize: 12,
   },
 });
