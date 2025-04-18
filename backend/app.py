@@ -8,7 +8,8 @@ from routes.login import login_bp
 from routes.detect import detect_bp
 from routes.update_user import update_user_bp
 from routes.update_password import update_password_bp
-from routes.delete_user import delete_user_bp  
+from routes.delete_user import delete_user_bp
+from routes.get_user import get_user_bp
 
 load_dotenv()
 app = Flask(__name__)
@@ -26,6 +27,7 @@ app.register_blueprint(detect_bp)
 app.register_blueprint(update_user_bp)
 app.register_blueprint(update_password_bp)
 app.register_blueprint(delete_user_bp)
+app.register_blueprint(get_user_bp)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5002)
