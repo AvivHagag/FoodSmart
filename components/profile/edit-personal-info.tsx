@@ -7,12 +7,23 @@ import {
   TextInput,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from "react-native";
-import { ChevronDown } from "lucide-react-native";
 import RNPickerSelect from "react-native-picker-select";
 import { BottomSpace } from "../bottom-space";
-import Title from "../title";
+import {
+  ChevronDown,
+  Calendar as CalendarIcon,
+  Scale as ScaleIcon,
+  Ruler as RulerIcon,
+  User as UserIcon,
+  Activity as ActivityIcon,
+  Target as TargetIcon,
+  HeartHandshake,
+} from "lucide-react-native";
 import { BASE_URL } from "@/constants/constants";
+import Title from "../title";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface Usertype {
   _id: string;
@@ -26,13 +37,14 @@ interface Usertype {
   gender?: string | null;
   activityLevel?: string | null;
   goal?: string | null;
-  bmi?: string | null;
-  tdee?: string | null;
+  bmi?: number | null;
+  tdee?: number | null;
 }
 
 interface EditPersonalInfoScreenProps {
   user: Usertype;
   setUserEditProfile: Dispatch<SetStateAction<boolean>>;
+  updateUser: (updatedUser: Usertype) => Promise<void>;
 }
 
 const genderOptions = [
@@ -57,6 +69,7 @@ const goalOptions = [
 export default function EditPersonalInfoScreen({
   user,
   setUserEditProfile,
+  updateUser,
 }: EditPersonalInfoScreenProps) {
   const [age, setAge] = useState<string>(user.age ? user.age.toString() : "");
   const [weight, setWeight] = useState<string>(
@@ -70,12 +83,51 @@ export default function EditPersonalInfoScreen({
     user.activityLevel || "sedentary"
   );
   const [goal, setGoal] = useState<string | null>(user.goal || "maintain");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [errors, setErrors] = useState<{
     age?: string;
     weight?: string;
     height?: string;
   }>({});
+
+  const calculateBMI = (weight: number, height: number) => {
+    const heightInMeters = height / 100;
+    return parseFloat((weight / (heightInMeters * heightInMeters)).toFixed(1));
+  };
+
+  const calculateTDEE = (
+    weight: number,
+    height: number,
+    age: number,
+    gender: string | null,
+    activityLevel: string | null,
+    goal: string | null
+  ) => {
+    let bmr: number;
+    if (gender === "female") {
+      bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+    } else {
+      bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+    }
+    const activityFactors: { [key: string]: number } = {
+      sedentary: 1.2,
+      "lightly active": 1.375,
+      "moderately active": 1.55,
+      "very active": 1.725,
+      "extra active": 1.9,
+    };
+    const factor = activityLevel
+      ? activityFactors[activityLevel.toLowerCase()] || 1.2
+      : 1.2;
+    let tdee = bmr * factor;
+    if (goal === "lose") {
+      tdee -= 500;
+    } else if (goal === "gain") {
+      tdee += 500;
+    }
+    return Math.round(tdee);
+  };
 
   const handleSave = async () => {
     if (!age.trim()) {
@@ -121,6 +173,17 @@ export default function EditPersonalInfoScreen({
     }
 
     setErrors({});
+    setIsLoading(true);
+
+    const bmi = calculateBMI(parsedWeight, parsedHeight);
+    const tdee = calculateTDEE(
+      parsedWeight,
+      parsedHeight,
+      parsedAge,
+      gender,
+      activityLevel,
+      goal
+    );
 
     const updatedUser: Usertype = {
       ...user,
@@ -130,6 +193,8 @@ export default function EditPersonalInfoScreen({
       gender,
       activityLevel,
       goal,
+      bmi,
+      tdee,
     };
 
     try {
@@ -140,22 +205,22 @@ export default function EditPersonalInfoScreen({
         },
         body: JSON.stringify(updatedUser),
       });
+      setIsLoading(false);
       if (response.ok) {
-        Alert.alert(
-          "Success",
-          "Your personal information has been updated.",
-          [
-            {
-              text: "OK",
-              onPress: () => setUserEditProfile(false),
-            },
-          ]
-        );
+        await updateUser(updatedUser);
+
+        Alert.alert("Success", "Your personal information has been updated.", [
+          {
+            text: "OK",
+            onPress: () => setUserEditProfile(false),
+          },
+        ]);
       } else {
         const errorData = await response.json();
         Alert.alert("Error", errorData.message || "Something went wrong.");
       }
     } catch (error) {
+      setIsLoading(false);
       Alert.alert("Error", "Failed to update personal information.");
     }
   };
@@ -164,167 +229,200 @@ export default function EditPersonalInfoScreen({
     setUserEditProfile(false);
   };
 
-  const handleChangePhoto = () => {
-    Alert.alert("Change Photo", "Image picker functionality not implemented.");
-  };
-
   return (
     <ScrollView className="flex-1 bg-white px-4">
-      <Title text={"Edit Personal Info"} backBottom={handleBackBottom} />
-
-      <View className="gap-3">
-        <View className="bg-white rounded-lg shadow p-4">
-          <Text className="text-lg font-semibold text-gray-900 mb-2">
-            Physical Information
-          </Text>
-          <Text className="text-sm text-gray-500 mb-4">
-            Help us understand your physical attributes
-          </Text>
-
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-gray-700 mb-1">Age</Text>
-            <TextInput
-              value={age}
-              onChangeText={(text) => {
-                setAge(text);
-                if (errors.age) {
-                  setErrors((prev) => ({ ...prev, age: undefined }));
-                }
-              }}
-              placeholder="Enter your age"
-              keyboardType="number-pad"
-              className="mt-1 p-3 border border-gray-300 rounded-lg bg-white"
-            />
-            {errors.age && <Text style={styles.errorText}>{errors.age}</Text>}
+      <Title text="Edit Personal Info" backBottom={handleBackBottom} />
+      <View className="items-center py-4">
+        <View className="bg-gray-900 w-12 h-12 rounded-full items-center justify-center mb-2">
+          <View
+            style={[
+              styles.circleBlackBackground,
+              { borderRadius: 999, padding: 8 },
+            ]}
+          >
+            <HeartHandshake size={36} color="#ffffff" />
           </View>
+        </View>
+        <Text className="text-2xl font-bold text-gray-900 text-center">
+          Physical Profile
+        </Text>
+        <Text className="text-gray-600 text-center">
+          Help us personalize your experience
+        </Text>
+      </View>
 
-          <View className="flex-row justify-between">
-            <View className="w-1/2 mr-2">
-              <Text className="text-sm font-medium text-gray-700 mb-1">
+      <View className="bg-white rounded-lg shadow p-4">
+        <View className="mb-4">
+          <View className="flex-row items-center mb-2" style={styles.spaceX}>
+            <CalendarIcon size={18} color="#6B7280" />
+            <Text className="text-sm font-medium text-gray-700">Age</Text>
+          </View>
+          <TextInput
+            value={age}
+            onChangeText={(text) => {
+              setAge(text);
+              if (errors.age) {
+                setErrors((prev) => ({ ...prev, age: undefined }));
+              }
+            }}
+            placeholder="Enter your age"
+            keyboardType="number-pad"
+            style={styles.textInput}
+          />
+          {errors.age && <Text style={styles.errorText}>{errors.age}</Text>}
+        </View>
+
+        <View
+          className="flex-row justify-between w-full"
+          style={styles.rowContainer}
+        >
+          <View style={styles.halfWidthInput}>
+            <View className="flex-row items-center mb-2" style={styles.spaceX}>
+              <ScaleIcon size={18} color="#6B7280" />
+              <Text className="text-sm font-medium text-gray-700">
                 Weight (kg)
               </Text>
-              <TextInput
-                value={weight}
-                onChangeText={(text) => {
-                  setWeight(text);
-                  if (errors.weight) {
-                    setErrors((prev) => ({ ...prev, weight: undefined }));
-                  }
-                }}
-                placeholder="Enter your weight"
-                keyboardType="decimal-pad"
-                className="mt-1 p-3 border border-gray-300 rounded-lg bg-white"
-              />
-              {errors.weight && (
-                <Text style={styles.errorText}>{errors.weight}</Text>
-              )}
             </View>
+            <TextInput
+              value={weight}
+              onChangeText={(text) => {
+                setWeight(text);
+                if (errors.weight) {
+                  setErrors((prev) => ({ ...prev, weight: undefined }));
+                }
+              }}
+              placeholder="Enter weight"
+              keyboardType="decimal-pad"
+              style={styles.textInput}
+            />
+            {errors.weight && (
+              <Text style={styles.errorText}>{errors.weight}</Text>
+            )}
+          </View>
 
-            <View className="w-1/2 ml-2">
-              <Text className="text-sm font-medium text-gray-700 mb-1">
+          <View style={styles.halfWidthInput}>
+            <View className="flex-row items-center mb-2" style={styles.spaceX}>
+              <RulerIcon size={18} color="#6B7280" />
+              <Text className="text-sm font-medium text-gray-700">
                 Height (cm)
               </Text>
-              <TextInput
-                value={height}
-                onChangeText={(text) => {
-                  setHeight(text);
-                  if (errors.height) {
-                    setErrors((prev) => ({ ...prev, height: undefined }));
-                  }
-                }}
-                placeholder="Enter your height"
-                keyboardType="decimal-pad"
-                className="mt-1 p-3 border border-gray-300 rounded-lg bg-white"
-              />
-              {errors.height && (
-                <Text style={styles.errorText}>{errors.height}</Text>
-              )}
             </View>
+            <TextInput
+              value={height}
+              onChangeText={(text) => {
+                setHeight(text);
+                if (errors.height) {
+                  setErrors((prev) => ({ ...prev, height: undefined }));
+                }
+              }}
+              placeholder="Enter height"
+              keyboardType="decimal-pad"
+              style={styles.textInput}
+            />
+            {errors.height && (
+              <Text style={styles.errorText}>{errors.height}</Text>
+            )}
           </View>
+        </View>
 
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-gray-700 mb-1">
-              Gender
-            </Text>
-            <View className="mt-1 border border-gray-300 rounded-lg bg-white">
-              <RNPickerSelect
-                onValueChange={(value) => setGender(value)}
-                items={genderOptions}
-                placeholder={{
-                  label: "Select your gender",
-                  value: undefined,
-                  color: "#9ca3af",
-                }}
-                style={{
-                  inputIOS: styles.picker,
-                  inputAndroid: styles.picker,
-                  iconContainer: styles.iconContainer,
-                }}
-                Icon={() => {
-                  return <ChevronDown size={20} color="#6B7280" />;
-                }}
-                value={gender}
-              />
-            </View>
+        <View className="mb-4">
+          <View className="flex-row items-center mb-2" style={styles.spaceX}>
+            <UserIcon size={18} color="#6B7280" />
+            <Text className="text-sm font-medium text-gray-700">Gender</Text>
           </View>
+          <View style={styles.pickerContainer}>
+            <RNPickerSelect
+              onValueChange={(value) => setGender(value)}
+              items={genderOptions}
+              placeholder={{
+                label: "Select your gender",
+                value: undefined,
+                color: "#9ca3af",
+              }}
+              style={{
+                inputIOS: { ...styles.picker, height: 48 },
+                inputAndroid: { ...styles.picker, height: 48 },
+                iconContainer: { ...styles.iconContainer, top: 14 },
+              }}
+              Icon={() => <ChevronDown size={20} color="#6B7280" />}
+              value={gender}
+            />
+          </View>
+        </View>
 
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-gray-700 mb-1">
+        <View className="mb-4">
+          <View className="flex-row items-center mb-2" style={styles.spaceX}>
+            <ActivityIcon size={18} color="#6B7280" />
+            <Text className="text-sm font-medium text-gray-700">
               Activity Level
             </Text>
-            <View className="mt-1 border border-gray-300 rounded-lg bg-white">
-              <RNPickerSelect
-                onValueChange={(value) => setActivityLevel(value)}
-                items={activityLevelOptions}
-                placeholder={{
-                  label: "Select your activity level",
-                  value: undefined,
-                  color: "#9ca3af",
-                }}
-                style={{
-                  inputIOS: styles.picker,
-                  inputAndroid: styles.picker,
-                  iconContainer: styles.iconContainer,
-                }}
-                Icon={() => {
-                  return <ChevronDown size={20} color="#6B7280" />;
-                }}
-                value={activityLevel}
-              />
-            </View>
           </View>
+          <View style={styles.pickerContainer}>
+            <RNPickerSelect
+              onValueChange={(value) => setActivityLevel(value)}
+              items={activityLevelOptions}
+              placeholder={{
+                label: "Select your activity level",
+                value: undefined,
+                color: "#9ca3af",
+              }}
+              style={{
+                inputIOS: { ...styles.picker, height: 48 },
+                inputAndroid: { ...styles.picker, height: 48 },
+                iconContainer: { ...styles.iconContainer, top: 14 },
+              }}
+              Icon={() => <ChevronDown size={20} color="#6B7280" />}
+              value={activityLevel}
+            />
+          </View>
+        </View>
 
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-gray-700 mb-1">Goal</Text>
-            <View className="mt-1 border border-gray-300 rounded-lg bg-white">
-              <RNPickerSelect
-                onValueChange={(value) => setGoal(value)}
-                items={goalOptions}
-                placeholder={{
-                  label: "Select your goal",
-                  value: undefined,
-                  color: "#9ca3af",
-                }}
-                style={{
-                  inputIOS: styles.picker,
-                  inputAndroid: styles.picker,
-                  iconContainer: styles.iconContainer,
-                }}
-                Icon={() => {
-                  return <ChevronDown size={20} color="#6B7280" />;
-                }}
-                value={goal}
-              />
-            </View>
+        <View className="mb-4">
+          <View className="flex-row items-center mb-2" style={styles.spaceX}>
+            <TargetIcon size={18} color="#6B7280" />
+            <Text className="text-sm font-medium text-gray-700">Goal</Text>
+          </View>
+          <View style={styles.pickerContainer}>
+            <RNPickerSelect
+              onValueChange={(value) => setGoal(value)}
+              items={goalOptions}
+              placeholder={{
+                label: "Select your goal",
+                value: undefined,
+                color: "#9ca3af",
+              }}
+              style={{
+                inputIOS: { ...styles.picker, height: 48 },
+                inputAndroid: { ...styles.picker, height: 48 },
+                iconContainer: { ...styles.iconContainer, top: 14 },
+              }}
+              Icon={() => <ChevronDown size={20} color="#6B7280" />}
+              value={goal}
+            />
           </View>
         </View>
       </View>
 
       <TouchableOpacity
         onPress={handleSave}
-        className="mt-6 pb-12 bg-blue-500 rounded-lg p-4 items-center"
+        style={[
+          styles.saveButtonContainer,
+          isLoading && styles.saveButtonDisabled,
+        ]}
+        disabled={isLoading}
       >
-        <Text className="text-white font-semibold">Save Changes</Text>
+        <LinearGradient
+          colors={["#27272A", "#000000"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradientBackground}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Profile</Text>
+          )}
+        </LinearGradient>
       </TouchableOpacity>
       <BottomSpace />
     </ScrollView>
@@ -347,5 +445,58 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
   },
+  circleBlackBackground: {
+    backgroundColor: "#000000",
+    borderRadius: 999,
+  },
+  spaceX: {
+    gap: 4,
+  },
+  pickerContainer: {
+    backgroundColor: "#f3f4f6",
+    height: 38,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    justifyContent: "center",
+  },
+  rowContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    gap: 12,
+  },
+  halfWidthInput: {
+    width: "48%",
+    marginBottom: 12,
+  },
+  textInput: {
+    backgroundColor: "#f3f4f6",
+    height: 38,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: "#1F2937",
+  },
+  saveButtonContainer: {
+    marginTop: 24,
+    marginBottom: 48,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  gradientBackground: {
+    padding: 12,
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  saveButtonText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
 });
-

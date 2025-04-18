@@ -21,8 +21,8 @@ interface User {
   gender?: string | null;
   activityLevel?: string | null;
   goal?: string | null;
-  bmi?: string | null;
-  tdee?: string | null;
+  bmi?: number | null;
+  tdee?: number | null;
 }
 
 interface RegisterResponse {
@@ -48,6 +48,7 @@ interface GlobalContextProps {
   ) => Promise<RegisterResponse>;
   login: (email: string, password: string) => Promise<LoginResponse>;
   logout: () => Promise<void>;
+  updateUser: (updatedUser: User) => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -70,6 +71,7 @@ const GlobalContext = createContext<GlobalContextProps>({
     };
   },
   logout: async () => {},
+  updateUser: async (updatedUser: User) => {},
 });
 
 export const useGlobalContext = () => useContext(GlobalContext);
@@ -178,6 +180,26 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const updateUser = async (updatedUser: User): Promise<void> => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/user/${updatedUser._id}`
+      );
+      if (response.data && response.data.user) {
+        const freshUserData = response.data.user;
+        await AsyncStorage.setItem("user", JSON.stringify(freshUserData));
+        setUser(freshUserData);
+      } else {
+        await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+    } catch (error) {
+      console.log("Update user error:", error);
+      await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    }
+  };
+
   const providerValue: GlobalContextProps = {
     isLogged,
     user,
@@ -185,6 +207,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     login,
     logout,
+    updateUser,
   };
 
   return (

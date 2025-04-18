@@ -98,15 +98,16 @@ export default function ChangePassword({
   };
 
   return (
-    <ScrollView className="flex-1 bg-white p-4">
+    <ScrollView className="flex-1 bg-white px-4">
       <Title text="Change Password" backBottom={handlePasswordOpen} />
 
-      <View className="mx-auto">
+      <View className="mx-auto py-4">
         <View className="mb-6">
           <View
-            className="flex-row items-center justify-center p-3 border rounded-lg"
+            className="flex-row items-center justify-center border rounded-lg"
             style={{
               backgroundColor: "#fef9c3",
+              paddingHorizontal: 12,
               borderColor: "#fde047",
             }}
           >
@@ -123,33 +124,36 @@ export default function ChangePassword({
         </View>
       </View>
 
-      <View className="bg-white rounded-lg p-3 shadow-md shadow-zinc-300 mb-8">
+      <View className="bg-white rounded-lg p-4 shadow-md shadow-zinc-300 mb-8">
         <View className="flex flex-row items-center">
-          <Text className="text-2xl font-semibold text-gray-900 mr-2">
+          <Text className="text-2xl font-medium text-gray-900">
             Change Your Password
           </Text>
-          <Text style={{ fontSize: 28 }}>🔐</Text>
+          <Text style={{ fontSize: 28, marginLeft: 4, marginBottom: 2 }}>
+            🔐
+          </Text>
         </View>
         <Text className="text-gray-500 mb-4">
           Please enter your current password and choose a new one
         </Text>
 
         <View className="mb-4">
-          <Text className="text-sm font-medium mb-1" >
-            Current Password
-          </Text>
+          <Text className="text-sm font-medium mb-1">Current Password</Text>
           <View className="relative">
             <TextInput
               value={currentPassword}
               onChangeText={(text) => {
                 setCurrentPassword(text);
                 if (errors.currentPassword) {
-                  setErrors((prev) => ({ ...prev, currentPassword: undefined }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    currentPassword: undefined,
+                  }));
                 }
               }}
               placeholder="Enter current password"
               secureTextEntry={!showCurrentPassword}
-              className="w-full p-3 border border-gray-300 rounded-lg bg-white"
+              style={styles.textInput}
             />
             <TouchableOpacity
               onPress={() => setShowCurrentPassword(!showCurrentPassword)}
@@ -168,9 +172,7 @@ export default function ChangePassword({
         </View>
 
         <View className="mb-4">
-          <Text className="text-sm font-medium mb-1">
-            New Password
-          </Text>
+          <Text className="text-sm font-medium mb-1">New Password</Text>
           <View className="relative">
             <TextInput
               value={newPassword}
@@ -182,7 +184,7 @@ export default function ChangePassword({
               }}
               placeholder="Enter new password"
               secureTextEntry={!showNewPassword}
-              className="w-full p-3 border border-gray-300 rounded-lg bg-white"
+              style={styles.textInput}
             />
             <TouchableOpacity
               onPress={() => setShowNewPassword(!showNewPassword)}
@@ -201,21 +203,22 @@ export default function ChangePassword({
         </View>
 
         <View className="mb-4">
-          <Text className="text-sm font-medium mb-1" >
-            Confirm New Password
-          </Text>
+          <Text className="text-sm font-medium mb-1">Confirm New Password</Text>
           <View className="relative">
             <TextInput
               value={confirmPassword}
               onChangeText={(text) => {
                 setConfirmPassword(text);
                 if (errors.confirmPassword) {
-                  setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    confirmPassword: undefined,
+                  }));
                 }
               }}
               placeholder="Confirm new password"
               secureTextEntry={!showConfirmPassword}
-              className="w-full p-3 border border-gray-300 rounded-lg bg-white"
+              style={styles.textInput}
             />
             <TouchableOpacity
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -235,9 +238,12 @@ export default function ChangePassword({
 
         <TouchableOpacity
           onPress={handleSubmit}
-          className="w-full bg-blue-500 rounded-lg p-4 items-center"
+          className="w-full bg-blue-500 rounded-lg items-center"
           disabled={isLoading}
-          style={isLoading ? styles.clicked : styles.notClicked}
+          style={[
+            isLoading ? styles.clicked : styles.notClicked,
+            { padding: 10 },
+          ]}
         >
           {isLoading ? (
             <View className="flex-row items-center">
@@ -273,5 +279,16 @@ const styles = StyleSheet.create({
     color: "red",
     marginTop: 4,
     fontSize: 12,
+  },
+  textInput: {
+    marginTop: 2,
+    // backgroundColor: "#f3f4f6",
+    height: 38,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    fontSize: 15,
+    color: "#1F2937",
   },
 });

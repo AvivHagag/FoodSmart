@@ -17,11 +17,9 @@ def update_user():
 
     update_fields = {}
 
-    for field in ['age', 'weight', 'height', 'gender', 'activityLevel', 'goal']:
+    for field in ['age', 'weight', 'height', 'gender', 'activityLevel', 'goal', 'bmi', 'tdee']:
         if field in data:
             update_fields[field] = data[field]
-
-    # Optionally, recalculate BMI and TDEE here if needed
 
     user = mongo.db.users.find_one({"_id": user_id})
     if not user:
