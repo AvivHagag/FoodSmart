@@ -9,8 +9,9 @@ import {
   MessageCircle,
 } from "lucide-react-native";
 import AvatarImage from "./avatar";
-import { useRouter } from "expo-router";
 import { BottomSpace } from "../bottom-space";
+import Title from "../title";
+import { Usertype } from "@/assets/types";
 
 interface MenuItem {
   icon: JSX.Element;
@@ -19,27 +20,12 @@ interface MenuItem {
   onClick?: () => void;
 }
 
-interface Usertype {
-  _id: string;
-  email: string;
-  fullname: string;
-  createdAt?: string;
-  age?: number | null;
-  weight?: number | null;
-  height?: number | null;
-  image?: string | null;
-  gender?: string | null;
-  activityLevel?: string | null;
-  goal?: string | null;
-  bmi?: string | null;
-  tdee?: string | null;
-}
-
-interface ProfileScreenProps {
+interface UserSettingProps {
   user: Usertype;
   logout: () => Promise<void>;
   setUserEditProfile: Dispatch<SetStateAction<boolean>>;
   setAccountEditProfile: Dispatch<SetStateAction<boolean>>;
+  setShowSettings: Dispatch<SetStateAction<boolean>>;
 }
 
 function calculateUsageDays(createdAt: string | undefined): number {
@@ -58,14 +44,14 @@ function calculateUsageDays(createdAt: string | undefined): number {
   return daysDifference;
 }
 
-export default function ProfileScreen({
+export default function UserSetting({
   user,
   logout,
   setUserEditProfile,
   setAccountEditProfile,
-}: ProfileScreenProps) {
+  setShowSettings,
+}: UserSettingProps) {
   const daysUsingApp = calculateUsageDays(user.createdAt);
-  const router = useRouter();
   const menuItems: MenuItem[] = [
     {
       icon: <UserRoundPen color={"#3b82f6"} />,
@@ -95,6 +81,7 @@ export default function ProfileScreen({
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="bg-gwhite px-4 pb-6 pt-12">
+        <Title text="Settings" backBottom={() => setShowSettings(false)} />
         <View className="flex-row items-center">
           {user.image ? (
             <Image
@@ -112,37 +99,6 @@ export default function ProfileScreen({
             <Text className="text-sm text-gray-500">{user.email}</Text>
           </View>
         </View>
-
-        <View className="mt-6 flex-row justify-between items-center">
-          <View className="items-center flex-1">
-            <Text className="text-2xl font-semibold text-gray-900">
-              {daysUsingApp}
-            </Text>
-            <Text className="text-xs text-gray-500">Days tracked</Text>
-          </View>
-          <View
-            style={{
-              width: 1,
-              height: "80%",
-              backgroundColor: "#9ca3af",
-            }}
-          />
-          <View className="items-center flex-1">
-            <Text className="text-2xl font-semibold text-gray-900">1,854</Text>
-            <Text className="text-xs text-gray-500">Calories avg.</Text>
-          </View>
-          <View
-            style={{
-              width: 1,
-              height: "80%",
-              backgroundColor: "#9ca3af",
-            }}
-          />
-          <View className="items-center flex-1">
-            <Text className="text-2xl font-semibold text-gray-900">85%</Text>
-            <Text className="text-xs text-gray-500">Goals met</Text>
-          </View>
-        </View>
       </View>
       <View
         className="mt-4"
@@ -154,7 +110,7 @@ export default function ProfileScreen({
           backgroundColor: "#9ca3af",
         }}
       />
-      <View className="mt-6 space-y-2 px-4">
+      <View className="mt-4 space-y-2 px-4">
         {menuItems.map((item, index) => (
           <View key={index}>
             {item.label !== "Log out" ? (
