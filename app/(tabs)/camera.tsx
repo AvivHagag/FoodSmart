@@ -11,8 +11,9 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "@/constants/constants";
-import FOOD_DATA from '../data/foods.json';
-import FoodItem from '../../components/FoodItem';
+import FOOD_DATA from "../data/foods.json";
+import FoodItem from "../../components/FoodItem";
+import Title from "@/components/title";
 interface DetectionResult {
   label: string;
   confidence: number;
@@ -64,11 +65,13 @@ const CameraScreen: React.FC = () => {
       setLoading(false);
     }
   };
-  const aggregatedDetections = detectedObjects.reduce((acc: Record<string, number>, item) => {
-    acc[item.label] = (acc[item.label] || 0) + 1;
-    return acc;
-  }, {});
-
+  const aggregatedDetections = detectedObjects.reduce(
+    (acc: Record<string, number>, item) => {
+      acc[item.label] = (acc[item.label] || 0) + 1;
+      return acc;
+    },
+    {}
+  );
 
   const calculateAverageConfidence = (items: DetectionResult[]) => {
     if (!items.length) return 0;
@@ -79,16 +82,16 @@ const CameraScreen: React.FC = () => {
   const averageConfidence = calculateAverageConfidence(detectedObjects);
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
-      <View className="flex-1 px-4">
-        {loading ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#000" />
-            <Text className="text-lg font-semibold mt-4">Processing...</Text>
-          </View>
-        ) : Object.keys(aggregatedDetections).length > 0 ? (
-          <ScrollView contentContainerStyle={{ alignItems: 'center', padding: 16 }} className="flex-1">
-            <Text className="text-2xl font-bold text-center mb-4">Result</Text>
+    <SafeAreaView className="flex-1 bg-gray-100 py-4">
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#000" />
+          <Text className="text-lg font-semibold mt-4">Processing...</Text>
+        </View>
+      ) : Object.keys(aggregatedDetections).length > 0 ? (
+        <ScrollView className="flex-1 px-4">
+          <Title text="Result" backBottom={() => router.push("/home")} />
+          <View className="flex-1 px-4">
             <View className="w-full max-w-md bg-white rounded-xl shadow-lg p-4">
               <View className="mb-6 items-center">
                 <Image
@@ -97,13 +100,20 @@ const CameraScreen: React.FC = () => {
                   resizeMode="cover"
                 />
               </View>
-              
+
               {Object.keys(aggregatedDetections).map((label) => {
-                const foodData = FOOD_DATA.foods.find((food: any) => food.name === label);
+                const foodData = FOOD_DATA.foods.find(
+                  (food: any) => food.name === label
+                );
                 if (!foodData) {
                   return (
-                    <View key={label} className="bg-red-100 p-4 rounded-lg mb-2">
-                      <Text className="text-red-700">No nutrition info for {label}</Text>
+                    <View
+                      key={label}
+                      className="bg-red-100 p-4 rounded-lg mb-2"
+                    >
+                      <Text className="text-red-700">
+                        No nutrition info for {label}
+                      </Text>
                     </View>
                   );
                 }
@@ -131,23 +141,21 @@ const CameraScreen: React.FC = () => {
                 </Text>
               </View>
             </View>
-          </ScrollView>
-        ) : (
-          <View className="flex-1 justify-center items-center px-4">
-            <Text className="text-base text-gray-500 mb-4 text-center">
-              No image or recognition results found.
-            </Text>
-            <TouchableOpacity
-              className="bg-blue-500 rounded-full py-3 px-6"
-              onPress={() => router.back()}
-            >
-              <Text className="text-white text-center font-medium">
-                Go Back
-              </Text>
-            </TouchableOpacity>
           </View>
-        )}
-      </View>
+        </ScrollView>
+      ) : (
+        <View className="flex-1 justify-center items-center px-4">
+          <Text className="text-base text-gray-500 mb-4 text-center">
+            No image or recognition results found.
+          </Text>
+          <TouchableOpacity
+            className="bg-blue-500 rounded-full py-3 px-6"
+            onPress={() => router.back()}
+          >
+            <Text className="text-white text-center font-medium">Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
