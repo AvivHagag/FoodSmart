@@ -1,0 +1,103 @@
+import os
+import json
+from flask import Blueprint, request, jsonify
+from openai import OpenAI              
+from extensions import mongo
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+food_bp = Blueprint("food_bp", __name__, url_prefix="/food")
+
+@food_bp.route("", methods=["POST"])
+def get_or_create_food():
+    data = request.get_json()
+    name = data.get("name")
+    if not name:
+        return jsonify({"error": "Missing 'name' parameter"}), 400
+
+    existing = mongo.db.foods.find_one({"name": name})
+    if existing:
+        existing.pop("_id", None)
+        return jsonify(existing), 200
+
+    prompt = f"""
+Provide the nutritional values for one serving of "{name}".
+Return ONLY a JSON object with these keys:
+{{
+  "name": <string>,
+  "unit": <"piece" or "gram">,
+  "piece_avg_weight": <number|null>,
+  "avg_gram": <number|null>,
+  "cal": <number>,
+  "protein": <number>,
+  "fat": <number>,
+  "carbohydrates": <number>
+}}
+"""
+    try:
+        chat_resp = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            max_tokens=300
+        )
+        content = chat_resp.choices[0].message.content.strip()
+        nutrition = json.loads(content)
+    except Exception as e:
+        return jsonify({"error": f"Failed to get/parse nutrition: {e}"}), 500
+
+    mongo.db.foods.insert_one(nutrition)
+    print(f"Inserted nutrition for '{name}': {nutrition}")  
+    return jsonify(nutrition), 201
+
+import os
+import json
+from flask import Blueprint, request, jsonify
+from openai import OpenAI              
+from extensions import mongo
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+food_bp = Blueprint("food_bp", __name__, url_prefix="/food")
+
+@food_bp.route("", methods=["POST"])
+def get_or_create_food():
+    data = request.get_json()
+    name = data.get("name")
+    if not name:
+        return jsonify({"error": "Missing 'name' parameter"}), 400
+
+    existing = mongo.db.foods.find_one({"name": name})
+    if existing:
+        existing.pop("_id", None)
+        return jsonify(existing), 200
+
+    prompt = f"""
+Provide the nutritional values for one serving of "{name}".
+Return ONLY a JSON object with these keys:
+{{
+  "name": <string>,
+  "unit": <"piece" or "gram">,
+  "piece_avg_weight": <number|null>,
+  "avg_gram": <number|null>,
+  "cal": <number>,
+  "protein": <number>,
+  "fat": <number>,
+  "carbohydrates": <number>
+}}
+"""
+    try:
+        chat_resp = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            max_tokens=300
+        )
+        content = chat_resp.choices[0].message.content.strip()
+        nutrition = json.loads(content)
+    except Exception as e:
+        return jsonify({"error": f"Failed to get/parse nutrition: {e}"}), 500
+
+    mongo.db.foods.insert_one(nutrition)
+    print(f"Inserted nutrition for '{name}': {nutrition}") 
+    return jsonify(nutrition), 201
