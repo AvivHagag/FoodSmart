@@ -129,7 +129,6 @@ const CameraScreen: React.FC = () => {
       setLoading(false);
     }
   };
-
   const aggregatedDetections = detectedObjects.reduce(
     (acc: Record<string, number>, item) => {
       acc[item.label] = (acc[item.label] || 0) + 1;
@@ -185,7 +184,6 @@ const CameraScreen: React.FC = () => {
                   resizeMode="cover"
                 />
               </View>
-
               {Object.keys(aggregatedDetections).map(
                 (label) => {
                   const food = nutritionData[label];
@@ -247,23 +245,21 @@ const CameraScreen: React.FC = () => {
                 </Text>
               </View>
             </View>
-          </ScrollView>
-        ) : (
-          <View className="flex-1 justify-center items-center px-4">
-            <Text className="text-base text-gray-500 mb-4 text-center">
-              No image or recognition results found.
-            </Text>
-            <TouchableOpacity
-              className="bg-blue-500 rounded-full py-3 px-6"
-              onPress={() => router.back()}
-            >
-              <Text className="text-white text-center font-medium">
-                Go Back
-              </Text>
-            </TouchableOpacity>
           </View>
-        )}
-      </View>
+        </ScrollView>
+      ) : (
+        <View className="flex-1 justify-center items-center px-4">
+          <Text className="text-base text-gray-500 mb-4 text-center">
+            No image or recognition results found.
+          </Text>
+          <TouchableOpacity
+            className="bg-blue-500 rounded-full py-3 px-6"
+            onPress={() => router.back()}
+          >
+            <Text className="text-white text-center font-medium">Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };

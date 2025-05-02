@@ -1,7 +1,8 @@
-import { SafeAreaView, ScrollView } from "react-native";
+import { SafeAreaView, ScrollView, RefreshControl } from "react-native";
 import MainPageHeader from "@/components/Main/header";
 import { DashboardScreen } from "@/components/Main/progress-component";
 import { RecentlyEaten } from "@/components/Main/recently-eaten";
+import { useState } from "react";
 
 const recentMeals = [
   {
@@ -37,12 +38,34 @@ const recentMeals = [
 ];
 
 export default function Home() {
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Add your refresh logic here
+      // For example, refetch data from your backend
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulated delay
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <MainPageHeader />
       <ScrollView
         className="bg-white flex-1 w-full p-4 mt-4"
         contentContainerStyle={{ paddingBottom: 80 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#000"
+            title="Pull to refresh"
+            titleColor="#000"
+          />
+        }
       >
         <DashboardScreen />
         <RecentlyEaten recentMeals={recentMeals} />
