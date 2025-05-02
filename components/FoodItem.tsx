@@ -41,7 +41,9 @@ const FoodItem: React.FC<FoodItemProps> = ({
     setValue(newValue);
   };
 
-  const multiplier = unit === "gram" ? value / (avg_gram || 1) : value;
+  const multiplier =
+    unit === "gram" ? value / 100 : (value * (piece_avg_weight || 0)) / 100;
+
   const totalCalories = nutrition.cal * multiplier;
   const totalProtein = nutrition.protein * multiplier;
   const totalFat = nutrition.fat * multiplier;
@@ -87,7 +89,6 @@ const FoodItem: React.FC<FoodItemProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* Nutrition Grid */}
       <View className="flex-row flex-wrap gap-4">
         <View className="flex-1 min-w-[45%] bg-indigo-50 p-3 rounded-lg">
           <Text className="text-sm text-indigo-600 font-medium mb-1">

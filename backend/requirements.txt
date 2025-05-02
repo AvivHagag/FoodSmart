@@ -1,6 +1,6 @@
 certifi
 Flask
-flask-cors=
+flask-cors
 flask-pymongo
 flask-bcrypt
 flask-jwt-extended
