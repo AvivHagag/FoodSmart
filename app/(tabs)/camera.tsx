@@ -11,18 +11,34 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "@/constants/constants";
-import FOOD_DATA from "../data/foods.json";
 import FoodItem from "../../components/FoodItem";
-import Title from "@/components/title";
+
 interface DetectionResult {
   label: string;
   confidence: number;
 }
 
+interface NutritionData {
+  name: string;
+  unit: "piece" | "gram";
+  piece_avg_weight: number | null;
+  avg_gram: number | null;
+  cal: number;
+  protein: number;
+  fat: number;
+  carbohydrates: number;
+}
+
 const CameraScreen: React.FC = () => {
   const router = useRouter();
-  const { imageUri } = useLocalSearchParams<{ imageUri: string }>();
-  const [detectedObjects, setDetectedObjects] = useState<DetectionResult[]>([]);
+  const { imageUri } =
+    useLocalSearchParams<{ imageUri: string }>();
+  const [detectedObjects, setDetectedObjects] = useState<
+    DetectionResult[]
+  >([]);
+  const [nutritionData, setNutritionData] = useState<
+    Record<string, NutritionData | null>
+  >({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -37,30 +53,78 @@ const CameraScreen: React.FC = () => {
   const sendImageToBackend = async (uri: string) => {
     setLoading(true);
     const formData = new FormData();
-    formData.append("image", {
-      uri: uri,
-      name: "photo.jpg",
-      type: "image/jpeg",
-    } as any);
+    formData.append(
+      "image",
+      {
+        uri,
+        name: "photo.jpg",
+        type: "image/jpeg",
+      } as any
+    );
 
     try {
-      const response = await fetch(`${BASE_URL}/detect`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        `${BASE_URL}/detect`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          body: formData,
+        }
+      );
 
-      if (response.ok) {
-        const result: DetectionResult[] = await response.json();
-        setDetectedObjects(result);
-      } else {
+      if (!response.ok) {
         Alert.alert("Error", "Failed to process the image.");
+        return;
       }
+
+      const result: DetectionResult[] =
+        await response.json();
+      setDetectedObjects(result);
+
+      const labels = Array.from(
+        new Set(result.map((r) => r.label))
+      );
+      setNutritionData(
+        Object.fromEntries(
+          labels.map((lbl) => [lbl, null])
+        )
+      );
+
+      const pairs = await Promise.all(
+        labels.map(async (label) => {
+          try {
+            const res = await fetch(
+              `${BASE_URL}/food`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ name: label }),
+              }
+            );
+            const data = await res.json();
+            return [label, data as NutritionData];
+          } catch (err) {
+            console.error(
+              `Nutrition fetch failed for ${label}:`,
+              err
+            );
+            return [label, null];
+          }
+        })
+      );
+      setNutritionData(
+        Object.fromEntries(pairs)
+      );
     } catch (error) {
       console.error("Error:", error);
-      Alert.alert("Error", "An error occurred while processing the image.");
+      Alert.alert(
+        "Error",
+        "An error occurred while processing the image."
+      );
     } finally {
       setLoading(false);
     }
@@ -73,25 +137,45 @@ const CameraScreen: React.FC = () => {
     {}
   );
 
-  const calculateAverageConfidence = (items: DetectionResult[]) => {
+  const calculateAverageConfidence = (
+    items: DetectionResult[]
+  ) => {
     if (!items.length) return 0;
-    const total = items.reduce((acc, item) => acc + item.confidence, 0);
+    const total = items.reduce(
+      (acc, item) => acc + item.confidence,
+      0
+    );
     return (total / items.length) * 100;
   };
 
-  const averageConfidence = calculateAverageConfidence(detectedObjects);
+  const averageConfidence =
+    calculateAverageConfidence(detectedObjects);
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100 py-4">
-      {loading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#000" />
-          <Text className="text-lg font-semibold mt-4">Processing...</Text>
-        </View>
-      ) : Object.keys(aggregatedDetections).length > 0 ? (
-        <ScrollView className="flex-1 px-4">
-          <Title text="Result" backBottom={() => router.push("/home")} />
-          <View className="flex-1 px-4">
+    <SafeAreaView className="flex-1 bg-gray-100">
+      <View className="flex-1 px-4">
+        {loading ? (
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator
+              size="large"
+              color="#000"
+            />
+            <Text className="text-lg font-semibold mt-4">
+              Processing...
+            </Text>
+          </View>
+        ) : Object.keys(aggregatedDetections)
+            .length > 0 ? (
+          <ScrollView
+            contentContainerStyle={{
+              alignItems: "center",
+              padding: 16,
+            }}
+            className="flex-1"
+          >
+            <Text className="text-2xl font-bold text-center mb-4">
+              Result
+            </Text>
             <View className="w-full max-w-md bg-white rounded-xl shadow-lg p-4">
               <View className="mb-6 items-center">
                 <Image
@@ -100,44 +184,64 @@ const CameraScreen: React.FC = () => {
                   resizeMode="cover"
                 />
               </View>
-
-              {Object.keys(aggregatedDetections).map((label) => {
-                const foodData = FOOD_DATA.foods.find(
-                  (food: any) => food.name === label
-                );
-                if (!foodData) {
+              {Object.keys(aggregatedDetections).map(
+                (label) => {
+                  const food = nutritionData[label];
+                  // still fetching?
+                  if (food === null) {
+                    return (
+                      <View
+                        key={label}
+                        className="bg-yellow-100 p-4 rounded-lg mb-2 items-center"
+                      >
+                        <ActivityIndicator size="small" />
+                        <Text className="text-yellow-800 mt-1">
+                          Loading nutrition for {label}…
+                        </Text>
+                      </View>
+                    );
+                  }
+                  // failed or not found
+                  if (!food) {
+                    return (
+                      <View
+                        key={label}
+                        className="bg-red-100 p-4 rounded-lg mb-2"
+                      >
+                        <Text className="text-red-700">
+                          No nutrition info for {label}
+                        </Text>
+                      </View>
+                    );
+                  }
+                  // we have valid data
                   return (
-                    <View
+                    <FoodItem
                       key={label}
-                      className="bg-red-100 p-4 rounded-lg mb-2"
-                    >
-                      <Text className="text-red-700">
-                        No nutrition info for {label}
-                      </Text>
-                    </View>
+                      name={food.name}
+                      initialCount={
+                        aggregatedDetections[label]
+                      }
+                      unit={food.unit}
+                      nutrition={{
+                        cal: food.cal,
+                        protein: food.protein,
+                        fat: food.fat,
+                        carbohydrates: food.carbohydrates,
+                      }}
+                      piece_avg_weight={
+                        food.piece_avg_weight
+                      }
+                      avg_gram={food.avg_gram}
+                    />
                   );
                 }
-                return (
-                  <FoodItem
-                    key={label}
-                    name={foodData.name}
-                    initialCount={aggregatedDetections[label]}
-                    unit={foodData.unit}
-                    nutrition={{
-                      cal: foodData.cal,
-                      protein: foodData.protein,
-                      fat: foodData.fat,
-                      carbohydrates: foodData.carbohydrates,
-                    }}
-                    piece_avg_weight={foodData.piece_avg_weight}
-                    avg_gram={foodData.avg_gram}
-                  />
-                );
-              })}
+              )}
 
               <View className="bg-green-100 rounded-t-lg py-3">
                 <Text className="text-green-700 font-semibold text-center">
-                  Recognition Confidence: {averageConfidence.toFixed(2)}%
+                  Recognition Confidence:{" "}
+                  {averageConfidence.toFixed(2)}%
                 </Text>
               </View>
             </View>
