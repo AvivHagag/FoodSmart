@@ -32,16 +32,16 @@ def get_or_create_food():
 
     prompt = f"""
 Provide the nutritional values for one serving of "{name}".
-Return ONLY a JSON object with these keys:
+Return ONLY a JSON object with these keys  the calm,protein,fat,carbohydrates need to be by 100g avg :
 {{
   "name": <string>,
   "unit": <"piece" or "gram">,
   "piece_avg_weight": <number|null>,
   "avg_gram": <number|null>,
-  "cal": <number>,
-  "protein": <number>,
-  "fat": <number>,
-  "carbohydrates": <number>
+  "cal": <number>, 
+  "protein": <number>, 
+  "fat": <number>, 
+  "carbohydrates": <number> 
 }}
 """
     try:
@@ -53,9 +53,11 @@ Return ONLY a JSON object with these keys:
         )
         content = chat_resp.choices[0].message.content.strip()
         nutrition = json.loads(content)
+        print(nutrition)
     except Exception as e:
         return jsonify({"error": f"Failed to get/parse nutrition: {e}"}), 500
 
     mongo.db.foods.insert_one(nutrition)
     print(f"Inserted nutrition for '{name}': {nutrition}")  
+    nutrition.pop("_id",None)
     return jsonify(nutrition), 201
