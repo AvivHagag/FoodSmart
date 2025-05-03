@@ -31,7 +31,8 @@ interface NutritionData {
 
 const CameraScreen: React.FC = () => {
   const router = useRouter();
-  const { imageUri } = useLocalSearchParams<{ imageUri: string }>();
+  const params = useLocalSearchParams();
+  const imageUri = params.imageUri as string;
   const [detectedObjects, setDetectedObjects] = useState<DetectionResult[]>([]);
   const [nutritionData, setNutritionData] = useState<
     Record<string, NutritionData | null>
@@ -70,7 +71,13 @@ const CameraScreen: React.FC = () => {
         return;
       }
 
-      const result: DetectionResult[] = await response.json();
+      const result = await response.json();
+      if (!result || !Array.isArray(result)) {
+        Alert.alert("Error", "Invalid response format from the server.");
+        setLoading(false);
+        return;
+      }
+
       setDetectedObjects(result);
 
       const labels = Array.from(new Set(result.map((r) => r.label)));
@@ -102,16 +109,17 @@ const CameraScreen: React.FC = () => {
       setLoading(false);
     }
   };
-  const aggregatedDetections = detectedObjects.reduce(
-    (acc: Record<string, number>, item) => {
-      acc[item.label] = (acc[item.label] || 0) + 1;
-      return acc;
-    },
-    {}
-  );
+
+  const aggregatedDetections =
+    detectedObjects && detectedObjects.length > 0
+      ? detectedObjects.reduce((acc: Record<string, number>, item) => {
+          acc[item.label] = (acc[item.label] || 0) + 1;
+          return acc;
+        }, {})
+      : {};
 
   const calculateAverageConfidence = (items: DetectionResult[]) => {
-    if (!items.length) return 0;
+    if (!items || !items.length) return 0;
     const total = items.reduce((acc, item) => acc + item.confidence, 0);
     return (total / items.length) * 100;
   };
