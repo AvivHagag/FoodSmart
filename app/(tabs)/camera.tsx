@@ -12,6 +12,9 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "@/constants/constants";
 import FoodItem from "../../components/FoodItem";
+import { ArrowLeftIcon, ShareIcon } from "lucide-react-native";
+import FoodDetectionResults from "../../components/FoodDetectionResults";
+import { BottomSpace } from "@/components/bottom-space";
 
 interface DetectionResult {
   label: string;
@@ -117,113 +120,154 @@ const CameraScreen: React.FC = () => {
           return acc;
         }, {})
       : {};
-
-  const calculateAverageConfidence = (items: DetectionResult[]) => {
-    if (!items || !items.length) return 0;
-    const total = items.reduce((acc, item) => acc + item.confidence, 0);
-    return (total / items.length) * 100;
-  };
-
-  const averageConfidence = calculateAverageConfidence(detectedObjects);
+  console.log("CameraScreen aggregatedDetections:", aggregatedDetections);
+  console.log("CameraScreen nutritionData keys:", Object.keys(nutritionData));
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
-      <View className="flex-1 px-4">
+    <View className="flex-1">
+      <View className="relative">
+        <Image
+          source={{ uri: imageUri }}
+          className="w-full h-96"
+          resizeMode="cover"
+        />
+        <TouchableOpacity
+          className="absolute top-14 left-4 bg-black/70 p-2 rounded-full"
+          onPress={() => router.back()}
+        >
+          <ArrowLeftIcon size={20} color="white" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="absolute top-14 right-4 bg-black/70 p-2 rounded-full"
+          onPress={() => {
+            Alert.alert("Share", "Share functionality to be implemented");
+          }}
+        >
+          <ShareIcon size={20} color="white" />
+        </TouchableOpacity>
+      </View>
+
+      <View className="flex-1 -mt-8 bg-white rounded-t-3xl shadow-lg p-4">
+        <Text className="text-2xl font-bold mb-6 text-center">
+          {Object.keys(aggregatedDetections).length > 0
+            ? "Detected Food"
+            : "No food detected"}
+        </Text>
+
         {loading ? (
-          <View className="flex-1 justify-center items-center">
+          <View className="flex-1 justify-center items-center p-10">
             <ActivityIndicator size="large" color="#000" />
             <Text className="text-lg font-semibold mt-4">Processing...</Text>
           </View>
-        ) : Object.keys(aggregatedDetections).length > 0 ? (
-          <ScrollView
-            contentContainerStyle={{
-              alignItems: "center",
-              padding: 16,
-            }}
-            className="flex-1"
-          >
-            <Text className="text-2xl font-bold text-center mb-4">Result</Text>
-            <View className="w-full max-w-md bg-white rounded-xl shadow-lg p-4">
-              <View className="mb-6 items-center">
-                <Image
-                  source={{ uri: imageUri }}
-                  className="w-full h-48 rounded-lg border border-gray-300"
-                  resizeMode="cover"
-                />
-              </View>
-              {Object.keys(aggregatedDetections).map((label) => {
-                const food = nutritionData[label];
-                // still fetching?
-                if (food === null) {
-                  return (
-                    <View
-                      key={label}
-                      className="bg-yellow-100 p-4 rounded-lg mb-2 items-center"
-                    >
-                      <ActivityIndicator size="small" />
-                      <Text className="text-yellow-800 mt-1">
-                        Loading nutrition for {label}…
-                      </Text>
-                    </View>
-                  );
-                }
-                // failed or not found
-                if (!food) {
-                  return (
-                    <View
-                      key={label}
-                      className="bg-red-100 p-4 rounded-lg mb-2"
-                    >
-                      <Text className="text-red-700">
-                        No nutrition info for {label}
-                      </Text>
-                    </View>
-                  );
-                }
-                // we have valid data
-                return (
-                  <FoodItem
-                    key={label}
-                    name={food.name}
-                    initialCount={aggregatedDetections[label]}
-                    unit={food.unit}
-                    nutrition={{
-                      cal: food.cal,
-                      protein: food.protein,
-                      fat: food.fat,
-                      carbohydrates: food.carbohydrates,
-                    }}
-                    piece_avg_weight={food.piece_avg_weight}
-                    avg_gram={food.avg_gram}
-                  />
-                );
-              })}
-
-              <View className="bg-green-100 rounded-t-lg py-3">
-                <Text className="text-green-700 font-semibold text-center">
-                  Recognition Confidence: {averageConfidence.toFixed(2)}%
-                </Text>
-              </View>
-            </View>
-          </ScrollView>
         ) : (
-          <View className="flex-1 justify-center items-center px-4">
-            <Text className="text-base text-gray-500 mb-4 text-center">
-              No image or recognition results found.
-            </Text>
-            <TouchableOpacity
-              className="bg-blue-500 rounded-full py-3 px-6"
-              onPress={() => router.back()}
-            >
-              <Text className="text-white text-center font-medium">
-                Go Back
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <FoodDetectionResults
+            aggregatedDetections={aggregatedDetections}
+            nutritionData={nutritionData}
+            onDone={() => router.back()}
+          />
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
+  // return (
+  //   <SafeAreaView className="flex-1 bg-gray-100">
+  //     <View className="flex-1 px-4">
+  //       {loading ? (
+  //         <View className="flex-1 justify-center items-center">
+  //           <ActivityIndicator size="large" color="#000" />
+  //           <Text className="text-lg font-semibold mt-4">Processing...</Text>
+  //         </View>
+  //       ) : Object.keys(aggregatedDetections).length > 0 ? (
+  //         <ScrollView
+  //           contentContainerStyle={{
+  //             alignItems: "center",
+  //             padding: 16,
+  //           }}
+  //           className="flex-1"
+  //         >
+  //           <Text className="text-2xl font-bold text-center mb-4">Result</Text>
+  //           <View className="w-full max-w-md bg-white rounded-xl shadow-lg p-4">
+  //             <View className="mb-6 items-center">
+  //               <Image
+  //                 source={{ uri: imageUri }}
+  //                 className="w-full h-48 rounded-lg border border-gray-300"
+  //                 resizeMode="cover"
+  //               />
+  //             </View>
+  //             {Object.keys(aggregatedDetections).map((label) => {
+  //               const food = nutritionData[label];
+  //               // still fetching?
+  //               if (food === null) {
+  //                 return (
+  //                   <View
+  //                     key={label}
+  //                     className="bg-yellow-100 p-4 rounded-lg mb-2 items-center"
+  //                   >
+  //                     <ActivityIndicator size="small" />
+  //                     <Text className="text-yellow-800 mt-1">
+  //                       Loading nutrition for {label}…
+  //                     </Text>
+  //                   </View>
+  //                 );
+  //               }
+  //               // failed or not found
+  //               if (!food) {
+  //                 return (
+  //                   <View
+  //                     key={label}
+  //                     className="bg-red-100 p-4 rounded-lg mb-2"
+  //                   >
+  //                     <Text className="text-red-700">
+  //                       No nutrition info for {label}
+  //                     </Text>
+  //                   </View>
+  //                 );
+  //               }
+  //               // we have valid data
+  //               return (
+  //                 <FoodItem
+  //                   key={label}
+  //                   name={food.name}
+  //                   initialCount={aggregatedDetections[label]}
+  //                   unit={food.unit}
+  //                   nutrition={{
+  //                     cal: food.cal,
+  //                     protein: food.protein,
+  //                     fat: food.fat,
+  //                     carbohydrates: food.carbohydrates,
+  //                   }}
+  //                   piece_avg_weight={food.piece_avg_weight}
+  //                   avg_gram={food.avg_gram}
+  //                 />
+  //               );
+  //             })}
+
+  //             <View className="bg-green-100 rounded-t-lg py-3">
+  //               <Text className="text-green-700 font-semibold text-center">
+  //                 Recognition Confidence: {averageConfidence.toFixed(2)}%
+  //               </Text>
+  //             </View>
+  //           </View>
+  //         </ScrollView>
+  //       ) : (
+  //         <View className="flex-1 justify-center items-center px-4">
+  //           <Text className="text-base text-gray-500 mb-4 text-center">
+  //             No image or recognition results found.
+  //           </Text>
+  //           <TouchableOpacity
+  //             className="bg-blue-500 rounded-full py-3 px-6"
+  //             onPress={() => router.back()}
+  //           >
+  //             <Text className="text-white text-center font-medium">
+  //               Go Back
+  //             </Text>
+  //           </TouchableOpacity>
+  //         </View>
+  //       )}
+  //     </View>
+  //   </SafeAreaView>
+  // );
 };
 
 export default CameraScreen;
