@@ -7,19 +7,46 @@ import {
   ScrollView,
   RefreshControl,
   Image,
+  ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
-import { router } from "expo-router";
+import React, { useState, useEffect } from "react";
 import DatePicker from "@/components/history/DatePicker";
-import { Clock, Calendar } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Calendar } from "lucide-react-native";
 import TopDateStrip from "@/components/history/top-date-strip";
-import { BottomSpace } from "@/components/bottom-space";
+import { useGlobalContext } from "@/app/context/authprovider";
+import { BASE_URL } from "@/constants/constants";
+import { RecentlyEaten } from "@/components/history/recently-eaten";
+interface Meal {
+  _id: string;
+  userId: string;
+  date: string;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  image?: string;
+  time?: string;
+}
+
+interface BackendMeal {
+  _id?: string;
+  name: string;
+  time: string;
+  calories: number;
+  fat: number;
+  protein: number;
+  carbo: number;
+  imageUri?: string;
+}
 
 const History = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [meals, setMeals] = useState<Meal[]>([]);
+  const { user } = useGlobalContext();
 
   const formatDate = (date: Date) => {
     const months = [
@@ -39,21 +66,106 @@ const History = () => {
     return `${months[date.getMonth()]} ${date.getDate()}`;
   };
 
+  const formatTimeFromDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const formatDateForApi = (date: Date) => {
+    return date.toISOString().split("T")[0];
+  };
+
+  const fetchMeals = async () => {
+    if (!user?._id) return;
+    setIsLoading(true);
+    try {
+      const dateParam = formatDateForApi(selectedDate);
+      const response = await fetch(
+        `${BASE_URL}/api/user/${user._id}/meals?date=${dateParam}`
+      );
+      const data = await response.json();
+
+      if (response.ok && data.meals) {
+        // Check if we have meals data with mealsList
+        if (data.meals.length > 0 && data.meals[0].mealsList) {
+          // Process meals from the mealsList array
+          const processedMeals = data.meals[0].mealsList.map(
+            (meal: BackendMeal) => ({
+              _id: meal._id || String(Math.random()),
+              userId: data.meals[0].userId,
+              date: data.meals[0].date,
+              name: meal.name,
+              calories: meal.calories,
+              protein: meal.protein || meal.fat,
+              carbs: meal.carbo,
+              fats: meal.fat,
+              image: meal.imageUri,
+              time: formatTimeFromDate(meal.time),
+            })
+          );
+          setMeals(processedMeals);
+        } else {
+          setMeals(data.meals);
+        }
+      } else {
+        console.error("Failed to fetch meals:", data.message);
+        setMeals([]);
+      }
+    } catch (error) {
+      console.error("Error fetching meals:", error);
+      setMeals([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMeals();
+  }, [selectedDate, user?._id]);
+
   const onRefresh = async () => {
-    setRefreshing(true);
-    setSelectedDate(new Date());
-    console.log(selectedDate);
-    console.log("refreshing");
-    setRefreshing(false);
+    // setRefreshing(true);
+    // await fetchMeals();
+    // setRefreshing(false);
+    if (!user?._id) return;
+    try {
+      const dateParam = formatDateForApi(selectedDate);
+      const response = await fetch(
+        `${BASE_URL}/api/user/${user._id}/meals?date=${dateParam}`
+      );
+      const data = await response.json();
+
+      if (response.ok && data.meals) {
+        if (data.meals.length > 0 && data.meals[0].mealsList) {
+          const processedMeals = data.meals[0].mealsList.map(
+            (meal: BackendMeal) => ({
+              _id: meal._id || String(Math.random()),
+              userId: data.meals[0].userId,
+              date: data.meals[0].date,
+              name: meal.name,
+              calories: meal.calories,
+              protein: meal.protein || meal.fat,
+              carbs: meal.carbo,
+              fats: meal.fat,
+              image: meal.imageUri,
+              time: formatTimeFromDate(meal.time),
+            })
+          );
+          setMeals(processedMeals);
+        } else {
+          setMeals(data.meals);
+        }
+      } else {
+        console.error("Failed to fetch meals:", data.message);
+        setMeals([]);
+      }
+    } catch (error) {
+      console.error("Error fetching meals:", error);
+      setMeals([]);
+    }
   };
 
   return (
-    // <LinearGradient
-    //   colors={["#8B5CF6", "#7C3AED"]}
-    //   start={{ x: 0, y: 0 }}
-    //   end={{ x: 1, y: 1 }}
-    //   style={{ height: "100%" }}
-    // >
     <SafeAreaView className="flex-1 bg-black">
       <View style={styles.header}>
         <Text style={styles.headerTitle}>History</Text>
@@ -108,26 +220,36 @@ const History = () => {
                 </Text>
               </View>
 
-              <View style={styles.emptyState}>
-                <View style={styles.emptyIconContainer}>
-                  <Calendar size={24} color="#BE123C" />
+              {isLoading ? (
+                <View style={styles.loaderContainer}>
+                  <ActivityIndicator size="large" color="#BE123C" />
+                  <Text style={styles.loaderText}>Loading meals...</Text>
                 </View>
-                <Text style={styles.emptyText}>
-                  No meals recorded for this date.
-                </Text>
-                <Image
-                  source={require("@/assets/images/hungry.png")}
-                  style={{ width: 120, height: 120 }}
-                  resizeMode="contain"
-                />
-              </View>
+              ) : meals.length > 0 ? (
+                <View>
+                  <RecentlyEaten recentMeals={meals} />
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <View style={styles.emptyIconContainer}>
+                    <Calendar size={24} color="#BE123C" />
+                  </View>
+                  <Text style={styles.emptyText}>
+                    No meals recorded for this date.
+                  </Text>
+                  <Image
+                    source={require("@/assets/images/hungry.png")}
+                    style={{ width: 120, height: 120 }}
+                    resizeMode="contain"
+                  />
+                </View>
+              )}
             </View>
           </ScrollView>
         </>
       )}
       <View className="bg-white -mt-52 h-12"></View>
     </SafeAreaView>
-    // </LinearGradient>
   );
 };
 
@@ -154,9 +276,6 @@ const styles = StyleSheet.create({
   },
   calendarContainer: {
     flex: 1,
-    // marginHorizontal: 16,
-    // marginTop: 16,
-    // marginBottom: 16,
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -180,12 +299,6 @@ const styles = StyleSheet.create({
   mealSection: {
     backgroundColor: "#fff",
     borderRadius: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
   },
   mealHeader: {
     flexDirection: "row",
@@ -203,6 +316,86 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#333",
+  },
+  loaderContainer: {
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  loaderText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#666",
+  },
+  mealCard: {
+    flexDirection: "row",
+    marginBottom: 16,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+    overflow: "hidden",
+  },
+  mealImageContainer: {
+    width: 96,
+    height: 96,
+    backgroundColor: "#f3f4f6",
+    overflow: "hidden",
+  },
+  mealImage: {
+    width: "100%",
+    height: "100%",
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
+  },
+  placeholderImage: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#f3f4f6",
+  },
+  mealInfo: {
+    flex: 1,
+    padding: 12,
+    justifyContent: "space-between",
+  },
+  mealTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  mealName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  mealTime: {
+    fontSize: 12,
+    color: "#666",
+  },
+  caloriesRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+  },
+  caloriesText: {
+    marginLeft: 4,
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  nutrientsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  nutrient: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  nutrientText: {
+    marginLeft: 2,
+    fontSize: 12,
   },
   emptyState: {
     alignItems: "center",
