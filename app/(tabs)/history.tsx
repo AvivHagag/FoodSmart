@@ -42,13 +42,7 @@ const History = () => {
     setSelectedDate(new Date());
     console.log(selectedDate);
     console.log("refreshing");
-    // try {
-    //   // Add your refresh logic here
-    //   // For example, refetch history data for the selected date
-    //   await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulated delay
-    // } finally {
     setRefreshing(false);
-    // }
   };
 
   return (
@@ -70,66 +64,62 @@ const History = () => {
             </TouchableOpacity>
           </View>
         </View>
-        <TopDateStrip
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-        />
-        {showCalendar ? (
-          <ScrollView style={styles.content}>
-            <View style={styles.mealSection}>
-              <View style={styles.mealHeader}>
-                <View style={styles.mealHeaderLine} />
-                <Text style={styles.mealHeaderText}>Select a date</Text>
-              </View>
-              <DatePicker
-                selectedDate={selectedDate}
-                onDateChange={(d) => {
-                  setSelectedDate(d);
-                  setShowCalendar(false);
-                }}
-                year={selectedDate.getFullYear()}
-                onYearChange={(y) =>
-                  setSelectedDate(
-                    (prev) => new Date(y, prev.getMonth(), prev.getDate())
-                  )
-                }
-              />
-            </View>
-          </ScrollView>
-        ) : (
-          <ScrollView
-            style={styles.content}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor="#8B5CF6"
-                title="Pull to refresh"
-                titleColor="#8B5CF6"
-              />
-            }
-          >
-            <View style={styles.mealSection}>
-              <View style={styles.mealHeader}>
-                <View style={styles.mealHeaderLine} />
-                <Text style={styles.mealHeaderText}>
-                  Meals for {formatDate(selectedDate)}
-                </Text>
-              </View>
 
-              <View style={styles.emptyState}>
-                <View style={styles.emptyIconContainer}>
-                  <Calendar size={24} color="#B388FF" />
-                </View>
-                <Text style={styles.emptyText}>
-                  No meals recorded for this date.
-                </Text>
-                <TouchableOpacity style={styles.addButton}>
-                  <Text style={styles.addButtonText}>Add Meal</Text>
-                </TouchableOpacity>
-              </View>
+        {showCalendar ? (
+          <View style={styles.calendarContainer}>
+            <View style={styles.mealHeader}>
+              <View style={styles.mealHeaderLine} />
+              <Text style={styles.mealHeaderText}>Select a date</Text>
             </View>
-          </ScrollView>
+            <DatePicker
+              selectedDate={selectedDate}
+              onDateChange={(d) => {
+                setSelectedDate(d);
+                setShowCalendar(false);
+              }}
+              highlightedDates={[]}
+            />
+          </View>
+        ) : (
+          <>
+            <TopDateStrip
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+            />
+            <ScrollView
+              style={styles.content}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor="#8B5CF6"
+                  title="Pull to refresh"
+                  titleColor="#8B5CF6"
+                />
+              }
+            >
+              <View style={styles.mealSection}>
+                <View style={styles.mealHeader}>
+                  <View style={styles.mealHeaderLine} />
+                  <Text style={styles.mealHeaderText}>
+                    Meals for {formatDate(selectedDate)}
+                  </Text>
+                </View>
+
+                <View style={styles.emptyState}>
+                  <View style={styles.emptyIconContainer}>
+                    <Calendar size={24} color="#B388FF" />
+                  </View>
+                  <Text style={styles.emptyText}>
+                    No meals recorded for this date.
+                  </Text>
+                  <TouchableOpacity style={styles.addButton}>
+                    <Text style={styles.addButtonText}>Add Meal</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+          </>
         )}
       </SafeAreaView>
     </LinearGradient>
@@ -137,9 +127,7 @@ const History = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -158,6 +146,20 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 5,
+  },
+  calendarContainer: {
+    flex: 1,
+    // marginHorizontal: 16,
+    // marginTop: 16,
+    // marginBottom: 16,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
   },
   content: {
     height: "100%",
