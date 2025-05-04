@@ -1,6 +1,5 @@
-// components/history/DatePicker.tsx
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Dimensions } from "react-native";
 import { CalendarList, DateData } from "react-native-calendars";
 
 interface HighlightedDate {
@@ -19,11 +18,10 @@ export default function DatePicker({
   onDateChange,
   highlightedDates = [],
 }: Props) {
-  // build markedDates object for react-native-calendars
   const markedDates: Record<string, any> = {
     [selectedDate.toISOString().slice(0, 10)]: {
       selected: true,
-      selectedColor: "#4F46E5",
+      selectedColor: "#BE123C",
     },
   };
   highlightedDates.forEach(({ date, type }) => {
@@ -42,26 +40,27 @@ export default function DatePicker({
     };
   });
 
+  const screenWidth = Dimensions.get("window").width;
+
   return (
     <View style={styles.container}>
       <CalendarList
-        // enable vertical infinite scroll
         horizontal={false}
         pagingEnabled
-        pastScrollRange={36}
-        futureScrollRange={36}
+        pastScrollRange={100}
+        futureScrollRange={100}
         scrollEnabled
         showScrollIndicator
-        // current selected
+        disableScrollViewPanResponder={true}
+        staticHeader={true}
         current={selectedDate.toISOString().slice(0, 10)}
         onDayPress={(day: DateData) => onDateChange(new Date(day.dateString))}
-        // styling/theme
         theme={{
           backgroundColor: "transparent",
           calendarBackground: "transparent",
           textSectionTitleColor: "#666",
           dayTextColor: "#333",
-          todayTextColor: "#4F46E5",
+          todayTextColor: "#BE123C",
           arrowColor: "#4F46E5",
           monthTextColor: "#000",
           textMonthFontSize: 16,
@@ -72,11 +71,10 @@ export default function DatePicker({
           selectedDayTextColor: "#fff",
           selectedDayBackgroundColor: "#4F46E5",
         }}
-        // apply our marks
         markingType={"custom"}
         markedDates={markedDates}
-        // style calendar list
         style={styles.calendarList}
+        calendarWidth={screenWidth - 32}
       />
     </View>
   );
@@ -85,10 +83,15 @@ export default function DatePicker({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginHorizontal: 16,
     overflow: "hidden",
     borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   calendarList: {
     paddingBottom: 8,
+    alignSelf: "center",
+    width: "100%",
   },
 });

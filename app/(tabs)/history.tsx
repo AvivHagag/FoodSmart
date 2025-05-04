@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   RefreshControl,
+  Image,
 } from "react-native";
 import React, { useState } from "react";
 import { router } from "expo-router";
@@ -13,6 +14,7 @@ import DatePicker from "@/components/history/DatePicker";
 import { Clock, Calendar } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import TopDateStrip from "@/components/history/top-date-strip";
+import { BottomSpace } from "@/components/bottom-space";
 
 const History = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -46,83 +48,86 @@ const History = () => {
   };
 
   return (
-    <LinearGradient
-      colors={["#8B5CF6", "#7C3AED"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      <SafeAreaView style={{ flex: 1 }}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>History</Text>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => setShowCalendar(!showCalendar)}
-            >
-              <Calendar size={24} color="#fff" />
-            </TouchableOpacity>
-          </View>
+    // <LinearGradient
+    //   colors={["#8B5CF6", "#7C3AED"]}
+    //   start={{ x: 0, y: 0 }}
+    //   end={{ x: 1, y: 1 }}
+    //   style={{ height: "100%" }}
+    // >
+    <SafeAreaView className="flex-1 bg-black">
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>History</Text>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => setShowCalendar(!showCalendar)}
+          >
+            <Calendar size={24} color="#fff" />
+          </TouchableOpacity>
         </View>
+      </View>
 
-        {showCalendar ? (
-          <View style={styles.calendarContainer}>
-            <View style={styles.mealHeader}>
-              <View style={styles.mealHeaderLine} />
-              <Text style={styles.mealHeaderText}>Select a date</Text>
-            </View>
-            <DatePicker
-              selectedDate={selectedDate}
-              onDateChange={(d) => {
-                setSelectedDate(d);
-                setShowCalendar(false);
-              }}
-              highlightedDates={[]}
-            />
+      {showCalendar ? (
+        <View style={styles.calendarContainer}>
+          <View style={styles.mealHeader}>
+            <View style={styles.mealHeaderLine} />
+            <Text style={styles.mealHeaderText}>Select a date</Text>
           </View>
-        ) : (
-          <>
-            <TopDateStrip
-              selectedDate={selectedDate}
-              onDateChange={setSelectedDate}
-            />
-            <ScrollView
-              style={styles.content}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                  tintColor="#8B5CF6"
-                  title="Pull to refresh"
-                  titleColor="#8B5CF6"
-                />
-              }
-            >
-              <View style={styles.mealSection}>
-                <View style={styles.mealHeader}>
-                  <View style={styles.mealHeaderLine} />
-                  <Text style={styles.mealHeaderText}>
-                    Meals for {formatDate(selectedDate)}
-                  </Text>
-                </View>
-
-                <View style={styles.emptyState}>
-                  <View style={styles.emptyIconContainer}>
-                    <Calendar size={24} color="#B388FF" />
-                  </View>
-                  <Text style={styles.emptyText}>
-                    No meals recorded for this date.
-                  </Text>
-                  <TouchableOpacity style={styles.addButton}>
-                    <Text style={styles.addButtonText}>Add Meal</Text>
-                  </TouchableOpacity>
-                </View>
+          <DatePicker
+            selectedDate={selectedDate}
+            onDateChange={(d) => {
+              setSelectedDate(d);
+              setShowCalendar(false);
+            }}
+            highlightedDates={[]}
+          />
+        </View>
+      ) : (
+        <>
+          <TopDateStrip
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+          />
+          <ScrollView
+            style={styles.content}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor="#BE123C"
+                title="Pull to refresh"
+                titleColor="#BE123C"
+              />
+            }
+          >
+            <View style={styles.mealSection}>
+              <View style={styles.mealHeader}>
+                <View style={styles.mealHeaderLine} />
+                <Text style={styles.mealHeaderText}>
+                  Meals for {formatDate(selectedDate)}
+                </Text>
               </View>
-            </ScrollView>
-          </>
-        )}
-      </SafeAreaView>
-    </LinearGradient>
+
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIconContainer}>
+                  <Calendar size={24} color="#BE123C" />
+                </View>
+                <Text style={styles.emptyText}>
+                  No meals recorded for this date.
+                </Text>
+                <Image
+                  source={require("@/assets/images/hungry.png")}
+                  style={{ width: 120, height: 120 }}
+                  resizeMode="contain"
+                />
+              </View>
+            </View>
+          </ScrollView>
+        </>
+      )}
+      <View className="bg-white -mt-52 h-12"></View>
+    </SafeAreaView>
+    // </LinearGradient>
   );
 };
 
@@ -153,8 +158,10 @@ const styles = StyleSheet.create({
     // marginTop: 16,
     // marginBottom: 16,
     backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 16,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
@@ -188,7 +195,7 @@ const styles = StyleSheet.create({
   mealHeaderLine: {
     width: 4,
     height: 20,
-    backgroundColor: "#9C68FA",
+    backgroundColor: "#BE123C",
     marginRight: 8,
     borderRadius: 2,
   },
@@ -205,7 +212,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "rgba(179, 136, 255, 0.1)",
+    backgroundColor: "#f3f4f6",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
@@ -214,17 +221,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     marginBottom: 24,
-  },
-  addButton: {
-    backgroundColor: "#9C68FA",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 30,
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });
 
