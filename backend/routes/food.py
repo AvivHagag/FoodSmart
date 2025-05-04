@@ -31,31 +31,35 @@ def get_or_create_food():
         return jsonify(existing), 200
 
     prompt = f"""
-Provide the nutritional values for one serving of "{name}".
-Return ONLY a JSON object with these keys:
-{{
-  "name": <string>,
-  "unit": <"piece" or "gram">,
-  "piece_avg_weight": <number|null>,
-  "avg_gram": <number|null>,
-  "cal": <number>,
-  "protein": <number>,
-  "fat": <number>,
-  "carbohydrates": <number>
-}}
-"""
+    You are a registered nutritionist. Given the food name "{name}", provide its nutritional values **normalized to 100 g** (ignore other serving sizes; scaling is done in the frontend).  
+    – Only output a single, valid JSON object (no markdown, no code fences, no extra text).  
+    – Use this exact schema and key order:
+
+    {{
+    "name": "<string: the food name>",
+    "unit": "<\"piece\" or \"gram\">",
+    "piece_avg_weight": <number|null: grams in one piece>,
+    "avg_gram": 100,
+    "cal": <number: kcal per 100 g>,
+    "protein": <number: g protein per 100 g>,
+    "fat": <number: g fat per 100 g>,
+    "carbohydrates": <number: g carbs per 100 g>
+    }}
+    """
     try:
         chat_resp = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4.1-mini",
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=300
         )
         content = chat_resp.choices[0].message.content.strip()
         nutrition = json.loads(content)
+        print(nutrition)
     except Exception as e:
         return jsonify({"error": f"Failed to get/parse nutrition: {e}"}), 500
 
     mongo.db.foods.insert_one(nutrition)
     print(f"Inserted nutrition for '{name}': {nutrition}")  
+    nutrition.pop("_id",None)
     return jsonify(nutrition), 201
