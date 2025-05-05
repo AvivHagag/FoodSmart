@@ -8,7 +8,6 @@ get_meals_bp = Blueprint('get_meals', __name__, url_prefix='/api/user')
 def _parse_date_only(date_str: str) -> datetime.date:
     ds = date_str.replace('Z', '+00:00')
     dt = datetime.datetime.fromisoformat(ds)
-    print("dt", dt)
     return dt.date()
 
 @get_meals_bp.route('/<user_id>/get_meals', methods=['GET'])

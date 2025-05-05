@@ -1,7 +1,7 @@
 import { View, Image, Text } from "react-native";
 import { Flame } from "lucide-react-native";
 
-function MainPageHeader() {
+function MainPageHeader({ burning }: { burning: number }) {
   return (
     <View className="flex-row justify-between items-center px-4">
       <View className="flex-row items-center gap-2">
@@ -19,11 +19,15 @@ function MainPageHeader() {
       </View>
 
       <View
-        style={{ backgroundColor: "#dadce0" }}
-        className="flex-row items-center gap-2 rounded-full px-3 py-1 shadow-sm"
+        style={{
+          backgroundColor: "#e5e7eb",
+          paddingHorizontal: 8,
+          paddingVertical: 5,
+        }}
+        className="flex-row items-center gap-2 rounded-full shadow-sm"
       >
-        <Flame size={20} color="#f97316" />
-        <Text className="font-bold">0</Text>
+        <Flame size={20} color="#f97316" style={{ marginRight: 2 }} />
+        <Text className="font-bold">{burning}</Text>
       </View>
     </View>
   );

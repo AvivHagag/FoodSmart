@@ -6,8 +6,8 @@ import React, {
   ReactNode,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import { BASE_URL } from "@/constants/constants";
+import moment from "moment";
 
 interface User {
   _id: string;
@@ -34,13 +34,37 @@ interface LoginResponse {
   success: boolean;
   error?: string;
   token?: string;
-  user?: any;
+  user?: User;
+}
+
+interface Meal {
+  _id?: string;
+  userId: string;
+  date: string;
+  totalCalories: number;
+  totalFat: number;
+  totalProtein: number;
+  totalCarbo: number;
+  mealsList: MealItem[];
+}
+
+interface MealItem {
+  name: string;
+  time: string;
+  calories: number;
+  fat: number;
+  protein: number;
+  carbo: number;
+  items: string;
+  imageUri?: string;
 }
 
 interface GlobalContextProps {
   isLogged: boolean;
   user: User | null;
   loading: boolean;
+  userMeals: Meal[];
+  fetchMeals: () => Promise<void>;
   register: (
     email: string,
     fullname: string,
@@ -59,19 +83,15 @@ const GlobalContext = createContext<GlobalContextProps>({
   isLogged: false,
   user: null,
   loading: true,
-  register: async (email: string, fullname: string, password: string) => {
-    return { success: false, message: "Default implementation" };
-  },
-  login: async (email: string, password: string) => {
-    return {
-      success: false,
-      error: "Default login implementation",
-      token: undefined,
-      user: undefined,
-    };
-  },
+  userMeals: [],
+  fetchMeals: async () => {},
+  register: async () => ({ success: false, message: "Default implementation" }),
+  login: async () => ({
+    success: false,
+    error: "Default login implementation",
+  }),
   logout: async () => {},
-  updateUser: async (updatedUser: User) => {},
+  updateUser: async () => {},
 });
 
 export const useGlobalContext = () => useContext(GlobalContext);
@@ -80,25 +100,44 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLogged, setIsLogged] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [userMeals, setUserMeals] = useState<Meal[]>([]);
+
+  const getTodayString = () =>
+    moment().tz("Asia/Jerusalem").format("YYYY-MM-DD");
+
+  const fetchMeals = async () => {
+    if (!user) return;
+    const dateStr = getTodayString();
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateStr}`
+      );
+      const data = await res.json();
+      if (res.ok) {
+        setUserMeals(data.meals || []);
+      } else {
+        console.log("Fetch meals error:", data.message);
+      }
+    } catch (err) {
+      console.log("Error fetching meals:", err);
+    }
+  };
 
   useEffect(() => {
     const checkToken = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
-        const email = await AsyncStorage.getItem("email");
         const userString = await AsyncStorage.getItem("user");
-        if (token && email && userString) {
-          const parsedUser = JSON.parse(userString);
+        if (token && userString) {
+          const parsedUser: User = JSON.parse(userString);
           setIsLogged(true);
-          setUser({
-            ...parsedUser,
-          });
+          setUser(parsedUser);
         } else {
           setIsLogged(false);
           setUser(null);
         }
       } catch (error) {
-        console.log("Error reading data from storage:", error);
+        console.log("Error reading storage:", error);
         setIsLogged(false);
         setUser(null);
       } finally {
@@ -115,20 +154,17 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     password: string
   ): Promise<RegisterResponse> => {
     try {
-      const response = await axios.post(`${BASE_URL}/register`, {
-        email,
-        fullname,
-        password,
+      const res = await fetch(`${BASE_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, fullname, password }),
       });
-      console.log("Register response:", response.data);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message);
       return { success: true, message: null };
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.error ||
-        error.message ||
-        "An unexpected error occurred";
-      console.log("Register error:", errorMessage);
-      return { success: false, message: errorMessage };
+      console.log("Register error:", error);
+      return { success: false, message: error.message };
     }
   };
 
@@ -137,44 +173,32 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     password: string
   ): Promise<LoginResponse> => {
     try {
-      const response = await axios.post(`${BASE_URL}/login`, {
-        email: email,
-        password,
+      const res = await fetch(`${BASE_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
-      const { token, user } = response.data;
-      if (!token || !user) {
-        console.log(
-          "Invalid response from server. Missing token or user data."
-        );
-        return { success: false, error: "Invalid response from server." };
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Login failed");
+      const { token, user: fetchedUser } = data;
       await AsyncStorage.setItem("token", token);
-      await AsyncStorage.setItem("email", email);
-      await AsyncStorage.setItem("user", JSON.stringify(user));
+      await AsyncStorage.setItem("user", JSON.stringify(fetchedUser));
       setIsLogged(true);
-      setUser({
-        email,
-        ...user,
-      });
-      return { success: true, token, user };
+      setUser(fetchedUser);
+      await fetchMeals();
+      return { success: true, token, user: fetchedUser };
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.error ||
-        error.message ||
-        "An unexpected error occurred.";
-      console.log("Login error:", errorMessage);
-
-      return { success: false, error: errorMessage };
+      console.log("Login error:", error);
+      return { success: false, error: error.message };
     }
   };
 
   const logout = async (): Promise<void> => {
     try {
-      await AsyncStorage.removeItem("token");
-      await AsyncStorage.removeItem("email");
-      await AsyncStorage.removeItem("user");
+      await AsyncStorage.multiRemove(["token", "user"]);
       setIsLogged(false);
       setUser(null);
+      setUserMeals([]);
     } catch (error) {
       console.log("Logout error:", error);
     }
@@ -182,17 +206,11 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const updateUser = async (updatedUser: User): Promise<void> => {
     try {
-      const response = await axios.get(
-        `${BASE_URL}/api/user/${updatedUser._id}`
-      );
-      if (response.data && response.data.user) {
-        const freshUserData = response.data.user;
-        await AsyncStorage.setItem("user", JSON.stringify(freshUserData));
-        setUser(freshUserData);
-      } else {
-        await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
-      }
+      const res = await fetch(`${BASE_URL}/api/user/${updatedUser._id}`);
+      const data = await res.json();
+      const freshUser = data.user || updatedUser;
+      await AsyncStorage.setItem("user", JSON.stringify(freshUser));
+      setUser(freshUser);
     } catch (error) {
       console.log("Update user error:", error);
       await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
@@ -204,6 +222,8 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLogged,
     user,
     loading,
+    userMeals,
+    fetchMeals,
     register,
     login,
     logout,

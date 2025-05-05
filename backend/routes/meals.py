@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 import uuid
 from bson import ObjectId
-from flask import Blueprint, request, jsonify, send_file, url_for, redirect
+from flask import Blueprint, request, jsonify,redirect
 from extensions import mongo
 import boto3
 from dotenv import load_dotenv
@@ -32,33 +32,14 @@ def _parse_iso(dt_str: str) -> datetime:
 def upload_image():
     """Accept a single file upload, store it in R2, and return its public URL."""
     try:
-        print("==== Request Headers ====")
-        for name, value in request.headers.items():
-            print(f"{name}: {value}")
-        
-        print("==== Request Form Data ====")
-        for key in request.form:
-            print(f"{key}: {request.form[key]}")
-        
-        print("==== Request Files ====")
-        for key in request.files:
-            file = request.files[key]
-            print(f"{key}: {file.filename}, {file.mimetype}")
-        
-        # Handle both standard file uploads and base64 data from React Native
+       
         if 'image' in request.files:
             img = request.files['image']
             img_data = img.read()
             mimetype = img.mimetype
             filename = f"{uuid.uuid4()}-{img.filename}"
         else:
-            # For debugging - if no files, check for other data
-            print("No image file found in request.files")
             return jsonify({"error": "No image file provided"}), 400
-        
-        print(f"Got image data: {len(img_data)} bytes, mimetype: {mimetype}")
-        
-        # Upload to R2
         s3.put_object(
             Bucket=R2_BUCKET_NAME,
             Key=filename,
@@ -66,17 +47,14 @@ def upload_image():
             ContentType=mimetype
         )
         
-        # Build the public URL for the image
         if R2_PUBLIC_URL:
             public_url = f"{R2_PUBLIC_URL.rstrip('/')}/{filename}"
         else:
             public_url = s3.generate_presigned_url(
                 'get_object',
                 Params={'Bucket': R2_BUCKET_NAME, 'Key': filename},
-                ExpiresIn=31536000  # 1 year in seconds
+                ExpiresIn=31536000
             )
-        
-        print(f"Image uploaded successfully, URL: {public_url}")
         return jsonify({
             "url": public_url
         }), 200
@@ -91,14 +69,12 @@ def get_image(filename):
     """Redirect to the R2 image URL or generate a presigned URL."""
     try:
         if R2_PUBLIC_URL:
-            # If we have a public URL configured, redirect to it
             return redirect(f"{R2_PUBLIC_URL.rstrip('/')}/{filename}")
         else:
-            # Generate a presigned URL with S3 client
             url = s3.generate_presigned_url(
                 'get_object',
                 Params={'Bucket': R2_BUCKET_NAME, 'Key': filename},
-                ExpiresIn=3600  # 1 hour in seconds
+                ExpiresIn=3600
             )
             return redirect(url)
     except Exception as e:
