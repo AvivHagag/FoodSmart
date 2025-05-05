@@ -11,6 +11,9 @@ import {
   Keyboard,
 } from "react-native";
 import { Edit2Icon, Save, Plus, Minus, PencilIcon } from "lucide-react-native";
+import { BASE_URL } from "@/constants/constants";
+import { useGlobalContext } from "../app/context/authprovider";
+import { useRouter } from "expo-router";
 
 interface NutritionData {
   name: string;
@@ -26,13 +29,13 @@ interface NutritionData {
 interface FoodDetectionResultsProps {
   aggregatedDetections: Record<string, number>;
   nutritionData: Record<string, NutritionData | null>;
-  onDone: () => void;
+  imageUri: string;
 }
 
 const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
   aggregatedDetections,
   nutritionData,
-  onDone,
+  imageUri,
 }) => {
   const [editMode, setEditMode] = useState(false);
   const [foodCounts, setFoodCounts] =
@@ -43,6 +46,7 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
     protein: 0,
     fat: 0,
   });
+  const { user } = useGlobalContext();
   const [editedNutrition, setEditedNutrition] = useState({
     calories: 0,
     carbs: 0,
@@ -53,6 +57,7 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
   const shakeAnimation = useRef(new Animated.Value(0)).current;
   const textInputRefs = useRef<Record<string, TextInput | null>>({});
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     if (Object.keys(aggregatedDetections).length > 0) {
@@ -158,15 +163,12 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
     setFoodCounts((prev) => {
       const currentCount = prev[foodName];
       const foodData = nutritionData[foodName];
-
       let newCount = currentCount;
-
       if (foodData?.unit === "gram") {
         newCount = increment ? currentCount + 1 : Math.max(1, currentCount - 1);
       } else {
         newCount = increment ? currentCount + 1 : Math.max(1, currentCount - 1);
       }
-
       return {
         ...prev,
         [foodName]: newCount,
@@ -184,6 +186,85 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
     setEditMode(!editMode);
   };
 
+  const uploadImage = async (uri: string): Promise<string> => {
+    try {
+      const endpoint = `${BASE_URL}/meals/upload`;
+      const ext = uri.split(".").pop() || "jpg";
+      const formData = new FormData();
+
+      formData.append("image", {
+        uri,
+        name: `photo.${ext}`,
+        type: `image/${ext}`,
+      } as any);
+
+      const res = await fetch(endpoint, { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Image upload failed");
+      }
+      return data.url;
+    } catch (e) {
+      console.error("Image upload error:", e);
+      throw e;
+    }
+  };
+
+  const saveMeal = async () => {
+    try {
+      if (!user) {
+        alert("You must be logged in to save a meal");
+        return;
+      }
+
+      const imageUrl = await uploadImage(imageUri);
+      const now = new Date();
+      const day = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      ).toISOString();
+
+      const items = Object.entries(foodCounts)
+        .map(([foodName, count]) => (count > 1 ? `${foodName}` : foodName))
+        .join(",");
+
+      const mealEntry = {
+        items,
+        time: now.toISOString(),
+        calories: editedNutrition.calories,
+        fat: editedNutrition.fat,
+        protein: editedNutrition.protein,
+        carbo: editedNutrition.carbs,
+        imageUri: imageUrl,
+      };
+
+      const payload = {
+        userId: user._id,
+        date: day,
+        totalCalories: editedNutrition.calories,
+        totalFat: editedNutrition.fat,
+        totalProtein: editedNutrition.protein,
+        totalCarbo: editedNutrition.carbs,
+        mealsList: [mealEntry],
+      };
+
+      const res = await fetch(`${BASE_URL}/meals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Failed to save meal");
+      alert("Your meal was saved!");
+      router.push("/");
+    } catch (e) {
+      console.error(e);
+      alert("Could not save your meal.");
+    }
+  };
+
   useEffect(() => {
     const keyboardWillShow = Keyboard.addListener(
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
@@ -191,14 +272,12 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
         setKeyboardHeight(e.endCoordinates.height);
       }
     );
-
     const keyboardWillHide = Keyboard.addListener(
       Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
       () => {
         setKeyboardHeight(0);
       }
     );
-
     return () => {
       keyboardWillShow.remove();
       keyboardWillHide.remove();
@@ -213,28 +292,23 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: keyboardHeight - 90 }}
-        style={{
-          marginBottom: 90,
-        }}
+        style={{ marginBottom: 90 }}
       >
+        {/* food list */}
         <View className="mb-1">
           {Object.entries(foodCounts).map(([foodName, count]) => {
             const foodData = nutritionData[foodName];
             let displayText = "";
-
             if (foodData?.unit === "piece") {
               displayText = `${count} piece${count > 1 ? "s" : ""}`;
             } else if (foodData?.unit === "gram") {
               displayText = `${count}g`;
             }
-
             return (
               <View
                 key={foodName}
-                className="mb-4 p-4 rounded-xl "
-                style={{
-                  backgroundColor: "#f9fafb",
-                }}
+                className="mb-4 p-4 rounded-xl"
+                style={{ backgroundColor: "#f9fafb" }}
               >
                 <View className="flex-row justify-between items-center">
                   <Text className="text-lg font-semibold">{foodName}</Text>
@@ -353,7 +427,7 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
                         });
                       }}
                       onFocus={() => setFocusedField(key)}
-                    ></TextInput>
+                    />
                   </View>
                   <PencilIcon size={20} color="black" />
                 </View>
@@ -413,7 +487,7 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
           {!editMode && (
             <TouchableOpacity
               className="flex-1 rounded-2xl ml-2 flex-row justify-center items-center border border-black p-2 gap-2"
-              onPress={onDone}
+              onPress={saveMeal}
             >
               <Save size={20} color="black" />
               <Text className="text-center text-black text-lg font-medium">

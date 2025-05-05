@@ -116,7 +116,6 @@ const CameraScreen: React.FC = () => {
           return acc;
         }, {})
       : {};
-
   return (
     <View className="flex-1">
       <View className="relative">
@@ -160,7 +159,7 @@ const CameraScreen: React.FC = () => {
           <FoodDetectionResults
             aggregatedDetections={aggregatedDetections}
             nutritionData={nutritionData}
-            onDone={() => router.back()}
+            imageUri={imageUri}
           />
         )}
       </View>
