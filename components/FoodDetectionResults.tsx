@@ -186,12 +186,39 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
     setEditMode(!editMode);
   };
 
+  const uploadImage = async (uri: string): Promise<string> => {
+    try {
+      const endpoint = `${BASE_URL}/meals/upload`;
+      const ext = uri.split(".").pop() || "jpg";
+      const formData = new FormData();
+
+      formData.append("image", {
+        uri,
+        name: `photo.${ext}`,
+        type: `image/${ext}`,
+      } as any);
+
+      const res = await fetch(endpoint, { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Image upload failed");
+      }
+      return data.url;
+    } catch (e) {
+      console.error("Image upload error:", e);
+      throw e;
+    }
+  };
+
   const saveMeal = async () => {
     try {
       if (!user) {
         alert("You must be logged in to save a meal");
         return;
       }
+
+      const imageUrl = await uploadImage(imageUri);
       const now = new Date();
       const day = new Date(
         now.getFullYear(),
@@ -200,29 +227,27 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
       ).toISOString();
 
       const items = Object.entries(foodCounts)
-        .map(([foodName, count]) =>
-          count > 1 ? `${foodName}` : foodName
-        )
+        .map(([foodName, count]) => (count > 1 ? `${foodName}` : foodName))
         .join(",");
 
       const mealEntry = {
         items,
-        time:     now.toISOString(),
+        time: now.toISOString(),
         calories: editedNutrition.calories,
-        fat:      editedNutrition.fat,
-        protein:  editedNutrition.protein,
-        carbo:    editedNutrition.carbs,
-        imageUri,
+        fat: editedNutrition.fat,
+        protein: editedNutrition.protein,
+        carbo: editedNutrition.carbs,
+        imageUri: imageUrl,
       };
 
       const payload = {
-        userId:        user._id,
-        date:          day,
+        userId: user._id,
+        date: day,
         totalCalories: editedNutrition.calories,
-        totalFat:      editedNutrition.fat,
-        totalProtein:  editedNutrition.protein,
-        totalCarbo:    editedNutrition.carbs,
-        mealsList:     [mealEntry],
+        totalFat: editedNutrition.fat,
+        totalProtein: editedNutrition.protein,
+        totalCarbo: editedNutrition.carbs,
+        mealsList: [mealEntry],
       };
 
       const res = await fetch(`${BASE_URL}/meals`, {
@@ -230,8 +255,8 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      
-      if (!res.ok) throw new Error("Failed to save meal");  
+
+      if (!res.ok) throw new Error("Failed to save meal");
       alert("Your meal was saved!");
       router.push("/");
     } catch (e) {
@@ -331,9 +356,7 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
             {
               icon: "🌾",
               label: "Carbs",
-              value: editMode
-                ? editedNutrition.carbs
-                : currentNutrition.carbs,
+              value: editMode ? editedNutrition.carbs : currentNutrition.carbs,
               key: "carbs",
               unit: "g",
             },
@@ -451,7 +474,11 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
               gap: 8,
             }}
           >
-            {editMode ? <Save size={20} color="white" /> : <Edit2Icon size={20} color="white" />}
+            {editMode ? (
+              <Save size={20} color="white" />
+            ) : (
+              <Edit2Icon size={20} color="white" />
+            )}
             <Text className="text-center text-white text-lg font-medium">
               {editMode ? "Save" : "Edit Nutrition"}
             </Text>

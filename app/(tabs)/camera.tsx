@@ -159,7 +159,7 @@ const CameraScreen: React.FC = () => {
           <FoodDetectionResults
             aggregatedDetections={aggregatedDetections}
             nutritionData={nutritionData}
-            imageUri={imageUri as string}
+            imageUri={imageUri}
           />
         )}
       </View>
