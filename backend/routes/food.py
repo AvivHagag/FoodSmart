@@ -55,11 +55,9 @@ def get_or_create_food():
         )
         content = chat_resp.choices[0].message.content.strip()
         nutrition = json.loads(content)
-        print(nutrition)
     except Exception as e:
         return jsonify({"error": f"Failed to get/parse nutrition: {e}"}), 500
 
     mongo.db.foods.insert_one(nutrition)
-    print(f"Inserted nutrition for '{name}': {nutrition}")  
     nutrition.pop("_id",None)
     return jsonify(nutrition), 201

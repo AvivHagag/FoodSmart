@@ -10,6 +10,7 @@ from routes.update_user import update_user_bp
 from routes.update_password import update_password_bp
 from routes.delete_user import delete_user_bp
 from routes.get_user import get_user_bp
+from routes.get_meals import get_meals_bp
 from routes.food import food_bp     
 from routes.meals import meals_bp
 
@@ -31,6 +32,7 @@ app.register_blueprint(update_password_bp)
 app.register_blueprint(delete_user_bp)
 app.register_blueprint(get_user_bp)
 app.register_blueprint(food_bp)
+app.register_blueprint(get_meals_bp)
 app.register_blueprint(meals_bp)
 
 if __name__ == '__main__':

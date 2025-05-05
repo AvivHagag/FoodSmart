@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "@/constants/constants";
-import { ArrowLeftIcon, ShareIcon } from "lucide-react-native";
+import { ArrowLeftIcon, ShareIcon, SearchXIcon } from "lucide-react-native";
 import FoodDetectionResults from "../../components/FoodDetectionResults";
 
 interface DetectionResult {
@@ -155,12 +155,33 @@ const CameraScreen: React.FC = () => {
             <ActivityIndicator size="large" color="#000" />
             <Text className="text-lg font-semibold mt-4">Processing...</Text>
           </View>
-        ) : (
+        ) : Object.keys(aggregatedDetections).length > 0 ? (
           <FoodDetectionResults
             aggregatedDetections={aggregatedDetections}
             nutritionData={nutritionData}
             imageUri={imageUri}
           />
+        ) : (
+          <View className="flex-1 items-center p-6">
+            <View className="bg-gray-100 p-6 rounded-full">
+              <SearchXIcon size={80} color="#888" />
+            </View>
+            <Text className="text-2xl font-bold mb-3 text-center">
+              No Food Detected
+            </Text>
+            <Text className="text-gray-600 text-center mb-8">
+              We couldn't identify any food items in this image.
+            </Text>
+            <TouchableOpacity
+              className="bg-black py-4 px-8 rounded-full flex-row items-center"
+              onPress={() => router.back()}
+            >
+              <ArrowLeftIcon size={20} color="white" className="mr-2" />
+              <Text className="text-white font-semibold text-lg ml-2">
+                Back to Home
+              </Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
     </View>

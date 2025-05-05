@@ -98,25 +98,25 @@ export default function ChangePassword({
   };
 
   return (
-    <ScrollView className="flex-1 bg-white px-4">
+    <ScrollView style={styles.scrollContainer}>
       <Title text="Change Password" backBottom={handlePasswordOpen} />
 
-      <View className="mx-auto py-4">
-        <View className="mb-6">
+      <View style={styles.container}>
+        <View style={styles.marginBottom6}>
           <View
-            className="flex-row items-center justify-center border rounded-lg"
-            style={{
-              backgroundColor: "#fef9c3",
-              paddingHorizontal: 12,
-              borderColor: "#fde047",
-            }}
+            style={[
+              styles.alertContainer,
+              {
+                backgroundColor: "#fef9c3",
+                paddingHorizontal: 12,
+                borderColor: "#fde047",
+              },
+            ]}
           >
             <KeyRound size={24} color="#F59E0B" />
-            <View className="ml-1">
-              <Text className="text-yellow-600 font-semibold">
-                Security First
-              </Text>
-              <Text className="text-yellow-700">
+            <View style={styles.marginLeft1}>
+              <Text style={styles.alertTitle}>Security First</Text>
+              <Text style={styles.alertText}>
                 Choose a strong password that you haven't used before.
               </Text>
             </View>
@@ -124,22 +124,46 @@ export default function ChangePassword({
         </View>
       </View>
 
-      <View className="bg-white rounded-lg p-4 shadow-md shadow-zinc-300 mb-8">
-        <View className="flex flex-row items-center">
-          <Text className="text-2xl font-medium text-gray-900">
+      <View
+        style={{
+          backgroundColor: "white",
+          borderRadius: 8,
+          padding: 16,
+          shadowColor: "#71717a",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.4,
+          shadowRadius: 4,
+          elevation: 3,
+          marginBottom: 32,
+        }}
+      >
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: "500",
+              color: "#111827",
+            }}
+          >
             Change Your Password
           </Text>
           <Text style={{ fontSize: 28, marginLeft: 4, marginBottom: 2 }}>
             🔐
           </Text>
         </View>
-        <Text className="text-gray-500 mb-4">
+        <Text style={{ color: "#9ca3af", marginBottom: 16 }}>
           Please enter your current password and choose a new one
         </Text>
 
-        <View className="mb-4">
-          <Text className="text-sm font-medium mb-1">Current Password</Text>
-          <View className="relative">
+        <View style={styles.formField}>
+          <Text style={styles.label}>Current Password</Text>
+          <View style={styles.inputContainer}>
             <TextInput
               value={currentPassword}
               onChangeText={(text) => {
@@ -154,6 +178,7 @@ export default function ChangePassword({
               placeholder="Enter current password"
               secureTextEntry={!showCurrentPassword}
               style={styles.textInput}
+              placeholderTextColor="#9ca3af"
             />
             <TouchableOpacity
               onPress={() => setShowCurrentPassword(!showCurrentPassword)}
@@ -171,9 +196,9 @@ export default function ChangePassword({
           )}
         </View>
 
-        <View className="mb-4">
-          <Text className="text-sm font-medium mb-1">New Password</Text>
-          <View className="relative">
+        <View style={styles.formField}>
+          <Text style={styles.label}>New Password</Text>
+          <View style={styles.inputContainer}>
             <TextInput
               value={newPassword}
               onChangeText={(text) => {
@@ -185,6 +210,7 @@ export default function ChangePassword({
               placeholder="Enter new password"
               secureTextEntry={!showNewPassword}
               style={styles.textInput}
+              placeholderTextColor="#9ca3af"
             />
             <TouchableOpacity
               onPress={() => setShowNewPassword(!showNewPassword)}
@@ -202,9 +228,9 @@ export default function ChangePassword({
           )}
         </View>
 
-        <View className="mb-4">
-          <Text className="text-sm font-medium mb-1">Confirm New Password</Text>
-          <View className="relative">
+        <View style={styles.formField}>
+          <Text style={styles.label}>Confirm New Password</Text>
+          <View style={styles.inputContainer}>
             <TextInput
               value={confirmPassword}
               onChangeText={(text) => {
@@ -219,6 +245,7 @@ export default function ChangePassword({
               placeholder="Confirm new password"
               secureTextEntry={!showConfirmPassword}
               style={styles.textInput}
+              placeholderTextColor="#9ca3af"
             />
             <TouchableOpacity
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -238,23 +265,21 @@ export default function ChangePassword({
 
         <TouchableOpacity
           onPress={handleSubmit}
-          className="w-full bg-blue-500 rounded-lg items-center"
           disabled={isLoading}
           style={[
+            styles.updateButton,
             isLoading ? styles.clicked : styles.notClicked,
             { padding: 10 },
           ]}
         >
           {isLoading ? (
-            <View className="flex-row items-center">
+            <View style={styles.rowCenter}>
               <ActivityIndicator size="small" color="#000" />
             </View>
           ) : (
-            <View className="flex-row items-center">
+            <View style={styles.rowCenter}>
               <KeyRound size={20} color="#FFFFFF" />
-              <Text className="text-white font-semibold ml-1">
-                Update Password
-              </Text>
+              <Text style={styles.buttonText}>Update Password</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -264,10 +289,68 @@ export default function ChangePassword({
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flex: 1,
+    backgroundColor: "white",
+    paddingHorizontal: 16,
+  },
+  container: {
+    marginLeft: "auto",
+    marginRight: "auto",
+    paddingVertical: 16,
+  },
+  marginBottom6: {
+    marginBottom: 24,
+  },
+  alertContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+  },
+  marginLeft1: {
+    marginLeft: 4,
+  },
+  alertTitle: {
+    color: "#000",
+    fontWeight: "600",
+  },
+  alertText: {
+    color: "#a16207",
+  },
+  formField: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "500",
+    marginBottom: 4,
+  },
+  inputContainer: {
+    position: "relative",
+  },
+  rowCenter: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  updateButton: {
+    width: "100%",
+    backgroundColor: "#3b82f6",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "600",
+    marginLeft: 4,
+  },
   eyeIconPosition: {
     position: "absolute",
-    top: 12,
-    right: 12,
+    padding: 12,
+    top: 0,
+    right: 0,
   },
   clicked: {
     opacity: 0.5,
@@ -282,13 +365,12 @@ const styles = StyleSheet.create({
   },
   textInput: {
     marginTop: 2,
-    // backgroundColor: "#f3f4f6",
     height: 38,
     borderWidth: 1,
     borderColor: "#d1d5db",
     borderRadius: 8,
     paddingHorizontal: 8,
     fontSize: 15,
-    color: "#1F2937",
+    color: "#000",
   },
 });

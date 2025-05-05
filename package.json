@@ -43,6 +43,7 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.2",
+    "react-native-calendars": "^1.1312.0",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-heroicons": "^4.0.0",
     "react-native-picker-select": "^9.3.1",

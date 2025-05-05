@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   selectedDay: {
-    backgroundColor: "#9C68FA",
+    backgroundColor: "#BE123C",
     paddingVertical: 24,
   },
   dayText: {
