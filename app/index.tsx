@@ -1,10 +1,22 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image, ScrollView, View, Text, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { useGlobalContext } from "./context/authprovider";
+
 export default function App() {
   const router = useRouter();
+  const { isLogged, loading } = useGlobalContext();
+
+  useEffect(() => {
+    if (!loading) {
+      if (isLogged) {
+        router.replace("/(tabs)/home");
+      }
+    }
+  }, [isLogged, loading]);
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="px-5">
