@@ -10,7 +10,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "@/constants/constants";
 import { ArrowLeftIcon, ShareIcon, SearchXIcon } from "lucide-react-native";
-import FoodDetectionResults from "../../components/FoodDetectionResults";
+import FoodDetectionResults from "../../components/camera/FoodDetectionResults";
 
 interface DetectionResult {
   label: string;

@@ -12,8 +12,9 @@ import {
 } from "react-native";
 import { Edit2Icon, Save, Plus, Minus, PencilIcon } from "lucide-react-native";
 import { BASE_URL } from "@/constants/constants";
-import { useGlobalContext } from "../app/context/authprovider";
+import { useGlobalContext } from "../../app/context/authprovider";
 import { useRouter } from "expo-router";
+import moment from "moment-timezone";
 
 interface NutritionData {
   name: string;
@@ -220,12 +221,8 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
 
       const imageUrl = await uploadImage(imageUri);
       const now = new Date();
-      const day = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate()
-      ).toISOString();
-
+      const day = moment().tz("Asia/Jerusalem").format("DD/MM/YYYY");
+      console.log("day", day);
       const items = Object.entries(foodCounts)
         .map(([foodName, count]) => (count > 1 ? `${foodName}` : foodName))
         .join(",");

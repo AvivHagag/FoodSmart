@@ -9,13 +9,15 @@ import {
 import { Card } from "../ui/card";
 
 type Meal = {
-  image?: string;
+  _id?: string;
   name: string;
-  time?: string;
+  time: string;
   calories: number;
+  fat: number;
   protein: number;
-  carbs: number;
-  fats: number;
+  carbo: number;
+  items: string;
+  image?: string;
 };
 
 interface RecentlyEatenProps {
@@ -97,13 +99,13 @@ export function RecentlyEaten({ recentMeals }: RecentlyEatenProps) {
                 <View className="flex-row items-center">
                   <WheatIcon color="#F59E0B" size={16} />
                   <Text className="text-sm" style={{ marginLeft: 2 }}>
-                    {meal.carbs}g
+                    {meal.carbo}g
                   </Text>
                 </View>
                 <View className="flex-row items-center">
                   <DropletIcon color="#3B82F6" size={16} />
                   <Text className="text-sm" style={{ marginLeft: 2 }}>
-                    {meal.fats}g
+                    {meal.fat}g
                   </Text>
                 </View>
               </View>

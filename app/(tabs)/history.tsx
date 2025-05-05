@@ -16,20 +16,9 @@ import TopDateStrip from "@/components/history/top-date-strip";
 import { useGlobalContext } from "@/app/context/authprovider";
 import { BASE_URL } from "@/constants/constants";
 import { RecentlyEaten } from "@/components/history/recently-eaten";
-interface Meal {
-  _id: string;
-  userId: string;
-  date: string;
-  name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-  image?: string;
-  time?: string;
-}
+import moment from "moment";
 
-interface BackendMeal {
+interface Meal {
   _id?: string;
   name: string;
   time: string;
@@ -37,11 +26,14 @@ interface BackendMeal {
   fat: number;
   protein: number;
   carbo: number;
+  items: string;
   imageUri?: string;
 }
 
 const History = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(
+    moment().tz("Asia/Jerusalem").toDate()
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,12 +59,38 @@ const History = () => {
   };
 
   const formatTimeFromDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = moment(dateString).tz("Asia/Jerusalem").toDate();
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   const formatDateForApi = (date: Date) => {
-    return date.toISOString().split("T")[0];
+    return moment(date).tz("Asia/Jerusalem").format("YYYY-MM-DD");
+  };
+
+  const areMealsDifferent = (newMeals: Meal[], currentMeals: Meal[]) => {
+    if (newMeals.length !== currentMeals.length) {
+      return true;
+    }
+
+    for (let i = 0; i < newMeals.length; i++) {
+      const newMeal = newMeals[i];
+      const currentMeal = currentMeals[i];
+
+      if (
+        newMeal._id !== currentMeal._id ||
+        newMeal.name !== currentMeal.name ||
+        newMeal.time !== currentMeal.time ||
+        newMeal.calories !== currentMeal.calories ||
+        newMeal.protein !== currentMeal.protein ||
+        newMeal.carbo !== currentMeal.carbo ||
+        newMeal.fat !== currentMeal.fat ||
+        newMeal.items !== currentMeal.items
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   };
 
   const fetchMeals = async () => {
@@ -81,38 +99,32 @@ const History = () => {
     try {
       const dateParam = formatDateForApi(selectedDate);
       const response = await fetch(
-        `${BASE_URL}/api/user/${user._id}/meals?date=${dateParam}`
+        `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateParam}`
       );
       const data = await response.json();
-
       if (response.ok && data.meals) {
-        // Check if we have meals data with mealsList
         if (data.meals.length > 0 && data.meals[0].mealsList) {
-          // Process meals from the mealsList array
-          const processedMeals = data.meals[0].mealsList.map(
-            (meal: BackendMeal) => ({
-              _id: meal._id || String(Math.random()),
-              userId: data.meals[0].userId,
-              date: data.meals[0].date,
-              name: meal.name,
-              calories: meal.calories,
-              protein: meal.protein || meal.fat,
-              carbs: meal.carbo,
-              fats: meal.fat,
-              image: meal.imageUri,
-              time: formatTimeFromDate(meal.time),
-            })
-          );
+          const processedMeals = data.meals[0].mealsList.map((meal: Meal) => ({
+            _id: meal._id,
+            name: meal.name,
+            time: formatTimeFromDate(meal.time),
+            calories: meal.calories,
+            protein: meal.protein || meal.fat,
+            carbs: meal.carbo,
+            fats: meal.fat,
+            image: meal.imageUri,
+            items: meal.items,
+          }));
           setMeals(processedMeals);
         } else {
           setMeals(data.meals);
         }
       } else {
-        console.error("Failed to fetch meals:", data.message);
+        console.log("Failed to fetch meals:", data.message);
         setMeals([]);
       }
     } catch (error) {
-      console.error("Error fetching meals:", error);
+      console.log("Error fetching meals:", error);
       setMeals([]);
     } finally {
       setIsLoading(false);
@@ -124,43 +136,39 @@ const History = () => {
   }, [selectedDate, user?._id]);
 
   const onRefresh = async () => {
-    // setRefreshing(true);
-    // await fetchMeals();
-    // setRefreshing(false);
     if (!user?._id) return;
     try {
       const dateParam = formatDateForApi(selectedDate);
       const response = await fetch(
-        `${BASE_URL}/api/user/${user._id}/meals?date=${dateParam}`
+        `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateParam}`
       );
       const data = await response.json();
-
       if (response.ok && data.meals) {
         if (data.meals.length > 0 && data.meals[0].mealsList) {
-          const processedMeals = data.meals[0].mealsList.map(
-            (meal: BackendMeal) => ({
-              _id: meal._id || String(Math.random()),
-              userId: data.meals[0].userId,
-              date: data.meals[0].date,
-              name: meal.name,
-              calories: meal.calories,
-              protein: meal.protein || meal.fat,
-              carbs: meal.carbo,
-              fats: meal.fat,
-              image: meal.imageUri,
-              time: formatTimeFromDate(meal.time),
-            })
-          );
-          setMeals(processedMeals);
+          const processedMeals = data.meals[0].mealsList.map((meal: Meal) => ({
+            _id: meal._id,
+            name: meal.name,
+            time: formatTimeFromDate(meal.time),
+            calories: meal.calories,
+            protein: meal.protein || meal.fat,
+            carbs: meal.carbo,
+            fats: meal.fat,
+            image: meal.imageUri,
+            items: meal.items,
+          }));
+          const mealsChanged = areMealsDifferent(processedMeals, meals);
+          if (mealsChanged) {
+            setMeals(processedMeals);
+          } else {
+            return;
+          }
         } else {
-          setMeals(data.meals);
+          console.log("Failed to fetch meals:", data.message);
+          setMeals([]);
         }
-      } else {
-        console.error("Failed to fetch meals:", data.message);
-        setMeals([]);
       }
     } catch (error) {
-      console.error("Error fetching meals:", error);
+      console.log("Error fetching meals:", error);
       setMeals([]);
     }
   };
