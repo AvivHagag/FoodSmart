@@ -1,10 +1,4 @@
-import {
-  SafeAreaView,
-  ScrollView,
-  RefreshControl,
-  View,
-  Text,
-} from "react-native";
+import { SafeAreaView, ScrollView, RefreshControl } from "react-native";
 import MainPageHeader from "@/components/Main/header";
 import { DashboardScreen } from "@/components/Main/progress-component";
 import { RecentlyEaten } from "@/components/Main/recently-eaten";
@@ -16,7 +10,6 @@ export default function Home() {
   const { userMeals, fetchMeals, user } = useGlobalContext();
   const meals = userMeals.map((meal) => meal.mealsList);
 
-  // Calculate daily nutrition data
   const userData = {
     totalCalories: userMeals.reduce(
       (sum, meal) => sum + (meal.totalCalories || 0),
@@ -33,24 +26,26 @@ export default function Home() {
     totalFats: userMeals.reduce((sum, meal) => sum + (meal.totalFat || 0), 0),
   };
   const tdee = user?.tdee ? Math.round(user.tdee) : 0;
-  console.log("tdee", tdee);
   const recommendedNutrition = {
-    protein: Math.round((tdee * 0.3) / 4), // 30% of calories, 4 calories per gram
-    carbs: Math.round((tdee * 0.4) / 4), // 40% of calories, 4 calories per gram
-    fat: Math.round((tdee * 0.3) / 9), // 30% of calories, 9 calories per gram
+    protein: Math.round((tdee * 0.3) / 4),
+    carbs: Math.round((tdee * 0.4) / 4),
+    fat: Math.round((tdee * 0.3) / 9),
   };
 
-  // Calculate remaining calories and macros for the day
   const remaining = {
-    calories: Math.max(0, tdee - userData.totalCalories),
-    protein: Math.max(0, recommendedNutrition.protein - userData.totalProtein),
-    carbs: Math.max(0, recommendedNutrition.carbs - userData.totalCarbs),
-    fat: Math.max(0, recommendedNutrition.fat - userData.totalFats),
+    calories: Number(Math.max(0, tdee - userData.totalCalories).toFixed(1)),
+    protein: Number(
+      Math.max(0, recommendedNutrition.protein - userData.totalProtein).toFixed(
+        1
+      )
+    ),
+    carbs: Number(
+      Math.max(0, recommendedNutrition.carbs - userData.totalCarbs).toFixed(1)
+    ),
+    fat: Number(
+      Math.max(0, recommendedNutrition.fat - userData.totalFats).toFixed(1)
+    ),
   };
-
-  console.log("userData", userData);
-  console.log("recommendedNutrition", recommendedNutrition);
-  console.log("remaining", remaining);
 
   useEffect(() => {
     fetchMeals();

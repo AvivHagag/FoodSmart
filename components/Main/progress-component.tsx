@@ -96,6 +96,12 @@ export function DashboardScreen(props: DashboardScreenProps = {}) {
             gradientEnd="#8B5CF6"
           >
             <FlameIcon width={32} height={32} color="#000000" />
+            <Text
+              className="text-sm"
+              style={{ color: "#27272A", marginTop: 6 }}
+            >
+              {Math.round((consumedCalories / tdee) * 100)}%
+            </Text>
           </CircleProgress>
         </View>
       </Card>
@@ -113,6 +119,12 @@ export function DashboardScreen(props: DashboardScreenProps = {}) {
               gradientEnd="#0369A1"
             >
               <DumbbellIcon className="h-5 w-5" color="#000000" />
+              <Text style={{ color: "#0369A1", marginTop: 4, fontSize: 10 }}>
+                {Math.round(
+                  (userData.totalProtein / recommendedNutrition.protein) * 100
+                )}
+                %
+              </Text>
             </CircleProgress>
           </View>
         </Card>
@@ -129,6 +141,12 @@ export function DashboardScreen(props: DashboardScreenProps = {}) {
               gradientEnd="#F59E0B"
             >
               <WheatIcon className="h-5 w-5" color="#000000" />
+              <Text style={{ color: "#F59E0B", marginTop: 4, fontSize: 10 }}>
+                {Math.round(
+                  (userData.totalCarbs / recommendedNutrition.carbs) * 100
+                )}
+                %
+              </Text>
             </CircleProgress>
           </View>
         </Card>
@@ -145,6 +163,12 @@ export function DashboardScreen(props: DashboardScreenProps = {}) {
               gradientEnd="#E11D48"
             >
               <DropletIcon className="h-5 w-5" color="#000000" />
+              <Text style={{ color: "#E11D48", marginTop: 4, fontSize: 10 }}>
+                {Math.round(
+                  (userData.totalFats / recommendedNutrition.fat) * 100
+                )}
+                %
+              </Text>
             </CircleProgress>
           </View>
         </Card>

@@ -31,12 +31,16 @@ interface FoodDetectionResultsProps {
   aggregatedDetections: Record<string, number>;
   nutritionData: Record<string, NutritionData | null>;
   imageUri: string;
+  onSaving: boolean;
+  setOnSaving: (onSaving: boolean) => void;
 }
 
 const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
   aggregatedDetections,
   nutritionData,
   imageUri,
+  onSaving,
+  setOnSaving,
 }) => {
   const [editMode, setEditMode] = useState(false);
   const [foodCounts, setFoodCounts] =
@@ -218,7 +222,7 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
         alert("You must be logged in to save a meal");
         return;
       }
-
+      setOnSaving(true);
       const imageUrl = await uploadImage(imageUri);
       const now = new Date();
       const day = moment().tz("Asia/Jerusalem").format("DD/MM/YYYY");
@@ -259,6 +263,8 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
     } catch (e) {
       console.error(e);
       alert("Could not save your meal.");
+    } finally {
+      setOnSaving(false);
     }
   };
 
@@ -291,7 +297,6 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
         contentContainerStyle={{ paddingBottom: keyboardHeight - 90 }}
         style={{ marginBottom: 90 }}
       >
-        {/* food list */}
         <View className="mb-1">
           {Object.entries(foodCounts).map(([foodName, count]) => {
             const foodData = nutritionData[foodName];
@@ -456,43 +461,45 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
           )}
         </View>
 
-        <View className="flex-row justify-between">
-          <TouchableOpacity
-            onPress={toggleEditMode}
-            style={{
-              flex: 1,
-              borderRadius: 16,
-              marginRight: 8,
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: "black",
-              padding: 8,
-              gap: 8,
-            }}
-          >
-            {editMode ? (
-              <Save size={20} color="white" />
-            ) : (
-              <Edit2Icon size={20} color="white" />
-            )}
-            <Text className="text-center text-white text-lg font-medium">
-              {editMode ? "Save" : "Edit Nutrition"}
-            </Text>
-          </TouchableOpacity>
-
-          {!editMode && (
+        {!onSaving && (
+          <View className="flex-row justify-between">
             <TouchableOpacity
-              className="flex-1 rounded-2xl ml-2 flex-row justify-center items-center border border-black p-2 gap-2"
-              onPress={saveMeal}
+              onPress={toggleEditMode}
+              style={{
+                flex: 1,
+                borderRadius: 16,
+                marginRight: 8,
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "black",
+                padding: 8,
+                gap: 8,
+              }}
             >
-              <Save size={20} color="black" />
-              <Text className="text-center text-black text-lg font-medium">
-                Save
+              {editMode ? (
+                <Save size={20} color="white" />
+              ) : (
+                <Edit2Icon size={20} color="white" />
+              )}
+              <Text className="text-center text-white text-lg font-medium">
+                {editMode ? "Save" : "Edit Nutrition"}
               </Text>
             </TouchableOpacity>
-          )}
-        </View>
+
+            {!editMode && (
+              <TouchableOpacity
+                className="flex-1 rounded-2xl ml-2 flex-row justify-center items-center border border-black p-2 gap-2"
+                onPress={saveMeal}
+              >
+                <Save size={20} color="black" />
+                <Text className="text-center text-black text-lg font-medium">
+                  Save
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

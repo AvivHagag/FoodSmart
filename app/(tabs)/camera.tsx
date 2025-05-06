@@ -11,6 +11,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "@/constants/constants";
 import { ArrowLeftIcon, ShareIcon, SearchXIcon } from "lucide-react-native";
 import FoodDetectionResults from "../../components/camera/FoodDetectionResults";
+import SavingModal from "@/components/camera/saving-moda";
 
 interface DetectionResult {
   label: string;
@@ -37,6 +38,7 @@ const CameraScreen: React.FC = () => {
     Record<string, NutritionData | null>
   >({});
   const [loading, setLoading] = useState(false);
+  const [onSaving, setOnSaving] = useState(false);
 
   useEffect(() => {
     if (imageUri) {
@@ -118,6 +120,7 @@ const CameraScreen: React.FC = () => {
       : {};
   return (
     <View className="flex-1">
+      {onSaving && <SavingModal />}
       <View className="relative">
         <Image
           source={{ uri: imageUri }}
@@ -160,6 +163,8 @@ const CameraScreen: React.FC = () => {
             aggregatedDetections={aggregatedDetections}
             nutritionData={nutritionData}
             imageUri={imageUri}
+            onSaving={onSaving}
+            setOnSaving={setOnSaving}
           />
         ) : (
           <View className="flex-1 items-center p-6">
