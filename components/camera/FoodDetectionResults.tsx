@@ -10,7 +10,7 @@ import {
   Platform,
   Keyboard,
 } from "react-native";
-import { Edit2Icon, Save, Plus, Minus, PencilIcon } from "lucide-react-native";
+import { Edit2Icon, Save, Plus, Minus, PencilIcon, X } from "lucide-react-native";
 import { BASE_URL } from "@/constants/constants";
 import { useGlobalContext } from "../../app/context/authprovider";
 import { useRouter } from "expo-router";
@@ -63,6 +63,8 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
   const textInputRefs = useRef<Record<string, TextInput | null>>({});
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const router = useRouter();
+  const [editingFood, setEditingFood] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState<string>("");
 
   useEffect(() => {
     if (Object.keys(aggregatedDetections).length > 0) {
@@ -287,6 +289,36 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
     };
   }, []);
 
+  const handleRemoveFood = (foodName: string) => {
+    setFoodCounts((prev) => {
+      const newCounts = { ...prev };
+      delete newCounts[foodName];
+      
+      if (Object.keys(newCounts).length === 0) {
+        router.push("/");
+      }
+      
+      return newCounts;
+    });
+  };
+
+  const handleFoodQuantitySubmit = (foodName: string) => {
+    const foodData = nutritionData[foodName];
+    let newValue = parseFloat(editingValue);
+    
+    if (isNaN(newValue) || newValue < 1) {
+      newValue = 1;
+    }
+
+    setFoodCounts((prev) => ({
+      ...prev,
+      [foodName]: newValue,
+    }));
+    
+    setEditingFood(null);
+    setEditingValue("");
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -313,7 +345,15 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
                 style={{ backgroundColor: "#f9fafb" }}
               >
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-lg font-semibold">{foodName}</Text>
+                  <View className="flex-row items-center">
+                    <TouchableOpacity
+                      onPress={() => handleRemoveFood(foodName)}
+                      className="mr-2 p-1"
+                    >
+                      <X size={18} color="#ef4444" />
+                    </TouchableOpacity>
+                    <Text className="text-lg font-semibold">{foodName}</Text>
+                  </View>
                   <View className="flex-row items-center bg-gray-100 rounded-full">
                     <TouchableOpacity
                       className="p-2"
@@ -321,9 +361,28 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
                     >
                       <Minus size={18} color="#000" />
                     </TouchableOpacity>
-                    <Text className="px-4 text-lg font-medium">
-                      {displayText}
-                    </Text>
+                    {editingFood === foodName ? (
+                      <TextInput
+                        className="px-4 text-lg font-medium"
+                        value={editingValue}
+                        onChangeText={setEditingValue}
+                        keyboardType="numeric"
+                        autoFocus
+                        onBlur={() => handleFoodQuantitySubmit(foodName)}
+                        onSubmitEditing={() => handleFoodQuantitySubmit(foodName)}
+                        style={{  paddingBottom: 10 }}
+                      />
+                    ) : (
+                      <TouchableOpacity
+                        className="px-4"
+                        onPress={() => {
+                          setEditingFood(foodName);
+                          setEditingValue(count.toString());
+                        }}
+                      >
+                        <Text className="text-lg font-medium">{displayText}</Text>
+                      </TouchableOpacity>
+                    )}
                     <TouchableOpacity
                       className="p-2"
                       onPress={() => adjustFoodAmount(foodName, true)}
