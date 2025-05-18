@@ -9,14 +9,16 @@ import {
   StyleSheet,
   Alert,
   Modal,
+  ActivityIndicator,
 } from "react-native";
-import { KeyRound, Pencil, Trash2, TriangleAlert } from "lucide-react-native";
+import { KeyRound, Pencil, Trash2, TriangleAlert, Images, Camera as CameraIcon, X } from "lucide-react-native";
 import AvatarImage from "./avatar";
 import Title from "../title";
 import { useGlobalContext } from "@/app/context/authprovider";
 import { useNavigation } from "@react-navigation/native";
 import { BASE_URL } from "@/constants/constants";
 import { Usertype } from "@/assets/types";
+import * as ImagePicker from "expo-image-picker";
 
 interface EditBasicInfoProps {
   user: Usertype;
@@ -35,11 +37,12 @@ export default function EditBasicInfo({
     user.image ? user.image : null
   );
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [isImagePickerVisible, setIsImagePickerVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { logout } = useGlobalContext();
-  const navigation = useNavigation();
+  const { logout, updateUser } = useGlobalContext();
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!fullname.trim()) {
       Alert.alert("Validation Error", "Full name is required.");
       return;
@@ -49,26 +52,124 @@ export default function EditBasicInfo({
       return;
     }
 
-    const updatedUser: Usertype = {
-      ...user,
-      fullname: fullname.trim(),
-      email: email.trim().toLowerCase(),
-      image,
-      // Optionally, recalculate BMI and TDEE here or on the backend
-    };
+    setIsLoading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append("userID", user._id);
+      formData.append("fullname", fullname.trim());
+      formData.append("email", email.trim().toLowerCase());
+      
+      if (image && image !== user.image && image.startsWith('file://')) {
+        const filename = image.split('/').pop() || 'image.jpg';
+        
+        formData.append("image", {
+          uri: image,
+          type: 'image/jpeg',
+          name: filename
+        } as any);
+      }
+      
+      const response = await fetch(`${BASE_URL}/api/update_basic_info`, {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        
+        if (updateUser) {
+          updateUser(result.user);
+        }
+        
+        Alert.alert(
+          "Success", 
+          "Your personal information has been updated.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                backBottom()
+              }
+            }
+          ]
+        );
+      } else {
+        const errorData = await response.json();
+        Alert.alert("Error", errorData.error || "Failed to update information.");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      Alert.alert("Error", "An error occurred while updating your profile.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    // TODO: Implement the updateUser logic, e.g., API call to update user data
-
-    Alert.alert("Success", "Your personal information has been updated.", [
-      {
-        text: "OK",
-        // Optionally, close the edit view here
-      },
-    ]);
+  const toggleImagePicker = () => {
+    setIsImagePickerVisible(!isImagePickerVisible);
   };
 
   const handleChangePhoto = () => {
-    Alert.alert("Change Photo", "Image picker functionality not implemented.");
+    toggleImagePicker();
+  };
+
+  const openCamera = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissions Required",
+          "Camera permissions are needed to take a photo."
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setImage(result.assets[0].uri);
+      }
+      
+      toggleImagePicker();
+    } catch (error) {
+      console.error("Error with camera:", error);
+      Alert.alert("Error", "Failed to take photo");
+    }
+  };
+
+  const openGallery = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissions Required",
+          "Gallery permissions are needed to select a photo."
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setImage(result.assets[0].uri);
+      }
+      
+      toggleImagePicker();
+    } catch (error) {
+      console.error("Error with gallery:", error);
+      Alert.alert("Error", "Failed to select photo");
+    }
   };
 
   const openDeleteModal = () => {
@@ -182,6 +283,18 @@ export default function EditBasicInfo({
                   style={styles.textInput}
                 />
               </View>
+              
+              <TouchableOpacity
+                onPress={handleSave}
+                disabled={isLoading}
+                className="rounded-lg p-2 items-center shadow-md border divide-solid"
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text className="font-semibold text-base">Save Changes</Text>
+                )}
+              </TouchableOpacity>
             </View>
           </View>
           <View className="gap-3">
@@ -240,6 +353,47 @@ export default function EditBasicInfo({
                 </View>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+      
+      {/* Image Picker Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isImagePickerVisible}
+        onRequestClose={toggleImagePicker}
+      >
+        <View style={styles.modalBackdrop}>
+          <View className="w-4/5 max-w-sm rounded-2xl bg-white shadow-md p-4">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-lg font-semibold text-gray-900">Change Profile Photo</Text>
+              <TouchableOpacity onPress={toggleImagePicker}>
+                <X size={20} color="#000" />
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity
+              className="flex-row items-center gap-3 rounded-xl px-4 py-3 mb-2"
+              onPress={openCamera}
+            >
+              <CameraIcon size={24} color={"black"} />
+              <Text className="text-black text-center text-lg font-medium">
+                Take Photo
+              </Text>
+            </TouchableOpacity>
+            
+            <View className="w-full h-[1px] bg-zinc-400 mb-2"></View>
+            
+            <TouchableOpacity
+              className="flex-row items-center gap-3 rounded-xl px-4 py-3"
+              onPress={openGallery}
+            >
+              <Images size={24} color={"black"} />
+              <Text className="text-black text-center text-lg font-medium">
+                Choose From Gallery
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
