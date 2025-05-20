@@ -21,7 +21,6 @@ const SavingModal = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Cloud pulsing
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -38,7 +37,6 @@ const SavingModal = () => {
       ])
     ).start();
 
-    // Arrow animation (looped)
     Animated.loop(
       Animated.sequence([
         Animated.parallel([
@@ -53,7 +51,7 @@ const SavingModal = () => {
             useNativeDriver: true,
           }),
         ]),
-        Animated.delay(300), // slight pause before restarting
+        Animated.delay(300),
         Animated.parallel([
           Animated.timing(arrowY, {
             toValue: 0,
@@ -106,11 +104,11 @@ const SavingModal = () => {
               opacity: arrowOpacity,
             }}
           >
-            <ArrowUpIcon size={28} color="#E11D48" strokeWidth={4} />
+            <ArrowUpIcon size={28} color="#22c55e" strokeWidth={4} />
           </Animated.View>
         </View>
 
-        <Text className="text-xl font-semibold text-center mb-2">
+        <Text className="text-xl font-semibold text-center mb-2 ">
           Saving your meal.
         </Text>
         <Text className="text-gray-500 text-center">

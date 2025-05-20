@@ -38,8 +38,8 @@ def get_or_create_food():
     {{
     "name": "<string: the food name>",
     "unit": "<\"piece\" or \"gram\">",
-    "piece_avg_weight": <number|null: grams in one piece>,
-    "avg_gram": 100,
+     "piece_avg_weight": <number|null: grams in one piece; null if unit is \"gram\">,
+  "avg_gram": <number|null: typical serving size in grams; null if unit is \"piece\">,
     "cal": <number: kcal per 100 g>,
     "protein": <number: g protein per 100 g>,
     "fat": <number: g fat per 100 g>,

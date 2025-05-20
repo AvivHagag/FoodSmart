@@ -37,8 +37,8 @@ const CameraScreen: React.FC = () => {
   const [nutritionData, setNutritionData] = useState<
     Record<string, NutritionData | null>
   >({});
-  const [loading, setLoading] = useState(false);
-  const [onSaving, setOnSaving] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [onSaving, setOnSaving] = useState<boolean>(false);
 
   useEffect(() => {
     if (imageUri) {
