@@ -67,14 +67,7 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
             <View className="flex flex-row justify-between items-center">
               <Text style={styles.title}>{meal.name}</Text>
               <View style={styles.timeBadge}>
-                <Text style={styles.time}>
-                  {new Date(meal.time).toLocaleString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </Text>
+                <Text style={styles.time}>{meal.time}</Text>
               </View>
             </View>
             <View style={styles.caloriesRow}>

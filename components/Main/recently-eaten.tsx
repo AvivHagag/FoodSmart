@@ -8,6 +8,7 @@ import {
 } from "lucide-react-native";
 import { Card } from "../ui/card";
 import { MealDetailModal } from "./MealDetailModal";
+import moment from "moment";
 
 interface MealItem {
   name: string;
@@ -26,8 +27,14 @@ interface RecentlyEatenProps {
 
 export function RecentlyEaten({ meals }: RecentlyEatenProps) {
   const recentMeals: MealItem[] = Array.isArray(meals[0])
-    ? (meals[0] as MealItem[])
-    : (meals as MealItem[]);
+    ? (meals[0] as MealItem[]).map((meal) => ({
+        ...meal,
+        time: moment(meal.time).tz("Asia/Jerusalem").format("DD/MM/YYYY HH:mm"),
+      }))
+    : (meals as MealItem[]).map((meal) => ({
+        ...meal,
+        time: moment(meal.time).tz("Asia/Jerusalem").format("DD/MM/YYYY HH:mm"),
+      }));
 
   const [selectedMeal, setSelectedMeal] = useState<MealItem | null>(null);
   const [mealOpenModal, setMealOpenModal] = useState<boolean>(false);
@@ -93,12 +100,7 @@ export function RecentlyEaten({ meals }: RecentlyEatenProps) {
                   <View className="flex-row justify-between">
                     <Text className="font-bold text-base">{meal.name}</Text>
                     {meal.time && (
-                      <Text className="text-sm text-gray-500">
-                        {new Date(meal.time).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </Text>
+                      <Text className="text-sm text-gray-500">{meal.time}</Text>
                     )}
                   </View>
                   <View
