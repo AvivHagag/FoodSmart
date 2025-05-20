@@ -112,7 +112,7 @@ const History = () => {
             protein: meal.protein || meal.fat,
             carbs: meal.carbo,
             fats: meal.fat,
-            image: meal.imageUri,
+            imageUri: meal.imageUri,
             items: meal.items,
           }));
           setMeals(processedMeals);
