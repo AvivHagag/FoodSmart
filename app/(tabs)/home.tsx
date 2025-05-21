@@ -63,7 +63,7 @@ export default function Home() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <MainPageHeader burning={userData.totalCalories} />
+      <MainPageHeader burning={Number(userData.totalCalories.toFixed(1))} />
       <ScrollView
         className="bg-white flex-1 w-full p-4 mt-4"
         contentContainerStyle={{ paddingBottom: 80 }}

@@ -112,26 +112,26 @@ export function RecentlyEaten({ meals }: RecentlyEatenProps) {
                       className="font-bold text-sm"
                       style={{ marginLeft: 2 }}
                     >
-                      {meal.calories} calories
+                      {meal.calories.toFixed(1)} calories
                     </Text>
                   </View>
                   <View className="mt-2 flex-row items-center justify-between w-full">
                     <View className="flex-row items-center">
                       <DumbbellIcon color="#EF4444" size={16} />
                       <Text className="text-sm" style={{ marginLeft: 2 }}>
-                        {meal.protein}g
+                        {meal.protein.toFixed(1)}g
                       </Text>
                     </View>
                     <View className="flex-row items-center">
                       <WheatIcon color="#F59E0B" size={16} />
                       <Text className="text-sm" style={{ marginLeft: 2 }}>
-                        {meal.carbo}g
+                        {meal.carbo.toFixed(1)}g
                       </Text>
                     </View>
                     <View className="flex-row items-center">
                       <DropletIcon color="#3B82F6" size={16} />
                       <Text className="text-sm" style={{ marginLeft: 2 }}>
-                        {meal.fat}g
+                        {meal.fat.toFixed(1)}g
                       </Text>
                     </View>
                   </View>

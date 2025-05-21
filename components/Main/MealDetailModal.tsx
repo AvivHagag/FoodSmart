@@ -76,22 +76,26 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
               </View>
               <View className="flex flex-col items-start">
                 <Text style={styles.calText1}>Calories</Text>
-                <Text style={styles.calText2}>{meal.calories} kcal</Text>
+                <Text style={styles.calText2}>
+                  {meal.calories.toFixed(1)} kcal
+                </Text>
               </View>
             </View>
 
             <View style={styles.macrosContainer}>
               <View style={styles.macroItem}>
                 <DumbbellIcon size={18} color="#EF4444" />
-                <Text style={styles.macroText}>{meal.protein} g</Text>
+                <Text style={styles.macroText}>
+                  {meal.protein.toFixed(1)} g
+                </Text>
               </View>
               <View style={styles.macroItem}>
                 <WheatIcon size={18} color="#F59E0B" />
-                <Text style={styles.macroText}>{meal.carbo} g</Text>
+                <Text style={styles.macroText}>{meal.carbo.toFixed(1)} g</Text>
               </View>
               <View style={styles.macroItem}>
                 <DropletIcon size={18} color="#3B82F6" />
-                <Text style={styles.macroText}>{meal.fat} g</Text>
+                <Text style={styles.macroText}>{meal.fat.toFixed(1)} g</Text>
               </View>
             </View>
 

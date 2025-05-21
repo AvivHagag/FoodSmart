@@ -82,7 +82,7 @@ const History = () => {
         newMeal.time !== currentMeal.time ||
         newMeal.calories !== currentMeal.calories ||
         newMeal.protein !== currentMeal.protein ||
-        newMeal.carbo !== currentMeal.carbo ||
+        newMeal.fat !== currentMeal.fat ||
         newMeal.fat !== currentMeal.fat ||
         newMeal.items !== currentMeal.items
       ) {
@@ -110,8 +110,8 @@ const History = () => {
             time: formatTimeFromDate(meal.time),
             calories: meal.calories,
             protein: meal.protein || meal.fat,
-            carbs: meal.carbo,
-            fats: meal.fat,
+            carbo: meal.carbo,
+            fat: meal.fat,
             imageUri: meal.imageUri,
             items: meal.items,
           }));
@@ -151,8 +151,8 @@ const History = () => {
             time: formatTimeFromDate(meal.time),
             calories: meal.calories,
             protein: meal.protein || meal.fat,
-            carbs: meal.carbo,
-            fats: meal.fat,
+            carbo: meal.carbo,
+            fat: meal.fat,
             image: meal.imageUri,
             items: meal.items,
           }));
