@@ -19,6 +19,7 @@ import { useNavigation } from "@react-navigation/native";
 import { BASE_URL } from "@/constants/constants";
 import { Usertype } from "@/assets/types";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface EditBasicInfoProps {
   user: Usertype;
@@ -49,6 +50,14 @@ export default function EditBasicInfo({
     }
     if (!email.trim()) {
       Alert.alert("Validation Error", "Email is required.");
+      return;
+    }
+
+    // Check if any changes were made
+    if (fullname.trim() === user.fullname && 
+        email.trim().toLowerCase() === user.email && 
+        image === user.image) {
+      backBottom();
       return;
     }
 
@@ -285,16 +294,24 @@ export default function EditBasicInfo({
               </View>
               
               <TouchableOpacity
-                onPress={handleSave}
-                disabled={isLoading}
-                className="rounded-lg p-2 items-center shadow-md border divide-solid"
+              onPress={handleSave}
+              style={[
+                styles.saveButtonContainer,
+              ]}
+                >
+              <LinearGradient
+                colors={["#27272A", "#000000"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.gradientBackground}
               >
                 {isLoading ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <ActivityIndicator size="small" color="#ffffff" />
                 ) : (
-                  <Text className="font-semibold text-base">Save Changes</Text>
+                  <Text style={styles.saveButtonText}>Save Profile</Text>
                 )}
-              </TouchableOpacity>
+              </LinearGradient>
+            </TouchableOpacity>
             </View>
           </View>
           <View className="gap-3">
@@ -357,7 +374,6 @@ export default function EditBasicInfo({
         </View>
       </Modal>
       
-      {/* Image Picker Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -402,7 +418,24 @@ export default function EditBasicInfo({
 }
 
 const styles = StyleSheet.create({
-  button: {
+  saveButtonContainer: {
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  gradientBackground: {
+    padding: 12,
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  saveButtonText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+   button: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
