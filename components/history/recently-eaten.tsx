@@ -38,7 +38,6 @@ export function RecentlyEaten({ recentMeals }: RecentlyEatenProps) {
     setSelectedMeal(null);
     setMealOpenModal(false);
   };
-  console.log(recentMeals);
   return (
     <View style={{ marginBottom: 200 }}>
       <Text className="mb-4 text-lg font-semibold text-gray-700">

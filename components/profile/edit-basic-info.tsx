@@ -81,7 +81,6 @@ export default function EditBasicInfo({
 
   const confirmDeleteAccount = async () => {
     try {
-      console.log(user);
       const response = await fetch(`${BASE_URL}/api/delete_user`, {
         method: "DELETE",
         headers: {
