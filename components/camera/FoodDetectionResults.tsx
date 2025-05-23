@@ -228,7 +228,6 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
       const imageUrl = await uploadImage(imageUri);
       const now = new Date();
       const day = moment().tz("Asia/Jerusalem").format("DD/MM/YYYY");
-      console.log("day", day);
       const items = Object.entries(foodCounts)
         .map(([foodName, count]) => (count > 1 ? `${foodName}` : foodName))
         .join(",");
