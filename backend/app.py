@@ -14,6 +14,9 @@ from routes.get_meals import get_meals_bp
 from routes.food import food_bp     
 from routes.meals import meals_bp
 from routes.update_basic_info import update_basic_info_bp
+from routes.delete_meal import delete_meal_bp
+from routes.update_meal import update_meal_bp
+from routes.support_message import support_message_bp
 
 load_dotenv()
 app = Flask(__name__)
@@ -36,6 +39,9 @@ app.register_blueprint(food_bp)
 app.register_blueprint(get_meals_bp)
 app.register_blueprint(meals_bp)
 app.register_blueprint(update_basic_info_bp)
+app.register_blueprint(delete_meal_bp)
+app.register_blueprint(update_meal_bp)
+app.register_blueprint(support_message_bp)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5002)

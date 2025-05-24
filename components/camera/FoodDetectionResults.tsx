@@ -10,7 +10,14 @@ import {
   Platform,
   Keyboard,
 } from "react-native";
-import { Edit2Icon, Save, Plus, Minus, PencilIcon, X } from "lucide-react-native";
+import {
+  Edit2Icon,
+  Save,
+  Plus,
+  Minus,
+  PencilIcon,
+  X,
+} from "lucide-react-native";
 import { BASE_URL } from "@/constants/constants";
 import { useGlobalContext } from "../../app/context/authprovider";
 import { useRouter } from "expo-router";
@@ -92,6 +99,12 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
       if (foodData) {
         if (foodData.unit === "gram") {
           const ratio = count / 100;
+          totalCal += parseFloat((foodData.cal * ratio).toFixed(1));
+          totalCarbs += parseFloat((foodData.carbohydrates * ratio).toFixed(1));
+          totalProtein += parseFloat((foodData.protein * ratio).toFixed(1));
+          totalFat += parseFloat((foodData.fat * ratio).toFixed(1));
+        } else if (foodData.unit === "piece" && foodData.piece_avg_weight) {
+          const ratio = (foodData.piece_avg_weight * count) / 100;
           totalCal += parseFloat((foodData.cal * ratio).toFixed(1));
           totalCarbs += parseFloat((foodData.carbohydrates * ratio).toFixed(1));
           totalProtein += parseFloat((foodData.protein * ratio).toFixed(1));
@@ -292,11 +305,11 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
     setFoodCounts((prev) => {
       const newCounts = { ...prev };
       delete newCounts[foodName];
-      
+
       if (Object.keys(newCounts).length === 0) {
         router.push("/");
       }
-      
+
       return newCounts;
     });
   };
@@ -304,7 +317,7 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
   const handleFoodQuantitySubmit = (foodName: string) => {
     const foodData = nutritionData[foodName];
     let newValue = parseFloat(editingValue);
-    
+
     if (isNaN(newValue) || newValue < 1) {
       newValue = 1;
     }
@@ -313,7 +326,7 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
       ...prev,
       [foodName]: newValue,
     }));
-    
+
     setEditingFood(null);
     setEditingValue("");
   };
@@ -368,8 +381,10 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
                         keyboardType="numeric"
                         autoFocus
                         onBlur={() => handleFoodQuantitySubmit(foodName)}
-                        onSubmitEditing={() => handleFoodQuantitySubmit(foodName)}
-                        style={{  paddingBottom: 10 }}
+                        onSubmitEditing={() =>
+                          handleFoodQuantitySubmit(foodName)
+                        }
+                        style={{ paddingBottom: 10 }}
                       />
                     ) : (
                       <TouchableOpacity
@@ -379,7 +394,9 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
                           setEditingValue(count.toString());
                         }}
                       >
-                        <Text className="text-lg font-medium">{displayText}</Text>
+                        <Text className="text-lg font-medium">
+                          {displayText}
+                        </Text>
                       </TouchableOpacity>
                     )}
                     <TouchableOpacity

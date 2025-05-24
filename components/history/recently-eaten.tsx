@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import {
   DropletIcon,
   FlameIcon,
@@ -8,6 +17,7 @@ import {
 } from "lucide-react-native";
 import { Card } from "../ui/card";
 import { MealDetailModal } from "../Main/MealDetailModal";
+import { BASE_URL } from "@/constants/constants";
 
 type Meal = {
   _id?: string;
@@ -23,11 +33,20 @@ type Meal = {
 
 interface RecentlyEatenProps {
   recentMeals: Meal[];
+  onRefresh: () => void;
+  userId: string;
+  mealsID: string;
 }
 
-export function RecentlyEaten({ recentMeals }: RecentlyEatenProps) {
+export function RecentlyEaten({
+  recentMeals,
+  onRefresh,
+  userId,
+  mealsID,
+}: RecentlyEatenProps) {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [mealOpenModal, setMealOpenModal] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   const handleMealPress = (meal: Meal) => {
     setSelectedMeal(meal);
@@ -38,6 +57,56 @@ export function RecentlyEaten({ recentMeals }: RecentlyEatenProps) {
     setSelectedMeal(null);
     setMealOpenModal(false);
   };
+
+  const handleDelete = async (meal: Meal) => {
+    try {
+      if (!mealsID || !userId) {
+        Alert.alert("Error", "Missing meal or user information");
+        return;
+      }
+      setIsDeleting(true);
+      const response = await fetch(
+        `${BASE_URL}/api/user/${userId}/delete_meal`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mealId: mealsID,
+            mealName: meal.name,
+          }),
+        }
+      );
+
+      if (response.status === 200) {
+        handleCloseModal();
+        onRefresh();
+      } else {
+        Alert.alert("Error", "Failed to delete meal");
+      }
+    } catch (error) {
+      console.error("Error deleting meal:", error);
+      Alert.alert(
+        "Error",
+        "An error occurred while deleting the meal. Please try again."
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const LoadingOverlay = () => (
+    <Modal transparent visible={isDeleting} animationType="fade">
+      <View style={styles.loadingOverlay}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#E11D48" />
+          <Text style={styles.loadingText}>Deleting meal...</Text>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <View style={{ marginBottom: 200 }}>
       <Text className="mb-4 text-lg font-semibold text-gray-700">
@@ -132,8 +201,42 @@ export function RecentlyEaten({ recentMeals }: RecentlyEatenProps) {
           meal={selectedMeal}
           visible={mealOpenModal}
           onClose={handleCloseModal}
+          onDelete={() => handleDelete(selectedMeal)}
+          onRefresh={onRefresh}
+          userId={userId}
+          mealsID={mealsID}
         />
       )}
+      <LoadingOverlay />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingContainer: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 32,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+  },
+});

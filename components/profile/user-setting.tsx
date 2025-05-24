@@ -26,6 +26,7 @@ interface UserSettingProps {
   setUserEditProfile: Dispatch<SetStateAction<boolean>>;
   setAccountEditProfile: Dispatch<SetStateAction<boolean>>;
   setShowSettings: Dispatch<SetStateAction<boolean>>;
+  setShowContactSupport: Dispatch<SetStateAction<boolean>>;
 }
 
 function calculateUsageDays(createdAt: string | undefined): number {
@@ -50,6 +51,7 @@ export default function UserSetting({
   setUserEditProfile,
   setAccountEditProfile,
   setShowSettings,
+  setShowContactSupport,
 }: UserSettingProps) {
   const daysUsingApp = calculateUsageDays(user.createdAt);
   const menuItems: MenuItem[] = [
@@ -66,6 +68,7 @@ export default function UserSetting({
     {
       icon: <Headset color={"#6b7280"} />,
       label: "Contact Support",
+      onClick: () => setShowContactSupport(true),
     },
     {
       icon: <MessageCircle color={"#6b7280"} />,

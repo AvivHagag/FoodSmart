@@ -2,14 +2,16 @@ import { SafeAreaView, ScrollView, RefreshControl } from "react-native";
 import MainPageHeader from "@/components/Main/header";
 import { DashboardScreen } from "@/components/Main/progress-component";
 import { RecentlyEaten } from "@/components/Main/recently-eaten";
+import { ProgressBarDashboard } from "@/components/Main/progress-bar-component";
 import { useEffect, useState } from "react";
 import { useGlobalContext } from "../context/authprovider";
+import { ProgressTypeToggle } from "@/components/Main/ProgressTypeToggle";
 
 export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
+  const [progressType, setProgressType] = useState<"ring" | "bar">("ring");
   const { userMeals, fetchMeals, user } = useGlobalContext();
   const meals = userMeals.map((meal) => meal.mealsList);
-
   const userData = {
     totalCalories: userMeals.reduce(
       (sum, meal) => sum + (meal.totalCalories || 0),
@@ -65,7 +67,7 @@ export default function Home() {
     <SafeAreaView className="flex-1 bg-white">
       <MainPageHeader burning={Number(userData.totalCalories.toFixed(1))} />
       <ScrollView
-        className="bg-white flex-1 w-full p-4 mt-4"
+        className="bg-white flex-1 w-full px-4 py-2"
         contentContainerStyle={{ paddingBottom: 80 }}
         refreshControl={
           <RefreshControl
@@ -77,14 +79,35 @@ export default function Home() {
           />
         }
       >
-        <DashboardScreen
-          tdee={tdee}
-          consumedCalories={userData.totalCalories}
-          recommendedNutrition={recommendedNutrition}
-          userData={userData}
-          remaining={remaining}
+        <ProgressTypeToggle
+          progressType={progressType}
+          setProgressType={setProgressType}
         />
-        <RecentlyEaten meals={meals} />
+        {progressType === "ring" ? (
+          <DashboardScreen
+            tdee={tdee}
+            consumedCalories={userData.totalCalories}
+            recommendedNutrition={recommendedNutrition}
+            userData={userData}
+            remaining={remaining}
+          />
+        ) : (
+          <ProgressBarDashboard
+            tdee={tdee}
+            consumedCalories={userData.totalCalories}
+            recommendedNutrition={recommendedNutrition}
+            userData={userData}
+            remaining={remaining}
+          />
+        )}
+        {meals.length > 0 && (
+          <RecentlyEaten
+            meals={meals}
+            userId={user?._id}
+            mealsID={userMeals[0]?._id}
+            onRefresh={onRefresh}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );

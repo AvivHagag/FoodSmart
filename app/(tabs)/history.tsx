@@ -39,6 +39,7 @@ const History = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [meals, setMeals] = useState<Meal[]>([]);
   const { user } = useGlobalContext();
+  const [mealsID, setMealsID] = useState<string>("");
 
   const formatDate = (date: Date) => {
     const months = [
@@ -104,6 +105,7 @@ const History = () => {
       const data = await response.json();
       if (response.ok && data.meals) {
         if (data.meals.length > 0 && data.meals[0].mealsList) {
+          setMealsID(data.meals[0]._id);
           const processedMeals = data.meals[0].mealsList.map((meal: Meal) => ({
             _id: meal._id,
             name: meal.name,
@@ -153,7 +155,7 @@ const History = () => {
             protein: meal.protein || meal.fat,
             carbo: meal.carbo,
             fat: meal.fat,
-            image: meal.imageUri,
+            imageUri: meal.imageUri,
             items: meal.items,
           }));
           const mealsChanged = areMealsDifferent(processedMeals, meals);
@@ -235,7 +237,12 @@ const History = () => {
                 </View>
               ) : meals.length > 0 ? (
                 <View>
-                  <RecentlyEaten recentMeals={meals} />
+                  <RecentlyEaten
+                    recentMeals={meals}
+                    onRefresh={onRefresh}
+                    userId={user?._id || ""}
+                    mealsID={mealsID}
+                  />
                 </View>
               ) : (
                 <View style={styles.emptyState}>

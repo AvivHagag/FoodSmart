@@ -5,12 +5,14 @@ import EditPersonalInfoScreen from "@/components/profile/edit-personal-info";
 import EditAccount from "@/components/profile/edit-account";
 import UserSetting from "@/components/profile/user-setting";
 import UserProfile from "@/components/profile/user-profile";
+import ContactSupport from "@/components/profile/contact-support";
 
 const Profile = () => {
   const { logout, user, updateUser } = useGlobalContext();
   const [userEditProfile, setUserEditProfile] = useState(false);
   const [accountEditProfile, setAccountEditProfile] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showContactSupport, setShowContactSupport] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
@@ -41,22 +43,29 @@ const Profile = () => {
           />
         }
       >
-        {!userEditProfile && !accountEditProfile && !showSettings && (
-          <UserProfile
-            user={user}
-            setShowSettings={setShowSettings}
-            setUserEditProfile={setUserEditProfile}
-          />
-        )}
-        {showSettings && !userEditProfile && !accountEditProfile && (
-          <UserSetting
-            user={user}
-            logout={logout}
-            setUserEditProfile={setUserEditProfile}
-            setAccountEditProfile={setAccountEditProfile}
-            setShowSettings={setShowSettings}
-          />
-        )}
+        {!userEditProfile &&
+          !accountEditProfile &&
+          !showSettings &&
+          !showContactSupport && (
+            <UserProfile
+              user={user}
+              setShowSettings={setShowSettings}
+              setUserEditProfile={setUserEditProfile}
+            />
+          )}
+        {showSettings &&
+          !userEditProfile &&
+          !accountEditProfile &&
+          !showContactSupport && (
+            <UserSetting
+              user={user}
+              logout={logout}
+              setUserEditProfile={setUserEditProfile}
+              setAccountEditProfile={setAccountEditProfile}
+              setShowSettings={setShowSettings}
+              setShowContactSupport={setShowContactSupport}
+            />
+          )}
         {userEditProfile && (
           <EditPersonalInfoScreen
             user={user}
@@ -69,6 +78,14 @@ const Profile = () => {
           <EditAccount
             user={user}
             setAccountEditProfile={setAccountEditProfile}
+          />
+        )}
+
+        {showContactSupport && (
+          <ContactSupport
+            setShowContactSupport={setShowContactSupport}
+            userEmail={user.email}
+            userName={user.fullname}
           />
         )}
       </ScrollView>
