@@ -1,7 +1,12 @@
-import { View, Image, Text } from "react-native";
-import { Flame } from "lucide-react-native";
+import { View, Image, Text, TouchableOpacity } from "react-native";
+import { Brain, Flame } from "lucide-react-native";
 
-function MainPageHeader({ burning }: { burning: number }) {
+interface MainPageHeaderProps {
+  burning: number;
+  onAskAI?: () => void;
+}
+
+function MainPageHeader({ burning, onAskAI }: MainPageHeaderProps) {
   return (
     <View className="flex-row justify-between items-center px-4">
       <View className="flex-row items-center gap-2">
@@ -18,17 +23,21 @@ function MainPageHeader({ burning }: { burning: number }) {
         <Text className="text-2xl font-bold">FoodSmart</Text>
       </View>
 
-      <View
+      <TouchableOpacity
         style={{
           backgroundColor: "#e5e7eb",
           paddingHorizontal: 8,
           paddingVertical: 5,
         }}
         className="flex-row items-center gap-2 rounded-full shadow-sm"
+        onPress={onAskAI}
+        activeOpacity={0.7}
       >
-        <Flame size={20} color="#f97316" style={{ marginRight: 2 }} />
-        <Text className="font-bold">{burning}</Text>
-      </View>
+        <Brain size={20} color="#000" style={{ marginRight: 4 }} />
+        <Text className="font-semibold" style={{ color: "#f97316" }}>
+          Ask AI
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }

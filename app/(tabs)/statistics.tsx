@@ -506,6 +506,7 @@ const Statistics = () => {
               />
             </View>
           )}
+          <View className="mt-48"></View>
         </View>
       </ScrollView>
       <View className="bg-white -mt-52 h-12"></View>

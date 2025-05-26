@@ -157,7 +157,7 @@ const TabsLayout: React.FC = () => {
       <TouchableOpacity
         onPress={openImagePickerOptions}
         activeOpacity={0.7}
-        className="bg-white shadow shadow-zinc-500 w-20 h-20 -mt-6 rounded-full items-center justify-center tra"
+        className="bg-white shadow shadow-zinc-500 w-20 h-20 -mt-6 rounded-full items-center justify-center transition-all"
       >
         {isModalVisible ? (
           <X size={32} color={"#000"} />

@@ -6,10 +6,16 @@ import { ProgressBarDashboard } from "@/components/Main/progress-bar-component";
 import { useEffect, useState } from "react";
 import { useGlobalContext } from "../context/authprovider";
 import { ProgressTypeToggle } from "@/components/Main/ProgressTypeToggle";
+import AnimatedSphere from "@/components/CirclesLightShow";
+import { BASE_URL } from "@/constants/constants";
+import AIAdviceCard from "@/components/AI/AIAdviceCard";
 
 export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [progressType, setProgressType] = useState<"ring" | "bar">("ring");
+  const [isAILoading, setIsAILoading] = useState(false);
+  const [showAIAdvice, setShowAIAdvice] = useState(false);
+  const [aiAdvice, setAIAdvice] = useState<any>(null);
   const { userMeals, fetchMeals, user } = useGlobalContext();
   const meals = userMeals.map((meal) => meal.mealsList);
   const userData = {
@@ -63,9 +69,46 @@ export default function Home() {
     }
   };
 
+  const handleAskAI = async () => {
+    setIsAILoading(true);
+    setShowAIAdvice(false);
+    setAIAdvice(null);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/user/${user?._id}/ai-nutrition-advice`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            date: new Date().toISOString().split("T")[0],
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        const aiAdvice = JSON.parse(data.ai_advice);
+        setAIAdvice(aiAdvice);
+        setShowAIAdvice(true);
+      } else {
+        console.error("AI advice error:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching AI advice:", error);
+    } finally {
+      setIsAILoading(false);
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <MainPageHeader burning={Number(userData.totalCalories.toFixed(1))} />
+      <MainPageHeader
+        burning={Number(userData.totalCalories.toFixed(1))}
+        onAskAI={handleAskAI}
+      />
       <ScrollView
         className="bg-white flex-1 w-full px-4 py-2"
         contentContainerStyle={{ paddingBottom: 80 }}
@@ -79,6 +122,18 @@ export default function Home() {
           />
         }
       >
+        {isAILoading && (
+          <AnimatedSphere
+            size={70} // optional tweaks
+          />
+        )}
+
+        {showAIAdvice && aiAdvice && (
+          <AIAdviceCard
+            advice={aiAdvice}
+            onClose={() => setShowAIAdvice(false)}
+          />
+        )}
         <ProgressTypeToggle
           progressType={progressType}
           setProgressType={setProgressType}
