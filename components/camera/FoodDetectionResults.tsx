@@ -272,7 +272,6 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
       });
 
       if (!res.ok) throw new Error("Failed to save meal");
-      alert("Your meal was saved!");
       router.push("/");
     } catch (e) {
       console.error(e);

@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
 import {
   Settings,
@@ -27,6 +27,7 @@ interface UserSettingProps {
   setAccountEditProfile: Dispatch<SetStateAction<boolean>>;
   setShowSettings: Dispatch<SetStateAction<boolean>>;
   setShowContactSupport: Dispatch<SetStateAction<boolean>>;
+  setShowUnderConstruction: Dispatch<SetStateAction<boolean>>;
 }
 
 function calculateUsageDays(createdAt: string | undefined): number {
@@ -52,6 +53,7 @@ export default function UserSetting({
   setAccountEditProfile,
   setShowSettings,
   setShowContactSupport,
+  setShowUnderConstruction,
 }: UserSettingProps) {
   const daysUsingApp = calculateUsageDays(user.createdAt);
   const menuItems: MenuItem[] = [
@@ -73,6 +75,7 @@ export default function UserSetting({
     {
       icon: <MessageCircle color={"#6b7280"} />,
       label: "Get Help",
+      onClick: () => setShowUnderConstruction(true),
     },
     {
       icon: <LogOut color={"#ef4444"} />,

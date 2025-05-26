@@ -208,13 +208,7 @@ export default function EditPersonalInfoScreen({
       setIsLoading(false);
       if (response.ok) {
         await updateUser(updatedUser);
-
-        Alert.alert("Success", "Your personal information has been updated.", [
-          {
-            text: "OK",
-            onPress: () => setUserEditProfile(false),
-          },
-        ]);
+        setUserEditProfile(false);
       } else {
         const errorData = await response.json();
         Alert.alert("Error", errorData.message || "Something went wrong.");

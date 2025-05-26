@@ -6,6 +6,7 @@ import EditAccount from "@/components/profile/edit-account";
 import UserSetting from "@/components/profile/user-setting";
 import UserProfile from "@/components/profile/user-profile";
 import ContactSupport from "@/components/profile/contact-support";
+import UnderConstruction from "@/components/profile/under-construction";
 
 const Profile = () => {
   const { logout, user, updateUser } = useGlobalContext();
@@ -13,6 +14,7 @@ const Profile = () => {
   const [accountEditProfile, setAccountEditProfile] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showContactSupport, setShowContactSupport] = useState(false);
+  const [showUnderConstruction, setShowUnderConstruction] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
@@ -47,7 +49,8 @@ const Profile = () => {
         {!userEditProfile &&
           !accountEditProfile &&
           !showSettings &&
-          !showContactSupport && (
+          !showContactSupport &&
+          !showUnderConstruction && (
             <UserProfile
               user={user}
               setShowSettings={setShowSettings}
@@ -57,7 +60,8 @@ const Profile = () => {
         {showSettings &&
           !userEditProfile &&
           !accountEditProfile &&
-          !showContactSupport && (
+          !showContactSupport &&
+          !showUnderConstruction && (
             <UserSetting
               user={user}
               logout={logout}
@@ -65,6 +69,7 @@ const Profile = () => {
               setAccountEditProfile={setAccountEditProfile}
               setShowSettings={setShowSettings}
               setShowContactSupport={setShowContactSupport}
+              setShowUnderConstruction={setShowUnderConstruction}
             />
           )}
         {userEditProfile && (
@@ -87,6 +92,12 @@ const Profile = () => {
             setShowContactSupport={setShowContactSupport}
             userEmail={user.email}
             userName={user.fullname}
+          />
+        )}
+
+        {showUnderConstruction && (
+          <UnderConstruction
+            setShowUnderConstruction={setShowUnderConstruction}
           />
         )}
       </ScrollView>

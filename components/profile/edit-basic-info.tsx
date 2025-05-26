@@ -11,7 +11,15 @@ import {
   Modal,
   ActivityIndicator,
 } from "react-native";
-import { KeyRound, Pencil, Trash2, TriangleAlert, Images, Camera as CameraIcon, X } from "lucide-react-native";
+import {
+  KeyRound,
+  Pencil,
+  Trash2,
+  TriangleAlert,
+  Images,
+  Camera as CameraIcon,
+  X,
+} from "lucide-react-native";
 import AvatarImage from "./avatar";
 import Title from "../title";
 import { useGlobalContext } from "@/app/context/authprovider";
@@ -40,78 +48,109 @@ export default function EditBasicInfo({
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isImagePickerVisible, setIsImagePickerVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{
+    fullname?: string;
+    email?: string;
+  }>({});
 
   const { logout, updateUser } = useGlobalContext();
 
-  const handleSave = async () => {
+  const validateForm = () => {
+    const newErrors: { fullname?: string; email?: string } = {};
+
     if (!fullname.trim()) {
-      Alert.alert("Validation Error", "Full name is required.");
-      return;
+      newErrors.fullname = "Full name is required.";
     }
+
     if (!email.trim()) {
-      Alert.alert("Validation Error", "Email is required.");
+      newErrors.email = "Email is required.";
+    } else if (!/\S+@\S+\.\S+/.test(email.trim())) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validateForm()) {
       return;
     }
 
     // Check if any changes were made
-    if (fullname.trim() === user.fullname && 
-        email.trim().toLowerCase() === user.email && 
-        image === user.image) {
+    if (
+      fullname.trim() === user.fullname &&
+      email.trim().toLowerCase() === user.email &&
+      image === user.image
+    ) {
       backBottom();
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       const formData = new FormData();
       formData.append("userID", user._id);
       formData.append("fullname", fullname.trim());
       formData.append("email", email.trim().toLowerCase());
-      
-      if (image && image !== user.image && image.startsWith('file://')) {
-        const filename = image.split('/').pop() || 'image.jpg';
-        
+
+      if (image && image !== user.image && image.startsWith("file://")) {
+        const filename = image.split("/").pop() || "image.jpg";
+
         formData.append("image", {
           uri: image,
-          type: 'image/jpeg',
-          name: filename
+          type: "image/jpeg",
+          name: filename,
         } as any);
       }
-      
+
       const response = await fetch(`${BASE_URL}/api/update_basic_info`, {
         method: "POST",
         body: formData,
       });
-      
+
       if (response.ok) {
         const result = await response.json();
-        
+
         if (updateUser) {
           updateUser(result.user);
         }
-        
-        Alert.alert(
-          "Success", 
-          "Your personal information has been updated.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                backBottom()
-              }
-            }
-          ]
-        );
+
+        Alert.alert("Success", "Your personal information has been updated.", [
+          {
+            text: "OK",
+            onPress: () => {
+              backBottom();
+            },
+          },
+        ]);
       } else {
         const errorData = await response.json();
-        Alert.alert("Error", errorData.error || "Failed to update information.");
+        Alert.alert(
+          "Error",
+          errorData.error || "Failed to update information."
+        );
       }
     } catch (error) {
       console.error("Error updating profile:", error);
       Alert.alert("Error", "An error occurred while updating your profile.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFullnameChange = (text: string) => {
+    setFullname(text);
+    if (errors.fullname && text.trim()) {
+      setErrors((prev) => ({ ...prev, fullname: undefined }));
+    }
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (errors.email && text.trim()) {
+      setErrors((prev) => ({ ...prev, email: undefined }));
     }
   };
 
@@ -144,7 +183,7 @@ export default function EditBasicInfo({
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setImage(result.assets[0].uri);
       }
-      
+
       toggleImagePicker();
     } catch (error) {
       console.error("Error with camera:", error);
@@ -154,7 +193,8 @@ export default function EditBasicInfo({
 
   const openGallery = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
           "Permissions Required",
@@ -173,7 +213,7 @@ export default function EditBasicInfo({
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setImage(result.assets[0].uri);
       }
-      
+
       toggleImagePicker();
     } catch (error) {
       console.error("Error with gallery:", error);
@@ -271,11 +311,17 @@ export default function EditBasicInfo({
                 </Text>
                 <TextInput
                   value={fullname}
-                  onChangeText={setFullname}
+                  onChangeText={handleFullnameChange}
                   placeholder="Enter your full name"
-                  style={styles.textInput}
+                  style={[
+                    styles.textInput,
+                    errors.fullname && styles.textInputError,
+                  ]}
                   autoCapitalize="words"
                 />
+                {errors.fullname && (
+                  <Text style={styles.errorText}>{errors.fullname}</Text>
+                )}
               </View>
 
               <View className="mb-4">
@@ -284,33 +330,37 @@ export default function EditBasicInfo({
                 </Text>
                 <TextInput
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={handleEmailChange}
                   placeholder="Enter your email"
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  style={styles.textInput}
+                  style={[
+                    styles.textInput,
+                    errors.email && styles.textInputError,
+                  ]}
                 />
-              </View>
-              
-              <TouchableOpacity
-              onPress={handleSave}
-              style={[
-                styles.saveButtonContainer,
-              ]}
-                >
-              <LinearGradient
-                colors={["#27272A", "#000000"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.gradientBackground}
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Save Profile</Text>
+                {errors.email && (
+                  <Text style={styles.errorText}>{errors.email}</Text>
                 )}
-              </LinearGradient>
-            </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity
+                onPress={handleSave}
+                style={[styles.saveButtonContainer]}
+              >
+                <LinearGradient
+                  colors={["#27272A", "#000000"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.gradientBackground}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Text style={styles.saveButtonText}>Save Profile</Text>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
           </View>
           <View className="gap-3">
@@ -372,7 +422,7 @@ export default function EditBasicInfo({
           </View>
         </View>
       </Modal>
-      
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -382,12 +432,14 @@ export default function EditBasicInfo({
         <View style={styles.modalBackdrop}>
           <View className="w-4/5 max-w-sm rounded-2xl bg-white shadow-md p-4">
             <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-lg font-semibold text-gray-900">Change Profile Photo</Text>
+              <Text className="text-lg font-semibold text-gray-900">
+                Change Profile Photo
+              </Text>
               <TouchableOpacity onPress={toggleImagePicker}>
                 <X size={20} color="#000" />
               </TouchableOpacity>
             </View>
-            
+
             <TouchableOpacity
               className="flex-row items-center gap-3 rounded-xl px-4 py-3 mb-2"
               onPress={openCamera}
@@ -397,9 +449,9 @@ export default function EditBasicInfo({
                 Take Photo
               </Text>
             </TouchableOpacity>
-            
+
             <View className="w-full h-[1px] bg-zinc-400 mb-2"></View>
-            
+
             <TouchableOpacity
               className="flex-row items-center gap-3 rounded-xl px-4 py-3"
               onPress={openGallery}
@@ -434,7 +486,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
   },
-   button: {
+  button: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
@@ -491,5 +543,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     fontSize: 15,
     color: "#1F2937",
+  },
+  textInputError: {
+    borderColor: "#EF4444",
+    borderWidth: 1.5,
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 2,
   },
 });

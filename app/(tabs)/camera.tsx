@@ -129,7 +129,7 @@ const CameraScreen: React.FC = () => {
         />
         <TouchableOpacity
           className="absolute top-14 left-4 bg-black/70 p-2 rounded-full"
-          onPress={() => router.back()}
+          onPress={() => router.push("/(tabs)/home")}
         >
           <ArrowLeftIcon size={20} color="white" />
         </TouchableOpacity>
@@ -179,7 +179,7 @@ const CameraScreen: React.FC = () => {
             </Text>
             <TouchableOpacity
               className="bg-black py-4 px-8 rounded-full flex-row items-center"
-              onPress={() => router.back()}
+              onPress={() => router.push("/(tabs)/home")}
             >
               <ArrowLeftIcon size={20} color="white" className="mr-2" />
               <Text className="text-white font-semibold text-lg ml-2">

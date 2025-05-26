@@ -11,7 +11,7 @@ if not API_KEY:
 client = OpenAI(api_key=API_KEY)
 detect_bp = Blueprint('detect_bp', __name__)
 model = YOLO("best.pt")
-YOLO_CONF_THRESHOLD = 0.7 
+YOLO_CONF_THRESHOLD = 0.6 
 
 @detect_bp.route('/detect', methods=['POST'])
 def detect():
