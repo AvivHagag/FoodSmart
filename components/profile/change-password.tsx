@@ -130,10 +130,10 @@ export default function ChangePassword({
           borderRadius: 8,
           padding: 16,
           shadowColor: "#71717a",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.4,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.7,
           shadowRadius: 4,
-          elevation: 3,
+          elevation: 5,
           marginBottom: 32,
         }}
       >
@@ -297,7 +297,13 @@ const styles = StyleSheet.create({
   container: {
     marginLeft: "auto",
     marginRight: "auto",
+    width: "100%",
     paddingVertical: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
   marginBottom6: {
     marginBottom: 24,
@@ -308,7 +314,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderRadius: 8,
-    padding: 12,
+    paddingVertical: 12,
   },
   marginLeft1: {
     marginLeft: 4,

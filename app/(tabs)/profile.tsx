@@ -18,9 +18,10 @@ const Profile = () => {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      // Add your refresh logic here
-      // For example, refetch user data
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulated delay
+      if (user?._id) {
+        await updateUser(user);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     } finally {
       setRefreshing(false);
     }

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Linking,
 } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
 import { BottomSpace } from "../bottom-space";
@@ -168,6 +169,20 @@ export default function ContactSupport({
     setShowContactSupport(false);
   };
 
+  const handleEmailPress = () => {
+    const emailUrl = "mailto:support@foodsmart.com";
+    Linking.openURL(emailUrl).catch((err) =>
+      console.error("Error opening email app:", err)
+    );
+  };
+
+  const handlePhonePress = () => {
+    const phoneUrl = "tel:08-61111111";
+    Linking.openURL(phoneUrl).catch((err) =>
+      console.error("Error opening phone dialer:", err)
+    );
+  };
+
   const getInputStyle = (fieldName: string, hasError: boolean) => [
     styles.textInput,
     focusedField === fieldName && styles.textInputFocused,
@@ -183,7 +198,7 @@ export default function ContactSupport({
         <Title text="Contact Support" backBottom={handleBackBottom} />
 
         <LinearGradient
-          colors={["#000", "#8B5CF6"]}
+          colors={["#1d4ed8", "#3b82f6"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 2, y: 1 }}
           style={styles.headerGradient}
@@ -206,11 +221,11 @@ export default function ContactSupport({
 
             <View style={styles.featuresContainer}>
               <View style={styles.featureItem}>
-                <Clock size={16} color="#a5b4fc" />
+                <Clock size={16} color="#93c5fd" />
                 <Text style={styles.featureText}>24/7 Support</Text>
               </View>
               <View style={styles.featureItem}>
-                <Shield size={16} color="#a5b4fc" />
+                <Shield size={16} color="#93c5fd" />
                 <Text style={styles.featureText}>Secure & Private</Text>
               </View>
             </View>
@@ -223,7 +238,7 @@ export default function ContactSupport({
           <View style={styles.contactCardsGrid}>
             <TouchableOpacity style={styles.contactCard}>
               <LinearGradient
-                colors={["#0369A1", "#38BDF8"]}
+                colors={["#2563eb", "#60a5fa"]}
                 style={styles.contactCardGradient}
               >
                 <Mail size={24} color="#ffffff" />
@@ -236,7 +251,7 @@ export default function ContactSupport({
 
             <TouchableOpacity style={styles.contactCard}>
               <LinearGradient
-                colors={["#047857", "#34D399"]}
+                colors={["#2563eb", "#60a5fa"]}
                 style={styles.contactCardGradient}
               >
                 <Phone size={24} color="#ffffff" />
@@ -247,7 +262,7 @@ export default function ContactSupport({
           </View>
 
           <View style={styles.availabilityCard}>
-            <HelpCircle size={20} color="#F59E0B" />
+            <HelpCircle size={20} color="#3b82f6" />
             <View style={styles.availabilityText}>
               <Text style={styles.availabilityTitle}>Available 24/7</Text>
               <Text style={styles.availabilitySubtitle}>
@@ -259,6 +274,7 @@ export default function ContactSupport({
 
         <View style={styles.formContainer}>
           <View style={styles.formHeader}>
+            <Mail size={20} color="#ffffff" />
             <Text style={styles.formHeaderTitle}>Send us a Message</Text>
           </View>
           <View style={styles.formContent}>
@@ -469,7 +485,7 @@ export default function ContactSupport({
           disabled={isLoading}
         >
           <LinearGradient
-            colors={["#27272A", "#000000"]}
+            colors={["#1e40af", "#3b82f6"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 3, y: 0 }}
             style={styles.submitGradient}
@@ -500,7 +516,7 @@ const styles = StyleSheet.create({
   headerGradient: {
     borderRadius: 20,
     marginBottom: 24,
-    shadowColor: "#4f46e5",
+    shadowColor: "#3b82f6",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
@@ -516,7 +532,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 16,
-    color: "#e0e7ff",
+    color: "#dbeafe",
     textAlign: "center",
     lineHeight: 22,
     paddingHorizontal: 20,
@@ -563,7 +579,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   featureText: {
-    color: "#e0e7ff",
+    color: "#dbeafe",
     fontSize: 14,
     fontWeight: "500",
   },
@@ -627,7 +643,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
     borderLeftWidth: 4,
-    borderLeftColor: "#F59E0B",
+    borderLeftColor: "#3b82f6",
   },
   availabilityText: {
     flex: 1,
@@ -655,7 +671,11 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   formHeader: {
-    backgroundColor: "#000",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    backgroundColor: "#1d4ed8",
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 16,
@@ -707,9 +727,9 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
   textInputFocused: {
-    borderColor: "#6366f1",
+    borderColor: "#3b82f6",
     backgroundColor: "#ffffff",
-    shadowColor: "#6366f1",
+    shadowColor: "#3b82f6",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -769,7 +789,7 @@ const styles = StyleSheet.create({
   submitButtonContainer: {
     borderRadius: 16,
     overflow: "hidden",
-    shadowColor: "#4f46e5",
+    shadowColor: "#3b82f6",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,

@@ -13,17 +13,51 @@ import React, { useState, useEffect } from "react";
 import { useGlobalContext } from "@/app/context/authprovider";
 import { LineChart } from "react-native-chart-kit";
 import { Dimensions } from "react-native";
+import { BASE_URL } from "@/constants/constants";
 
-// Range options for statistics
 const RANGE_OPTIONS = ["Week", "30 Days", "60 Days", "90 Days"];
 
-// Nutrition colors matching progress-component CircleProgress gradientEnd colors
 const NUTRITION_COLORS = {
-  calories: "#8B5CF6", // Purple from calories circle
-  protein: "#0369A1", // Blue from protein circle
-  carbs: "#F59E0B", // Yellow/Orange from carbs circle
-  fats: "#E11D48", // Red from fats circle
+  calories: "#8B5CF6",
+  protein: "#0369A1",
+  carbs: "#F59E0B",
+  fats: "#E11D48",
 };
+
+interface MealData {
+  _id: string;
+  userId: string;
+  date: string;
+  totalCalories: number;
+  totalFat: number;
+  totalProtein: number;
+  totalCarbo: number;
+  mealsList: any[];
+}
+
+interface UserGoals {
+  tdee: number;
+  goal: string;
+  age?: number;
+  weight?: number;
+  height?: number;
+  gender?: string;
+  activityLevel?: string;
+}
+
+interface NutritionGoals {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
+interface GoalProgress {
+  calories: { current: number; target: number; unit: string };
+  protein: { current: number; target: number; unit: string };
+  carbs: { current: number; target: number; unit: string };
+  fats: { current: number; target: number; unit: string };
+}
 
 const Statistics = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -32,17 +66,17 @@ const Statistics = () => {
   const [nutritionData, setNutritionData] = useState({
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     datasets: {
-      calories: [2100, 1800, 2200, 1950, 2300, 1700, 2000],
-      protein: [120, 100, 130, 110, 140, 90, 115],
-      carbs: [210, 180, 230, 200, 250, 160, 190],
-      fats: [70, 60, 80, 65, 85, 55, 75],
+      calories: [0, 0, 0, 0, 0, 0, 0],
+      protein: [0, 0, 0, 0, 0, 0, 0],
+      carbs: [0, 0, 0, 0, 0, 0, 0],
+      fats: [0, 0, 0, 0, 0, 0, 0],
     },
   });
-  const [goalProgress, setGoalProgress] = useState({
-    calories: { current: 2000, target: 2200, unit: "kcal" },
-    protein: { current: 120, target: 150, unit: "g" },
-    carbs: { current: 200, target: 250, unit: "g" },
-    fats: { current: 65, target: 70, unit: "g" },
+  const [goalProgress, setGoalProgress] = useState<GoalProgress>({
+    calories: { current: 0, target: 2000, unit: "kcal" },
+    protein: { current: 0, target: 150, unit: "g" },
+    carbs: { current: 0, target: 250, unit: "g" },
+    fats: { current: 0, target: 70, unit: "g" },
   });
   const { user } = useGlobalContext();
   const [activeDataset, setActiveDataset] = useState("calories");
@@ -53,70 +87,229 @@ const Statistics = () => {
     fetchStatisticsData();
   }, [selectedRange, user?._id]);
 
+  const calculateNutritionGoals = (userGoals: UserGoals): NutritionGoals => {
+    const tdee = userGoals?.tdee || 2000;
+    const goal = userGoals?.goal || "maintain";
+
+    let targetCalories = tdee;
+    if (goal === "lose") {
+      targetCalories = tdee - 500;
+    } else if (goal === "gain") {
+      targetCalories = tdee + 500;
+    }
+
+    const targetProtein = Math.round((targetCalories * 0.25) / 4);
+    const targetCarbs = Math.round((targetCalories * 0.45) / 4);
+    const targetFats = Math.round((targetCalories * 0.3) / 9);
+
+    return {
+      calories: Math.round(targetCalories),
+      protein: targetProtein,
+      carbs: targetCarbs,
+      fats: targetFats,
+    };
+  };
+
+  const getDateRange = (rangeType: string) => {
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    let startDate = new Date();
+
+    if (rangeType === "Week") {
+      startDate = new Date(endDate.getTime() - 6 * 24 * 60 * 60 * 1000);
+    } else if (rangeType === "30 Days") {
+      startDate = new Date(endDate.getTime() - 29 * 24 * 60 * 60 * 1000);
+    } else if (rangeType === "60 Days") {
+      startDate = new Date(endDate.getTime() - 59 * 24 * 60 * 60 * 1000);
+    } else if (rangeType === "90 Days") {
+      startDate = new Date(endDate.getTime() - 89 * 24 * 60 * 60 * 1000);
+    }
+
+    startDate.setHours(0, 0, 0, 0);
+    return { startDate, endDate };
+  };
+
+  const generateLabelsForRange = (
+    rangeType: string,
+    startDate: Date,
+    endDate: Date
+  ) => {
+    const labels = [];
+    const currentDate = new Date(startDate);
+    const daysCount =
+      Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
+      ) + 1;
+
+    for (let i = 0; i < daysCount; i++) {
+      if (rangeType === "Week") {
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        labels.push(dayNames[currentDate.getDay()]);
+      } else if (rangeType === "30 Days") {
+        if (i % 5 === 0 || i === 0 || i === daysCount - 1) {
+          labels.push(`${currentDate.getDate()}/${currentDate.getMonth() + 1}`);
+        } else {
+          labels.push("");
+        }
+      } else if (rangeType === "60 Days") {
+        if (i % 10 === 0 || i === 0 || i === daysCount - 1) {
+          labels.push(`${currentDate.getDate()}/${currentDate.getMonth() + 1}`);
+        } else {
+          labels.push("");
+        }
+      } else if (rangeType === "90 Days") {
+        if (i % 15 === 0 || i === 0 || i === daysCount - 1) {
+          labels.push(`${currentDate.getDate()}/${currentDate.getMonth() + 1}`);
+        } else {
+          labels.push("");
+        }
+      } else {
+        labels.push(`${currentDate.getDate()}/${currentDate.getMonth() + 1}`);
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return labels;
+  };
+
+  const processNutritionData = (
+    meals: MealData[],
+    rangeType: string,
+    startDate: Date,
+    endDate: Date
+  ) => {
+    const dailyNutrition: {
+      [key: string]: {
+        calories: number;
+        protein: number;
+        carbs: number;
+        fats: number;
+      };
+    } = {};
+
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const dateKey = currentDate.toISOString().split("T")[0];
+      dailyNutrition[dateKey] = {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fats: 0,
+      };
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    meals.forEach((meal) => {
+      const mealDate = new Date(meal.date);
+      const dateKey = mealDate.toISOString().split("T")[0];
+
+      if (dailyNutrition[dateKey]) {
+        dailyNutrition[dateKey].calories += meal.totalCalories || 0;
+        dailyNutrition[dateKey].protein += meal.totalProtein || 0;
+        dailyNutrition[dateKey].carbs += meal.totalCarbo || 0;
+        dailyNutrition[dateKey].fats += meal.totalFat || 0;
+      }
+    });
+
+    const sortedDates = Object.keys(dailyNutrition).sort();
+    const caloriesData = sortedDates.map(
+      (date) => dailyNutrition[date].calories
+    );
+    const proteinData = sortedDates.map((date) => dailyNutrition[date].protein);
+    const carbsData = sortedDates.map((date) => dailyNutrition[date].carbs);
+    const fatsData = sortedDates.map((date) => dailyNutrition[date].fats);
+
+    const labels = generateLabelsForRange(rangeType, startDate, endDate);
+
+    return {
+      labels,
+      datasets: {
+        calories: caloriesData,
+        protein: proteinData,
+        carbs: carbsData,
+        fats: fatsData,
+      },
+      dailyNutrition,
+    };
+  };
+
+  const calculateGoalProgress = (
+    dailyNutrition: any,
+    nutritionGoals: NutritionGoals
+  ): GoalProgress => {
+    const values = Object.values(dailyNutrition) as any[];
+    const daysWithData = values.filter((day) => day.calories > 0);
+    const totalDays = daysWithData.length || 1;
+
+    const avgCalories =
+      values.reduce((sum, day) => sum + day.calories, 0) / totalDays;
+    const avgProtein =
+      values.reduce((sum, day) => sum + day.protein, 0) / totalDays;
+    const avgCarbs =
+      values.reduce((sum, day) => sum + day.carbs, 0) / totalDays;
+    const avgFats = values.reduce((sum, day) => sum + day.fats, 0) / totalDays;
+
+    return {
+      calories: {
+        current: Math.round(avgCalories),
+        target: nutritionGoals.calories,
+        unit: "kcal",
+      },
+      protein: {
+        current: Math.round(avgProtein),
+        target: nutritionGoals.protein,
+        unit: "g",
+      },
+      carbs: {
+        current: Math.round(avgCarbs),
+        target: nutritionGoals.carbs,
+        unit: "g",
+      },
+      fats: {
+        current: Math.round(avgFats),
+        target: nutritionGoals.fats,
+        unit: "g",
+      },
+    };
+  };
+
   const fetchStatisticsData = async () => {
     if (!user?._id) return;
     setIsLoading(true);
     try {
-      // In a real implementation, you would fetch data from your API based on the selected range
-      // For now, we'll simulate a delay and use mock data
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch(
+        `${BASE_URL}/api/statistics/${user._id}?range=${selectedRange}`
+      );
 
-      // Simulating different data for different ranges
-      const days =
-        selectedRange === "Week"
-          ? 7
-          : selectedRange === "30 Days"
-          ? 30
-          : selectedRange === "60 Days"
-          ? 60
-          : 90;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log("API Error:", response.status, errorText);
+        throw new Error(`Failed to fetch statistics: ${response.status}`);
+      }
 
-      const labels = generateLabelsForRange(days);
-      const datasets = generateRandomDatasets(days);
+      const data = await response.json();
+      const nutritionGoals = calculateNutritionGoals(data.userGoals);
+      const { startDate, endDate } = getDateRange(selectedRange);
+      const processedData = processNutritionData(
+        data.meals,
+        selectedRange,
+        startDate,
+        endDate
+      );
+      const goalProgressData = calculateGoalProgress(
+        processedData.dailyNutrition,
+        nutritionGoals
+      );
 
-      setNutritionData({
-        labels,
-        datasets,
-      });
+      setNutritionData(processedData);
+      setGoalProgress(goalProgressData);
     } catch (error) {
       console.log("Error fetching statistics:", error);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const generateLabelsForRange = (days: number) => {
-    if (days === 7) {
-      return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    }
-
-    // For longer ranges, just use the date numbers or simplified format
-    const labels = [];
-    for (let i = 0; i < days; i++) {
-      if (i % 5 === 0 || i === 0 || i === days - 1) {
-        labels.push(`${i + 1}`);
-      } else {
-        labels.push("");
-      }
-    }
-    return labels;
-  };
-
-  const generateRandomDatasets = (days: number) => {
-    const calories = [];
-    const protein = [];
-    const carbs = [];
-    const fats = [];
-
-    for (let i = 0; i < days; i++) {
-      // Generate random values with some consistency
-      calories.push(Math.floor(Math.random() * 1000) + 1500);
-      protein.push(Math.floor(Math.random() * 80) + 80);
-      carbs.push(Math.floor(Math.random() * 150) + 150);
-      fats.push(Math.floor(Math.random() * 40) + 50);
-    }
-
-    return { calories, protein, carbs, fats };
   };
 
   const onRefresh = async () => {
@@ -127,7 +320,7 @@ const Statistics = () => {
 
   const getProgressPercentage = (current: number, target: number): number => {
     const percentage = (current / target) * 100;
-    return Math.min(percentage, 100); // Cap at 100%
+    return Math.min(percentage, 100);
   };
 
   const renderGoalProgress = () => {
@@ -159,16 +352,18 @@ const Statistics = () => {
   };
 
   const getChartConfig = () => {
+    const colorHex =
+      NUTRITION_COLORS[activeDataset as keyof typeof NUTRITION_COLORS] ||
+      "#BE123C";
     return {
       backgroundGradientFrom: "#fff",
       backgroundGradientTo: "#fff",
-      color: (opacity = 1) =>
-        `${
-          NUTRITION_COLORS[activeDataset as keyof typeof NUTRITION_COLORS] ||
-          "#BE123C"
-        }${Math.round(opacity * 255)
+      color: (opacity = 1) => {
+        const alpha = Math.round(opacity * 255)
           .toString(16)
-          .padStart(2, "0")}`,
+          .padStart(2, "0");
+        return `${colorHex}${alpha}`;
+      },
       strokeWidth: 2,
       barPercentage: 0.5,
       useShadowColorFromDataset: false,
@@ -182,7 +377,6 @@ const Statistics = () => {
         <Text style={styles.headerTitle}>Statistics</Text>
       </View>
 
-      {/* Range Selector Strip */}
       <View style={styles.rangeStripContainer}>
         <Text style={styles.rangeTitle}>Select Range</Text>
         <FlatList
@@ -227,7 +421,6 @@ const Statistics = () => {
           />
         }
       >
-        {/* Goal Progress Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionHeaderLine} />
@@ -237,14 +430,12 @@ const Statistics = () => {
           <View style={styles.goalsContainer}>{renderGoalProgress()}</View>
         </View>
 
-        {/* Nutrition Data Chart */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionHeaderLine} />
             <Text style={styles.sectionHeaderText}>Nutrition Trends</Text>
           </View>
 
-          {/* Dataset Selector */}
           <View style={styles.datasetSelector}>
             {Object.keys(nutritionData.datasets).map((dataset) => (
               <TouchableOpacity
@@ -288,14 +479,16 @@ const Statistics = () => {
                       data: nutritionData.datasets[
                         activeDataset as keyof typeof nutritionData.datasets
                       ],
-                      color: (opacity = 1) =>
-                        `${
+                      color: (opacity = 1) => {
+                        const colorHex =
                           NUTRITION_COLORS[
                             activeDataset as keyof typeof NUTRITION_COLORS
-                          ] || "#BE123C"
-                        }${Math.round(opacity * 255)
+                          ] || "#BE123C";
+                        const alpha = Math.round(opacity * 255)
                           .toString(16)
-                          .padStart(2, "0")}`,
+                          .padStart(2, "0");
+                        return `${colorHex}${alpha}`;
+                      },
                       strokeWidth: 2,
                     },
                   ],

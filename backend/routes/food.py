@@ -33,12 +33,12 @@ def get_or_create_food():
     prompt = f"""
     You are a registered nutritionist. Given the food name "{name}", provide its nutritional values **normalized to 100 g** (ignore other serving sizes; scaling is done in the frontend).  
     
-    - For discrete foods that come in natural units (like eggs, apples, bananas, etc.):
+    - For discrete foods that come in natural units (like eggs, apples, bananas, pizza slices, cookies, etc.):
       * Set "unit" to "piece"
       * Set "piece_avg_weight" to the average weight in grams of one piece
       * Set "avg_gram" to null
     
-    - For continuous foods or ingredients measured by weight (like rice, meat, liquids):
+    - For continuous foods or ingredients measured by weight (like rice, meat, liquids, flour, sugar):
       * Set "unit" to "gram"
       * Set "piece_avg_weight" to null
       * Set "avg_gram" to a typical serving size in grams

@@ -100,14 +100,12 @@ export default function Home() {
             remaining={remaining}
           />
         )}
-        {meals.length > 0 && (
-          <RecentlyEaten
-            meals={meals}
-            userId={user?._id}
-            mealsID={userMeals[0]?._id}
-            onRefresh={onRefresh}
-          />
-        )}
+        <RecentlyEaten
+          meals={meals}
+          userId={user?._id}
+          mealsID={userMeals[0]?._id}
+          onRefresh={onRefresh}
+        />
       </ScrollView>
     </SafeAreaView>
   );
