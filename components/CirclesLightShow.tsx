@@ -8,17 +8,20 @@ interface AnimatedSphereProps {
 const AnimatedSphere: React.FC<AnimatedSphereProps> = ({ size = 80 }) => {
   const spinValue = useRef(new Animated.Value(0)).current;
   const pulseValue = useRef(new Animated.Value(0)).current;
-  const [currentMessage, setCurrentMessage] = useState(0);
-
-  const aiMessages = [
-    "🧠 AI is thinking...",
-    "🔍 Analyzing your nutrition...",
-    "⚡ Processing data patterns...",
-    "🎯 Calculating recommendations...",
-    "🚀 Optimizing your health...",
-    "💡 Generating insights...",
-    "🌟 Creating magic...",
-  ];
+  const [selectedMessage] = useState(() => {
+    const aiMessages = [
+      "🧠 AI is thinking...",
+      "🔍 Analyzing your nutrition...",
+      "⚡ Processing data patterns...",
+      "🎯 Calculating recommendations...",
+      "🚀 Optimizing your health...",
+      "💡 Generating insights...",
+      "🌟 Creating magic...",
+    ];
+    return aiMessages[Math.floor(Math.random() * aiMessages.length)];
+  });
+  const [displayedText, setDisplayedText] = useState("");
+  const [showCursor, setShowCursor] = useState(true);
 
   const startAnimations = () => {
     // Rotation animation
@@ -44,16 +47,41 @@ const AnimatedSphere: React.FC<AnimatedSphereProps> = ({ size = 80 }) => {
     ).start();
   };
 
+  const startTypewriterEffect = () => {
+    setDisplayedText("");
+    let currentIndex = 0;
+
+    const typeInterval = setInterval(() => {
+      if (currentIndex < selectedMessage.length) {
+        setDisplayedText(selectedMessage.substring(0, currentIndex + 1));
+        currentIndex++;
+      } else {
+        clearInterval(typeInterval);
+        setTimeout(() => {
+          startTypewriterEffect();
+        }, 2000);
+      }
+    }, 75);
+
+    return typeInterval;
+  };
+
+  const startCursorBlink = () => {
+    const cursorInterval = setInterval(() => {
+      setShowCursor((prev) => !prev);
+    }, 500); // Blink every 500ms
+
+    return cursorInterval;
+  };
+
   useEffect(() => {
     startAnimations();
-
-    // Change AI message every 2 seconds
-    const messageInterval = setInterval(() => {
-      setCurrentMessage((prev) => (prev + 1) % aiMessages.length);
-    }, 2000);
+    const typeInterval = startTypewriterEffect();
+    const cursorInterval = startCursorBlink();
 
     return () => {
-      clearInterval(messageInterval);
+      clearInterval(typeInterval);
+      clearInterval(cursorInterval);
     };
   }, []);
 
@@ -97,7 +125,10 @@ const AnimatedSphere: React.FC<AnimatedSphereProps> = ({ size = 80 }) => {
           minHeight: 24,
         }}
       >
-        {aiMessages[currentMessage]}
+        {displayedText}
+        {showCursor && (
+          <Text style={{ color: "#000", fontWeight: "bold" }}>|</Text>
+        )}
       </Text>
     </View>
   );

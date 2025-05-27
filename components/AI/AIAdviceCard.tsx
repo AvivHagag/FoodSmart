@@ -6,7 +6,7 @@ import {
   ScrollView,
   Image,
   StyleSheet,
-  Dimensions,
+  Alert,
 } from "react-native";
 import {
   X,
@@ -18,8 +18,27 @@ import {
   ChevronRight,
   List,
   BookOpen,
+  Save,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import moment from "moment-timezone";
+import { BASE_URL } from "@/constants/constants";
+
+interface User {
+  _id: string;
+  email: string;
+  fullname: string;
+  createdAt?: string;
+  age?: number | null;
+  weight?: number | null;
+  height?: number | null;
+  image?: string | null;
+  gender?: string | null;
+  activityLevel?: string | null;
+  goal?: string | null;
+  bmi?: number | null;
+  tdee?: number | null;
+}
 
 interface AIAdviceCardProps {
   advice: {
@@ -42,13 +61,20 @@ interface AIAdviceCardProps {
     celebration?: string;
     micro_tip?: string;
   } | null;
+  user: User;
   onClose: () => void;
+  onRefresh: () => void;
 }
 
-const { width } = Dimensions.get("window");
-
-const AIAdviceCard: React.FC<AIAdviceCardProps> = ({ advice, onClose }) => {
+const AIAdviceCard: React.FC<AIAdviceCardProps> = ({
+  advice,
+  user,
+  onClose,
+  onRefresh,
+}) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [imageError, setImageError] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!advice) return null;
 
@@ -63,18 +89,6 @@ const AIAdviceCard: React.FC<AIAdviceCardProps> = ({ advice, onClose }) => {
     }
   };
 
-  const getGradientColors = (): [string, string] => {
-    switch (advice.advice_type) {
-      case "recipe":
-        return ["#FF6B6B", "#FF8E53"];
-      case "warning":
-        return ["#FF9500", "#FF5722"];
-      default:
-        return ["#4ECDC4", "#44A08D"];
-    }
-  };
-
-  // Recipe carousel slides: 0 = image, 1 = ingredients, 2 = instructions
   const totalSlides = 3;
 
   const nextSlide = () => {
@@ -116,29 +130,42 @@ const AIAdviceCard: React.FC<AIAdviceCardProps> = ({ advice, onClose }) => {
 
     switch (currentSlideIndex) {
       case 0:
-        // Recipe Image
-        const imageUrl =
-          advice.recipe.image ||
+        const fallbackImageUrl =
           "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop&crop=center";
-        console.log("Rendering image with URL:", imageUrl);
+        const imageUrl = imageError
+          ? fallbackImageUrl
+          : advice.recipe.image || fallbackImageUrl;
+
+        const showIcon = !advice.recipe.image || imageError;
 
         return (
-          <Image
-            source={{ uri: imageUrl }}
-            style={styles.recipeImage}
-            resizeMode="cover"
-            onError={(error) => {
-              console.log("Failed to load recipe image:", imageUrl);
-              console.log("Error details:", error.nativeEvent.error);
-            }}
-            onLoad={() => {
-              console.log("Successfully loaded image:", imageUrl);
-            }}
-          />
+          <View style={styles.imageContainer}>
+            {showIcon ? (
+              <View style={styles.recipeIconContainer}>
+                <ChefHat size={60} color="#000" />
+                <Text style={styles.recipeIconText}>Recipe</Text>
+              </View>
+            ) : (
+              <Image
+                source={{ uri: imageUrl }}
+                style={styles.recipeImage}
+                resizeMode="cover"
+                onError={(error) => {
+                  console.log("Image failed to load:", imageUrl);
+                  if (!imageError) {
+                    console.log("Switching to recipe icon");
+                    setImageError(true);
+                  }
+                }}
+                onLoad={() => {
+                  console.log("Successfully loaded image:", imageUrl);
+                }}
+              />
+            )}
+          </View>
         );
 
       case 1:
-        // Ingredients
         return (
           <ScrollView
             style={styles.slideContent}
@@ -161,25 +188,32 @@ const AIAdviceCard: React.FC<AIAdviceCardProps> = ({ advice, onClose }) => {
         );
 
       case 2:
-        // Instructions
         return (
           <ScrollView
             style={styles.slideContent}
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.instructionsContainer}>
+            <View>
               {advice.recipe.instructions &&
               advice.recipe.instructions.length > 0 ? (
-                advice.recipe.instructions.map((instruction, index) => (
-                  <View key={index} style={styles.instructionItem}>
-                    <View style={styles.instructionNumber}>
-                      <Text style={styles.instructionNumberText}>
-                        {index + 1}
+                advice.recipe.instructions.map((instruction, index) => {
+                  const cleanInstruction = instruction
+                    .replace(/^\d+\.?\s*/, "")
+                    .trim();
+
+                  return (
+                    <View key={index} style={styles.instructionItem}>
+                      <View style={styles.instructionNumber}>
+                        <Text style={styles.instructionNumberText}>
+                          {index + 1}
+                        </Text>
+                      </View>
+                      <Text style={styles.instructionText}>
+                        {cleanInstruction}
                       </Text>
                     </View>
-                    <Text style={styles.instructionText}>{instruction}</Text>
-                  </View>
-                ))
+                  );
+                })
               ) : (
                 <Text style={styles.emptyText}>No instructions available</Text>
               )}
@@ -200,7 +234,6 @@ const AIAdviceCard: React.FC<AIAdviceCardProps> = ({ advice, onClose }) => {
         <View style={styles.slideContainer}>
           {renderSlideContent()}
 
-          {/* Navigation Arrows */}
           <TouchableOpacity style={styles.prevButton} onPress={prevSlide}>
             <ChevronLeft size={20} color="#fff" />
           </TouchableOpacity>
@@ -208,7 +241,6 @@ const AIAdviceCard: React.FC<AIAdviceCardProps> = ({ advice, onClose }) => {
             <ChevronRight size={20} color="#fff" />
           </TouchableOpacity>
 
-          {/* Slide Header Overlay */}
           <View style={styles.slideOverlay}>
             <View style={styles.slideHeader}>
               {getSlideIcon()}
@@ -217,7 +249,6 @@ const AIAdviceCard: React.FC<AIAdviceCardProps> = ({ advice, onClose }) => {
           </View>
         </View>
 
-        {/* Nutrition Info - Only show on image slide */}
         {currentSlideIndex === 0 && (
           <View style={styles.nutritionRow}>
             <View style={styles.nutritionItem}>
@@ -247,7 +278,6 @@ const AIAdviceCard: React.FC<AIAdviceCardProps> = ({ advice, onClose }) => {
           </View>
         )}
 
-        {/* Slide Indicators */}
         <View style={styles.dotsContainer}>
           {Array.from({ length: totalSlides }).map((_, index) => (
             <TouchableOpacity
@@ -257,7 +287,7 @@ const AIAdviceCard: React.FC<AIAdviceCardProps> = ({ advice, onClose }) => {
                 styles.dot,
                 {
                   backgroundColor:
-                    index === currentSlideIndex ? "#FF6B6B" : "#E0E0E0",
+                    index === currentSlideIndex ? "#27272A" : "#E0E0E0",
                 },
               ]}
             />
@@ -267,10 +297,66 @@ const AIAdviceCard: React.FC<AIAdviceCardProps> = ({ advice, onClose }) => {
     );
   };
 
+  const saveRecipeAsMeal = async () => {
+    try {
+      if (!user) {
+        Alert.alert("Login Required", "You must be logged in to save a recipe");
+        return;
+      }
+
+      if (!advice.recipe) {
+        Alert.alert("Error", "No recipe to save");
+        return;
+      }
+
+      setIsSaving(true);
+
+      const now = new Date();
+      const day = moment().tz("Asia/Jerusalem").format("DD/MM/YYYY");
+
+      const items = advice.recipe.ingredients.join(", ");
+
+      const mealEntry = {
+        items,
+        time: now.toISOString(),
+        calories: advice.recipe.nutrition.calories,
+        fat: advice.recipe.nutrition.fat,
+        protein: advice.recipe.nutrition.protein,
+        carbo: advice.recipe.nutrition.carbs,
+        imageUri: advice.recipe.image || null,
+      };
+
+      const payload = {
+        userId: user._id,
+        date: day,
+        totalCalories: advice.recipe.nutrition.calories,
+        totalFat: advice.recipe.nutrition.fat,
+        totalProtein: advice.recipe.nutrition.protein,
+        totalCarbo: advice.recipe.nutrition.carbs,
+        mealsList: [mealEntry],
+      };
+
+      const res = await fetch(`${BASE_URL}/meals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Failed to save recipe");
+
+      onRefresh();
+    } catch (error) {
+      console.error("Error saving recipe:", error);
+      Alert.alert("Error", "Could not save your recipe. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={getGradientColors()}
+        colors={["#27272A", "#000000"]}
         style={styles.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -323,11 +409,33 @@ const AIAdviceCard: React.FC<AIAdviceCardProps> = ({ advice, onClose }) => {
 
         {advice.micro_tip && (
           <View style={styles.microTipContainer}>
-            <Lightbulb size={14} color="#4ECDC4" />
+            <Lightbulb size={18} color="#fff" />
             <Text style={styles.microTipText} numberOfLines={2}>
               {advice.micro_tip}
             </Text>
           </View>
+        )}
+
+        {advice.advice_type === "recipe" && advice.recipe && (
+          <TouchableOpacity
+            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+            onPress={saveRecipeAsMeal}
+            disabled={isSaving}
+          >
+            <LinearGradient
+              colors={
+                isSaving ? ["#BDC3C7", "#95A5A6"] : ["#27272A", "#000000"]
+              }
+              style={styles.saveButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Save size={16} color="#fff" />
+              <Text style={styles.saveButtonText}>
+                {isSaving ? "Saving..." : "Save Recipe"}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         )}
       </View>
     </View>
@@ -344,8 +452,8 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
     elevation: 4,
   },
   header: {
@@ -380,7 +488,7 @@ const styles = StyleSheet.create({
   celebrationContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF9E6",
+    backgroundColor: "#27272A",
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
@@ -388,7 +496,7 @@ const styles = StyleSheet.create({
   celebrationText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#B8860B",
+    color: "#fff",
     marginLeft: 6,
     flex: 1,
   },
@@ -403,7 +511,7 @@ const styles = StyleSheet.create({
   },
   slideContainer: {
     position: "relative",
-    height: 160,
+    height: 200,
     borderRadius: 12,
     overflow: "hidden",
     marginBottom: 8,
@@ -415,7 +523,8 @@ const styles = StyleSheet.create({
   },
   slideContent: {
     flex: 1,
-    padding: 12,
+    padding: 4,
+    marginVertical: 4,
   },
   slideOverlay: {
     position: "absolute",
@@ -447,7 +556,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#FF6B6B",
+    backgroundColor: "#27272A",
     marginRight: 10,
     marginTop: 6,
   },
@@ -457,19 +566,16 @@ const styles = StyleSheet.create({
     color: "#2C3E50",
     flex: 1,
   },
-  instructionsContainer: {
-    paddingVertical: 4,
-  },
   instructionItem: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 12,
+    alignItems: "center",
+    marginBottom: 4,
   },
   instructionNumber: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#FF6B6B",
+    backgroundColor: "#27272A",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
@@ -557,7 +663,7 @@ const styles = StyleSheet.create({
   recommendationsTitle: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#2C3E50",
+    color: "#27272A",
     marginBottom: 8,
   },
   recommendationItem: {
@@ -569,7 +675,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#4ECDC4",
+    backgroundColor: "#27272A",
     marginRight: 8,
     marginTop: 6,
   },
@@ -580,20 +686,57 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   microTipContainer: {
+    width: "100%",
     flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: "#E8F8F5",
+    alignItems: "center",
+    backgroundColor: "#18181b",
     borderRadius: 8,
     padding: 12,
     borderLeftWidth: 3,
-    borderLeftColor: "#4ECDC4",
+    borderLeftColor: "#000",
   },
   microTipText: {
     fontSize: 12,
     lineHeight: 16,
-    color: "#34495E",
+    color: "#fff",
     marginLeft: 6,
     flex: 1,
+  },
+  imageContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  recipeIconContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  recipeIconText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#fff",
+    marginTop: 8,
+  },
+  saveButton: {
+    marginTop: 12,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveButtonGradient: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 8,
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#fff",
+    marginLeft: 8,
   },
 });
 

@@ -73,6 +73,7 @@ export default function Home() {
     setIsAILoading(true);
     setShowAIAdvice(false);
     setAIAdvice(null);
+
     try {
       const response = await fetch(
         `${BASE_URL}/api/user/${user?._id}/ai-nutrition-advice`,
@@ -122,15 +123,13 @@ export default function Home() {
           />
         }
       >
-        {isAILoading && (
-          <AnimatedSphere
-            size={70} // optional tweaks
-          />
-        )}
+        {isAILoading && <AnimatedSphere size={70} />}
 
-        {showAIAdvice && aiAdvice && (
+        {showAIAdvice && aiAdvice && user && (
           <AIAdviceCard
+            onRefresh={onRefresh}
             advice={aiAdvice}
+            user={user}
             onClose={() => setShowAIAdvice(false)}
           />
         )}
