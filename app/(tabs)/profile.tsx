@@ -1,5 +1,5 @@
 import { SafeAreaView, ScrollView, RefreshControl } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useGlobalContext } from "../context/authprovider";
 import EditPersonalInfoScreen from "@/components/profile/edit-personal-info";
 import EditAccount from "@/components/profile/edit-account";
@@ -9,13 +9,19 @@ import ContactSupport from "@/components/profile/contact-support";
 import UnderConstruction from "@/components/profile/under-construction";
 
 const Profile = () => {
-  const { logout, user, updateUser } = useGlobalContext();
+  const { logout, user, updateUser, hasCompleteProfile } = useGlobalContext();
   const [userEditProfile, setUserEditProfile] = useState(false);
   const [accountEditProfile, setAccountEditProfile] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showContactSupport, setShowContactSupport] = useState(false);
   const [showUnderConstruction, setShowUnderConstruction] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (user && !hasCompleteProfile) {
+      setUserEditProfile(true);
+    }
+  }, [user, hasCompleteProfile]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -77,6 +83,7 @@ const Profile = () => {
             user={user}
             setUserEditProfile={setUserEditProfile}
             updateUser={updateUser}
+            required={!hasCompleteProfile}
           />
         )}
 

@@ -20,6 +20,7 @@ import {
   DropletIcon,
   DumbbellIcon,
   WheatIcon,
+  UtensilsIcon,
 } from "lucide-react-native";
 import { Card } from "../ui/card";
 import { MealDetailModal } from "./MealDetailModal";
@@ -123,6 +124,7 @@ export function RecentlyEaten({
       );
 
       if (response.status === 200) {
+        handleCloseModal();
         onRefresh();
         if (openIndex !== null) {
           setOpenIndex(null);
@@ -205,10 +207,10 @@ export function RecentlyEaten({
                           />
                         ) : (
                           <View style={styles.placeholder}>
-                            <FlameIcon
-                              color="#BE123C"
-                              size={32}
-                              opacity={0.5}
+                            <UtensilsIcon
+                              color="#6B7280"
+                              size={28}
+                              opacity={0.7}
                             />
                           </View>
                         )}
@@ -345,9 +347,12 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F9FAFB",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderStyle: "dashed",
   },
   loadingOverlay: {
     flex: 1,

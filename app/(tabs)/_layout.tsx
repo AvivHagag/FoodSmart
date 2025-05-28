@@ -63,7 +63,7 @@ const tabs: Tab[] = [
 
 const TabsLayout: React.FC = () => {
   const router = useRouter();
-  const { isLogged, loading } = useGlobalContext();
+  const { isLogged, loading, hasCompleteProfile } = useGlobalContext();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const slideAnim = useRef(new Animated.Value(300)).current;
   useEffect(() => {
@@ -202,20 +202,24 @@ const TabsLayout: React.FC = () => {
         screenOptions={{
           headerShown: false,
           tabBarShowLabel: false,
-          tabBarStyle: {
-            position: "absolute",
-            bottom: 16,
-            height: 60,
-            width: "90%",
-            marginLeft: "5%",
-            borderRadius: 50,
-            backgroundColor: "#ffffff",
-            shadowColor: "#000",
-            shadowOffset: { width: 1, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 5,
-            elevation: 5,
-          },
+          tabBarStyle: hasCompleteProfile
+            ? {
+                position: "absolute",
+                bottom: 16,
+                height: 60,
+                width: "90%",
+                marginLeft: "5%",
+                borderRadius: 50,
+                backgroundColor: "#ffffff",
+                shadowColor: "#000",
+                shadowOffset: { width: 1, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 5,
+                elevation: 5,
+              }
+            : {
+                display: "none",
+              },
         }}
       >
         {tabs.map((tab) => {
@@ -253,7 +257,7 @@ const TabsLayout: React.FC = () => {
           );
         })}
       </Tabs>
-      {isModalVisible && (
+      {isModalVisible && hasCompleteProfile && (
         <Animated.View
           style={{
             transform: [{ translateY: slideAnim }],

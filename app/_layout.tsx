@@ -10,17 +10,21 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   const router = useRouter();
-  const { isLogged, loading } = useGlobalContext();
+  const { isLogged, loading, hasCompleteProfile } = useGlobalContext();
 
   useEffect(() => {
     if (!loading) {
       if (isLogged) {
-        router.replace("/(tabs)/home");
+        if (!hasCompleteProfile) {
+          router.replace("/(tabs)/profile");
+        } else {
+          router.replace("/(tabs)/home");
+        }
       } else {
         router.replace("/(auth)/login");
       }
     }
-  }, [isLogged, loading]);
+  }, [isLogged, loading, hasCompleteProfile]);
 
   return (
     <>

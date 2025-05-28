@@ -24,6 +24,7 @@ import {
 import { BASE_URL } from "@/constants/constants";
 import Title from "../title";
 import { LinearGradient } from "expo-linear-gradient";
+import { useGlobalContext } from "@/app/context/authprovider";
 
 interface Usertype {
   _id: string;
@@ -45,6 +46,7 @@ interface EditPersonalInfoScreenProps {
   user: Usertype;
   setUserEditProfile: Dispatch<SetStateAction<boolean>>;
   updateUser: (updatedUser: Usertype) => Promise<void>;
+  required?: boolean;
 }
 
 const genderOptions = [
@@ -70,7 +72,9 @@ export default function EditPersonalInfoScreen({
   user,
   setUserEditProfile,
   updateUser,
+  required,
 }: EditPersonalInfoScreenProps) {
+  const { logout } = useGlobalContext();
   const [age, setAge] = useState<string>(user.age ? user.age.toString() : "");
   const [weight, setWeight] = useState<string>(
     user.weight ? user.weight.toString() : ""
@@ -220,12 +224,28 @@ export default function EditPersonalInfoScreen({
   };
 
   const handleBackBottom = () => {
-    setUserEditProfile(false);
+    if (required) {
+      logout();
+    } else {
+      setUserEditProfile(false);
+    }
   };
 
   return (
     <ScrollView className="flex-1 bg-white px-4">
-      <Title text="Edit Personal Info" backBottom={handleBackBottom} />
+      {required ? (
+        <Title
+          text="Add Personal Info"
+          backBottom={handleBackBottom}
+          logoutFunction={true}
+        />
+      ) : (
+        <Title
+          text="Edit Personal Info"
+          backBottom={handleBackBottom}
+          logoutFunction={false}
+        />
+      )}
       <View className="items-center py-4">
         <View className="bg-gray-900 w-12 h-12 rounded-full items-center justify-center mb-2">
           <View

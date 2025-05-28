@@ -8,7 +8,7 @@ import { useGlobalContext } from "../context/authprovider";
 import { ProgressTypeToggle } from "@/components/Main/ProgressTypeToggle";
 import AnimatedSphere from "@/components/CirclesLightShow";
 import { BASE_URL } from "@/constants/constants";
-import AIAdviceCard from "@/components/AI/AIAdviceCard";
+import AIAdviceCard from "@/components/Ai-Advice/AIAdviceCard";
 
 export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
@@ -124,7 +124,6 @@ export default function Home() {
         }
       >
         {isAILoading && <AnimatedSphere size={70} />}
-
         {showAIAdvice && aiAdvice && user && (
           <AIAdviceCard
             onRefresh={onRefresh}
