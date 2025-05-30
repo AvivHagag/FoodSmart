@@ -18,6 +18,7 @@ from routes.delete_meal import delete_meal_bp
 from routes.update_meal import update_meal_bp
 from routes.support_message import support_message_bp
 from routes.statistics import statistics_bp
+from routes.ai_nutrition_advisor import ai_nutrition_advisor_bp
 
 load_dotenv()
 app = Flask(__name__)
@@ -44,6 +45,7 @@ app.register_blueprint(delete_meal_bp)
 app.register_blueprint(update_meal_bp)
 app.register_blueprint(support_message_bp)
 app.register_blueprint(statistics_bp)
+app.register_blueprint(ai_nutrition_advisor_bp)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5002)

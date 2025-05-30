@@ -89,17 +89,9 @@ const Statistics = () => {
 
   const calculateNutritionGoals = (userGoals: UserGoals): NutritionGoals => {
     const tdee = userGoals?.tdee || 2000;
-    const goal = userGoals?.goal || "maintain";
-
-    let targetCalories = tdee;
-    if (goal === "lose") {
-      targetCalories = tdee - 500;
-    } else if (goal === "gain") {
-      targetCalories = tdee + 500;
-    }
-
-    const targetProtein = Math.round((targetCalories * 0.25) / 4);
-    const targetCarbs = Math.round((targetCalories * 0.45) / 4);
+    const targetCalories = tdee;
+    const targetProtein = Math.round((targetCalories * 0.3) / 4);
+    const targetCarbs = Math.round((targetCalories * 0.4) / 4);
     const targetFats = Math.round((targetCalories * 0.3) / 9);
 
     return {
@@ -424,7 +416,7 @@ const Statistics = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionHeaderLine} />
-            <Text style={styles.sectionHeaderText}>Goal Progress</Text>
+            <Text style={styles.sectionHeaderText}>Daily Average vs Goals</Text>
           </View>
 
           <View style={styles.goalsContainer}>{renderGoalProgress()}</View>
@@ -506,6 +498,7 @@ const Statistics = () => {
               />
             </View>
           )}
+          <View className="mt-48"></View>
         </View>
       </ScrollView>
       <View className="bg-white -mt-52 h-12"></View>

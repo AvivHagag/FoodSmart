@@ -64,6 +64,7 @@ interface GlobalContextProps {
   user: User | null;
   loading: boolean;
   userMeals: Meal[];
+  hasCompleteProfile: boolean;
   fetchMeals: () => Promise<void>;
   register: (
     email: string,
@@ -84,6 +85,7 @@ const GlobalContext = createContext<GlobalContextProps>({
   user: null,
   loading: true,
   userMeals: [],
+  hasCompleteProfile: false,
   fetchMeals: async () => {},
   register: async () => ({ success: false, message: "Default implementation" }),
   login: async () => ({
@@ -101,6 +103,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [userMeals, setUserMeals] = useState<Meal[]>([]);
+  const [hasCompleteProfile, setHasCompleteProfile] = useState<boolean>(false);
 
   const getTodayString = () =>
     moment().tz("Asia/Jerusalem").format("YYYY-MM-DD");
@@ -147,6 +150,24 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     checkToken();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      const isComplete = !!(
+        user.bmi &&
+        user.tdee &&
+        user.age &&
+        user.weight &&
+        user.height &&
+        user.gender &&
+        user.activityLevel &&
+        user.goal
+      );
+      setHasCompleteProfile(isComplete);
+    } else {
+      setHasCompleteProfile(false);
+    }
+  }, [user]);
 
   const register = async (
     email: string,
@@ -223,6 +244,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     loading,
     userMeals,
+    hasCompleteProfile,
     fetchMeals,
     register,
     login,
