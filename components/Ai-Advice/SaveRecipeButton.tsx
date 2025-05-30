@@ -92,7 +92,7 @@ const SaveRecipeButton: React.FC<SaveRecipeButtonProps> = ({
       >
         <Save size={16} color="#fff" />
         <Text style={styles.saveButtonText}>
-          {isSaving ? "Saving..." : "Save Recipe"}
+          {isSaving ? "Saving..." : "Save Meal"}
         </Text>
       </LinearGradient>
     </TouchableOpacity>
