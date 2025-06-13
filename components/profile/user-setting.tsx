@@ -30,11 +30,21 @@ interface UserSettingProps {
   setShowUnderConstruction: Dispatch<SetStateAction<boolean>>;
 }
 
-function calculateUsageDays(createdAt: string | undefined): number {
+function calculateUsageDays(createdAt: string | undefined | { $date: string }): number {
   if (!createdAt) {
     return 0;
   }
-  const creationDate = new Date(createdAt);
+  
+  let dateString: string;
+  if (typeof createdAt === 'object' && createdAt.$date) {
+    dateString = createdAt.$date;
+  } else if (typeof createdAt === 'string') {
+    dateString = createdAt;
+  } else {
+    return 0;
+  }
+
+  const creationDate = new Date(dateString);
   if (isNaN(creationDate.getTime())) {
     throw new Error("Invalid creation date");
   }
