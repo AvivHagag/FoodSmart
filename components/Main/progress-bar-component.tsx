@@ -135,8 +135,8 @@ export function ProgressBarDashboard(props: ProgressBarDashboardProps) {
           consumed={Number(consumedCalories.toFixed(1))}
           left={Number(remaining.calories.toFixed(1))}
           total={tdee}
-          gradientStart="#27272A"
-          gradientEnd="#8B5CF6"
+          gradientStart="#EA580C"
+          gradientEnd="#FB923C"
           unit="kcal"
         />
         <ProgressBar
@@ -144,8 +144,8 @@ export function ProgressBarDashboard(props: ProgressBarDashboardProps) {
           consumed={Number(userData.totalProtein.toFixed(1))}
           left={Number(remaining.protein.toFixed(1))}
           total={recommendedNutrition.protein}
-          gradientStart="#38BDF8"
-          gradientEnd="#0369A1"
+          gradientStart="#BE123C"
+          gradientEnd="#E11D48"
           unit="g"
         />
         <ProgressBar
@@ -153,8 +153,8 @@ export function ProgressBarDashboard(props: ProgressBarDashboardProps) {
           consumed={Number(userData.totalCarbs.toFixed(1))}
           left={Number(remaining.carbs.toFixed(1))}
           total={recommendedNutrition.carbs}
-          gradientStart="#FBBF24"
-          gradientEnd="#F59E0B"
+          gradientStart="#F59E0B"
+          gradientEnd="#FBBF24"
           unit="g"
         />
         <ProgressBar
@@ -162,8 +162,8 @@ export function ProgressBarDashboard(props: ProgressBarDashboardProps) {
           consumed={Number(userData.totalFats.toFixed(1))}
           left={Number(remaining.fat.toFixed(1))}
           total={recommendedNutrition.fat}
-          gradientStart="#BE123C"
-          gradientEnd="#E11D48"
+          gradientStart="#2563EB"
+          gradientEnd="#60A5FA"
           unit="g"
         />
       </Card>

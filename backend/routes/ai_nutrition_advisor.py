@@ -323,22 +323,20 @@ def determine_advice_type(user_data, user_id):
     recent_advice = get_recent_advice_for_user(user_id)
     recent_types = [advice.get('advice_type') for advice in recent_advice[-3:]]
     
-    if remaining_calories > 400:  
+    if remaining_calories > 400 and calories_over < 1:  
         preferred_type = 'recipe'
-    elif calories_over > 300:  
+    elif calories_over >= 0:  
         preferred_type = 'warning'
-    elif remaining_calories > 200:  
-        preferred_type = random.choice(['recipe', 'tips'])
     else:  
-        preferred_type = random.choice(['tips', 'tips', 'recipe'])
+        preferred_type = random.choice(['recipe', 'tips'])
     
     if recent_types.count(preferred_type) >= 3 :
         if preferred_type == 'recipe':
             alternative_type = random.choice(['tips', 'warning'] if calories_over > 100 else ['tips'])
         elif preferred_type == 'tips':
-            alternative_type = 'recipe' if remaining_calories > 200 else 'warning'
+            alternative_type = 'recipe' if remaining_calories > 400 else 'warning'
         else: 
-            alternative_type = random.choice(['tips', 'recipe'])
+            alternative_type = random.choice(['tips'])
         
         return alternative_type
     

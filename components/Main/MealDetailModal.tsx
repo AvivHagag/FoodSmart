@@ -26,6 +26,7 @@ import {
   Trash2 as TrashIcon,
   PlusIcon,
   CheckIcon,
+  AlertTriangle,
 } from "lucide-react-native";
 import { Card } from "../ui/card";
 import { BASE_URL } from "@/constants/constants";
@@ -71,6 +72,12 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
   );
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    calories: false,
+    protein: false,
+    carbo: false,
+    fat: false,
+  });
 
   useEffect(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -88,17 +95,87 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
         setErrorMessage("Missing meal or user information");
         return;
       }
+      setFieldErrors({
+        calories: false,
+        protein: false,
+        carbo: false,
+        fat: false,
+      });
+      setErrorMessage("");
+      let hasError = false;
+
+      if (!calories.trim()) {
+        setFieldErrors((prev) => ({ ...prev, calories: true }));
+        setErrorMessage("Calories field cannot be empty");
+        hasError = true;
+      }
+
+      if (!protein.trim()) {
+        setFieldErrors((prev) => ({ ...prev, protein: true }));
+        setErrorMessage("Protein field cannot be empty");
+        hasError = true;
+      }
+
+      if (!carbo.trim()) {
+        setFieldErrors((prev) => ({ ...prev, carbo: true }));
+        setErrorMessage("Carbohydrates field cannot be empty");
+        hasError = true;
+      }
+
+      if (!fat.trim()) {
+        setFieldErrors((prev) => ({ ...prev, fat: true }));
+        setErrorMessage("Fat field cannot be empty");
+        hasError = true;
+      }
+
+      if (hasError) {
+        return;
+      }
+
       const cal = parseFloat(calories) || 0;
       const pro = parseFloat(protein) || 0;
       const car = parseFloat(carbo) || 0;
       const fa = parseFloat(fat) || 0;
+      console.log(cal, pro, car, fa);
+
       if ([cal, pro, car, fa].some((v) => v < 0)) {
-        setErrorMessage("Nutritional values cannot be negative");
+        setErrorMessage("⚠️ Nutritional values cannot be negative");
         return;
       }
+
+      hasError = false;
+
+      if (cal > 5000) {
+        setFieldErrors((prev) => ({ ...prev, calories: true }));
+        setErrorMessage("Calories cannot exceed 5,000 kcal per meal");
+        hasError = true;
+      }
+
+      if (pro > 200) {
+        setFieldErrors((prev) => ({ ...prev, protein: true }));
+        setErrorMessage("Protein cannot exceed 200g per meal");
+        hasError = true;
+      }
+
+      if (car > 500) {
+        setFieldErrors((prev) => ({ ...prev, carbo: true }));
+        setErrorMessage("Carbohydrates cannot exceed 500g per meal");
+        hasError = true;
+      }
+
+      if (fa > 200) {
+        setFieldErrors((prev) => ({ ...prev, fat: true }));
+        setErrorMessage("Fat cannot exceed 200g per meal");
+        hasError = true;
+      }
+
+      if (hasError) {
+        return;
+      }
+
       const trimmedDetails = details.filter((d) => d.trim());
       if (trimmedDetails.length === 0) {
-        setErrorMessage("Please add at least one meal detail");
+        setErrorMessage("📝 Please add at least one meal detail");
         return;
       }
 
@@ -213,9 +290,21 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
                     {isEditing ? (
                       <TextInput
                         value={calories}
-                        onChangeText={setCalories}
+                        onChangeText={(text) => {
+                          setCalories(text);
+                          if (fieldErrors.calories) {
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              calories: false,
+                            }));
+                            setErrorMessage("");
+                          }
+                        }}
                         keyboardType="numeric"
-                        style={styles.inputField}
+                        style={[
+                          styles.inputField,
+                          fieldErrors.calories && styles.inputFieldError,
+                        ]}
                       />
                     ) : (
                       <View style={styles.calTextWrapper}>
@@ -234,23 +323,43 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
                         col: "#EF4444",
                         v: protein,
                         s: setProtein,
+                        field: "protein" as keyof typeof fieldErrors,
                       },
                       {
                         Icon: WheatIcon,
                         col: "#F59E0B",
                         v: carbo,
                         s: setCarbo,
+                        field: "carbo" as keyof typeof fieldErrors,
                       },
-                      { Icon: DropletIcon, col: "#3B82F6", v: fat, s: setFat },
-                    ].map(({ Icon, col, v, s }, idx) => (
+                      {
+                        Icon: DropletIcon,
+                        col: "#3B82F6",
+                        v: fat,
+                        s: setFat,
+                        field: "fat" as keyof typeof fieldErrors,
+                      },
+                    ].map(({ Icon, col, v, s, field }, idx) => (
                       <View key={idx} style={styles.macroItem}>
                         <Icon size={18} color={col} />
                         {isEditing ? (
                           <TextInput
                             value={v}
-                            onChangeText={s}
+                            onChangeText={(text) => {
+                              s(text);
+                              if (fieldErrors[field]) {
+                                setFieldErrors((prev) => ({
+                                  ...prev,
+                                  [field]: false,
+                                }));
+                                setErrorMessage("");
+                              }
+                            }}
                             keyboardType="numeric"
-                            style={styles.inputFieldSmall}
+                            style={[
+                              styles.inputFieldSmall,
+                              fieldErrors[field] && styles.inputFieldError,
+                            ]}
                           />
                         ) : (
                           <Text style={styles.macroText}>
@@ -296,7 +405,10 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
                   </View>
 
                   {isEditing && errorMessage && (
-                    <Text style={styles.errorText}>{errorMessage}</Text>
+                    <View style={styles.errorContainer}>
+                      <AlertTriangle size={20} color="#DC2626" />
+                      <Text style={styles.errorText}>{errorMessage}</Text>
+                    </View>
                   )}
 
                   <View style={styles.actionsContainer}>
@@ -327,6 +439,12 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
                           onPress={() => {
                             setIsEditing(false);
                             setErrorMessage("");
+                            setFieldErrors({
+                              calories: false,
+                              protein: false,
+                              carbo: false,
+                              fat: false,
+                            });
                             setCalories(meal.calories.toString());
                             setProtein(meal.protein.toString());
                             setCarbo(meal.carbo.toString());
@@ -489,12 +607,28 @@ const styles = StyleSheet.create({
   },
   addDetailButton: { flexDirection: "row", alignItems: "center", marginTop: 8 },
   addDetailText: { marginLeft: 6, fontSize: 14, color: "#2563EB" },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEF2F2",
+    borderColor: "#FECACA",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 12,
+    shadowColor: "#DC2626",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
   errorText: {
     color: "#DC2626",
     fontSize: 14,
     fontWeight: "500",
-    textAlign: "center",
-    marginTop: 8,
+    marginLeft: 8,
+    flex: 1,
+    lineHeight: 20,
   },
   actionsContainer: {
     flexDirection: "row",
@@ -535,5 +669,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#374151",
+  },
+  inputFieldError: {
+    borderColor: "#DC2626",
+    borderWidth: 2,
+    backgroundColor: "#FEF2F2",
   },
 });

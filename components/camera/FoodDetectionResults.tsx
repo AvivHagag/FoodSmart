@@ -17,6 +17,7 @@ import {
   Minus,
   PencilIcon,
   X,
+  AlertTriangle,
 } from "lucide-react-native";
 import { BASE_URL } from "@/constants/constants";
 import { useGlobalContext } from "../../app/context/authprovider";
@@ -72,6 +73,16 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
   const router = useRouter();
   const [editingFood, setEditingFood] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<string>("");
+  const [fieldErrors, setFieldErrors] = useState({
+    calories: false,
+    carbs: false,
+    protein: false,
+    fat: false,
+  });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [foodQuantityError, setFoodQuantityError] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     if (Object.keys(aggregatedDetections).length > 0) {
@@ -198,12 +209,71 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
 
   const toggleEditMode = () => {
     if (editMode) {
-      setFocusedField(null);
-      setCurrentNutrition({ ...editedNutrition });
+      if (validateNutritionInputs()) {
+        setFocusedField(null);
+        setCurrentNutrition({ ...editedNutrition });
+        setErrorMessage("");
+        setFieldErrors({
+          calories: false,
+          carbs: false,
+          protein: false,
+          fat: false,
+        });
+      } else {
+        return;
+      }
     } else {
       setEditedNutrition({ ...currentNutrition });
     }
     setEditMode(!editMode);
+  };
+
+  const validateNutritionInputs = () => {
+    setFieldErrors({
+      calories: false,
+      carbs: false,
+      protein: false,
+      fat: false,
+    });
+    setErrorMessage("");
+
+    let hasError = false;
+
+    if (!editedNutrition.calories) {
+      setFieldErrors((prev) => ({ ...prev, calories: true }));
+      setErrorMessage("Calories field cannot be empty");
+      hasError = true;
+    }
+
+    if (hasError) return false;
+
+    hasError = false;
+
+    if (editedNutrition.calories > 5000) {
+      setFieldErrors((prev) => ({ ...prev, calories: true }));
+      setErrorMessage("Calories cannot exceed 5,000 kcal");
+      hasError = true;
+    }
+
+    if (editedNutrition.protein > 200) {
+      setFieldErrors((prev) => ({ ...prev, protein: true }));
+      setErrorMessage("Protein cannot exceed 200g");
+      hasError = true;
+    }
+
+    if (editedNutrition.carbs > 500) {
+      setFieldErrors((prev) => ({ ...prev, carbs: true }));
+      setErrorMessage("Carbohydrates cannot exceed 500g");
+      hasError = true;
+    }
+
+    if (editedNutrition.fat > 200) {
+      setFieldErrors((prev) => ({ ...prev, fat: true }));
+      setErrorMessage("Fat cannot exceed 200g");
+      hasError = true;
+    }
+
+    return !hasError;
   };
 
   const uploadImage = async (uri: string): Promise<string> => {
@@ -315,10 +385,36 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
 
   const handleFoodQuantitySubmit = (foodName: string) => {
     const foodData = nutritionData[foodName];
+
+    setFoodQuantityError(null);
+
+    if (!editingValue.trim()) {
+      setFoodQuantityError("Food quantity cannot be empty");
+      return;
+    }
+
     let newValue = parseFloat(editingValue);
 
-    if (isNaN(newValue) || newValue < 1) {
-      newValue = 1;
+    if (isNaN(newValue)) {
+      setFoodQuantityError("Please enter a valid number");
+      return;
+    }
+
+    if (newValue < 1) {
+      setFoodQuantityError("Food quantity must be at least 1");
+      return;
+    }
+
+    if (foodData?.unit === "gram") {
+      if (newValue > 2000) {
+        setFoodQuantityError("Food quantity cannot exceed 2000g");
+        return;
+      }
+    } else if (foodData?.unit === "piece") {
+      if (newValue > 50) {
+        setFoodQuantityError("Food quantity cannot exceed 50 pieces");
+        return;
+      }
     }
 
     setFoodCounts((prev) => ({
@@ -328,6 +424,7 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
 
     setEditingFood(null);
     setEditingValue("");
+    setFoodQuantityError(null);
   };
 
   return (
@@ -376,14 +473,27 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
                       <TextInput
                         className="px-4 text-lg font-medium"
                         value={editingValue}
-                        onChangeText={setEditingValue}
+                        onChangeText={(text) => {
+                          setEditingValue(text);
+                          if (foodQuantityError) {
+                            setFoodQuantityError(null);
+                          }
+                        }}
                         keyboardType="numeric"
                         autoFocus
                         onBlur={() => handleFoodQuantitySubmit(foodName)}
                         onSubmitEditing={() =>
                           handleFoodQuantitySubmit(foodName)
                         }
-                        style={{ paddingBottom: 10 }}
+                        style={{
+                          paddingBottom: 10,
+                          ...(foodQuantityError && {
+                            borderWidth: 1,
+                            borderColor: "#DC2626",
+                            backgroundColor: "#FEF2F2",
+                            borderRadius: 4,
+                          }),
+                        }}
                       />
                     ) : (
                       <TouchableOpacity
@@ -475,6 +585,11 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
                         editMode && focusedField !== key ? shakeAnimation : 0,
                     },
                   ],
+                  ...(fieldErrors[key as keyof typeof fieldErrors] && {
+                    borderWidth: 2,
+                    borderColor: "#DC2626",
+                    backgroundColor: "#FEF2F2",
+                  }),
                 }}
                 onPress={() => {
                   setFocusedField(key);
@@ -501,6 +616,10 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
                           ...editedNutrition,
                           [key]: numValue,
                         });
+                        if (fieldErrors[key as keyof typeof fieldErrors]) {
+                          setFieldErrors((prev) => ({ ...prev, [key]: false }));
+                          setErrorMessage("");
+                        }
                       }}
                       onFocus={() => setFocusedField(key)}
                     />
@@ -534,6 +653,74 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
             )
           )}
         </View>
+
+        {editMode && errorMessage && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#FEF2F2",
+              borderColor: "#FECACA",
+              borderWidth: 1,
+              borderRadius: 8,
+              padding: 12,
+              marginBottom: 16,
+              shadowColor: "#DC2626",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.1,
+              shadowRadius: 2,
+              elevation: 2,
+            }}
+          >
+            <AlertTriangle size={20} color="#DC2626" />
+            <Text
+              style={{
+                color: "#DC2626",
+                fontSize: 14,
+                fontWeight: "500",
+                marginLeft: 8,
+                flex: 1,
+                lineHeight: 20,
+              }}
+            >
+              {errorMessage}
+            </Text>
+          </View>
+        )}
+
+        {foodQuantityError && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#FEF2F2",
+              borderColor: "#FECACA",
+              borderWidth: 1,
+              borderRadius: 8,
+              padding: 12,
+              marginBottom: 16,
+              shadowColor: "#DC2626",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.1,
+              shadowRadius: 2,
+              elevation: 2,
+            }}
+          >
+            <AlertTriangle size={20} color="#DC2626" />
+            <Text
+              style={{
+                color: "#DC2626",
+                fontSize: 14,
+                fontWeight: "500",
+                marginLeft: 8,
+                flex: 1,
+                lineHeight: 20,
+              }}
+            >
+              {foodQuantityError}
+            </Text>
+          </View>
+        )}
 
         {!onSaving && (
           <View className="flex-row justify-between">

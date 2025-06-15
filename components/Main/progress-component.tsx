@@ -92,13 +92,13 @@ export function DashboardScreen(props: DashboardScreenProps = {}) {
             percentage={caloriesPercentage}
             size={120}
             strokeWidth={10}
-            gradientStart="#27272A"
-            gradientEnd="#8B5CF6"
+            gradientStart="#EA580C"
+            gradientEnd="#FB923C"
           >
             <FlameIcon width={32} height={32} color="#000000" />
             <Text
               className="text-sm"
-              style={{ color: "#27272A", marginTop: 6 }}
+              style={{ color: "#FB923C", marginTop: 6 }}
             >
               {Math.round((consumedCalories / tdee) * 100)}%
             </Text>
@@ -115,11 +115,11 @@ export function DashboardScreen(props: DashboardScreenProps = {}) {
               percentage={proteinPercentage}
               size={80}
               strokeWidth={8}
-              gradientStart="#38BDF8"
-              gradientEnd="#0369A1"
+              gradientStart="#BE123C"
+              gradientEnd="#E11D48"
             >
               <DumbbellIcon className="h-5 w-5" color="#000000" />
-              <Text style={{ color: "#0369A1", marginTop: 4, fontSize: 10 }}>
+              <Text style={{ color: "#BE123C", marginTop: 4, fontSize: 10 }}>
                 {Math.round(
                   (userData.totalProtein / recommendedNutrition.protein) * 100
                 )}
@@ -137,8 +137,8 @@ export function DashboardScreen(props: DashboardScreenProps = {}) {
               percentage={carbsPercentage}
               size={80}
               strokeWidth={8}
-              gradientStart="#FBBF24"
-              gradientEnd="#F59E0B"
+              gradientStart="#F59E0B"
+              gradientEnd="#FBBF24"
             >
               <WheatIcon className="h-5 w-5" color="#000000" />
               <Text style={{ color: "#F59E0B", marginTop: 4, fontSize: 10 }}>
@@ -159,11 +159,11 @@ export function DashboardScreen(props: DashboardScreenProps = {}) {
               percentage={fatsPercentage}
               size={80}
               strokeWidth={8}
-              gradientStart="#BE123C"
-              gradientEnd="#E11D48"
+              gradientStart="#2563EB"
+              gradientEnd="#60A5FA"
             >
               <DropletIcon className="h-5 w-5" color="#000000" />
-              <Text style={{ color: "#E11D48", marginTop: 4, fontSize: 10 }}>
+              <Text style={{ color: "#2563EB", marginTop: 4, fontSize: 10 }}>
                 {Math.round(
                   (userData.totalFats / recommendedNutrition.fat) * 100
                 )}
