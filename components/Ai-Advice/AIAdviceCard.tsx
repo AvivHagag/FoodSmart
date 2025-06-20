@@ -39,9 +39,9 @@ const AIAdviceCard: React.FC<AIAdviceCardProps> = ({
         <Text style={styles.messageText} numberOfLines={3}>
           {advice.message}
         </Text>
-
-        {advice.recipe && <RecipeCarousel recipe={advice.recipe} />}
-
+      </View>
+      {advice.recipe && <RecipeCarousel recipe={advice.recipe} />}
+      <View style={styles.content}>
         {advice.specific_recommendations && (
           <RecommendationsList
             recommendations={advice.specific_recommendations}

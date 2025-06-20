@@ -6,6 +6,7 @@ import {
   ScrollView,
   Image,
   StyleSheet,
+  Dimensions,
 } from "react-native";
 import {
   ChefHat,
@@ -19,6 +20,8 @@ import { Recipe } from "@/assets/types";
 interface RecipeCarouselProps {
   recipe: Recipe;
 }
+
+const { width: screenWidth } = Dimensions.get("window");
 
 const RecipeCarousel: React.FC<RecipeCarouselProps> = ({ recipe }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -96,6 +99,7 @@ const RecipeCarousel: React.FC<RecipeCarouselProps> = ({ recipe }) => {
         return (
           <ScrollView
             style={styles.slideContent}
+            contentContainerStyle={styles.scrollContentContainer}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.ingredientsContainer}>
@@ -117,6 +121,7 @@ const RecipeCarousel: React.FC<RecipeCarouselProps> = ({ recipe }) => {
         return (
           <ScrollView
             style={styles.slideContent}
+            contentContainerStyle={styles.scrollContentContainer}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.instructionsContainer}>
@@ -153,24 +158,26 @@ const RecipeCarousel: React.FC<RecipeCarouselProps> = ({ recipe }) => {
 
   return (
     <View style={styles.carouselContainer}>
-      <View style={styles.slideContainer}>
-        {renderSlideContent()}
-
-        <TouchableOpacity style={styles.prevButton} onPress={prevSlide}>
+      <View style={styles.carouselRow}>
+        <TouchableOpacity style={styles.sideButton} onPress={prevSlide}>
           <ChevronLeft size={20} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.nextButton} onPress={nextSlide}>
-          <ChevronRight size={20} color="#fff" />
-        </TouchableOpacity>
 
-        <View style={styles.slideOverlay}>
-          <View style={styles.slideHeader}>
-            {getSlideIcon()}
-            <Text style={styles.slideTitle}>{getSlideTitle()}</Text>
+        <View style={styles.slideContainer}>
+          {renderSlideContent()}
+
+          <View style={styles.slideOverlay}>
+            <View style={styles.slideHeader}>
+              {getSlideIcon()}
+              <Text style={styles.slideTitle}>{getSlideTitle()}</Text>
+            </View>
           </View>
         </View>
-      </View>
 
+        <TouchableOpacity style={styles.sideButton} onPress={nextSlide}>
+          <ChevronRight size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
       {currentSlideIndex === 0 && (
         <View style={styles.nutritionRow}>
           <View style={styles.nutritionItem}>
@@ -196,6 +203,7 @@ const RecipeCarousel: React.FC<RecipeCarouselProps> = ({ recipe }) => {
         </View>
       )}
 
+      {/* Dots Indicator */}
       <View style={styles.dotsContainer}>
         {Array.from({ length: totalSlides }).map((_, index) => (
           <TouchableOpacity
@@ -219,13 +227,35 @@ const styles = StyleSheet.create({
   carouselContainer: {
     marginBottom: 12,
   },
+  carouselRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  sideButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
   slideContainer: {
-    position: "relative",
-    height: 200,
+    flex: 1,
+    height: Math.min(screenWidth * 0.6, 250),
     borderRadius: 12,
     overflow: "hidden",
-    marginBottom: 8,
     backgroundColor: "#F8F9FA",
+    position: "relative",
+    boxShadow: "0 0 6px 0 rgba(0, 0, 0, 0.3)",
   },
   recipeImage: {
     width: "100%",
@@ -233,8 +263,11 @@ const styles = StyleSheet.create({
   },
   slideContent: {
     flex: 1,
-    padding: 4,
-    marginVertical: 4,
+    padding: 12,
+  },
+  scrollContentContainer: {
+    flexGrow: 1,
+    paddingBottom: 50,
   },
   slideOverlay: {
     position: "absolute",
@@ -253,34 +286,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginLeft: 6,
+    flexShrink: 1,
   },
   ingredientsContainer: {
-    paddingVertical: 4,
-    paddingBottom: 30,
+    flex: 1,
   },
   ingredientItem: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 8,
+    marginBottom: 6,
+    paddingRight: 8,
   },
   ingredientBullet: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: "#27272A",
-    marginRight: 10,
+    marginRight: 12,
     marginTop: 6,
+    flexShrink: 0,
   },
   ingredientText: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
     color: "#2C3E50",
+    flex: 1,
+    flexWrap: "wrap",
+  },
+  instructionsContainer: {
     flex: 1,
   },
   instructionItem: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
+    alignItems: "flex-start",
+    marginBottom: 6,
+    paddingRight: 8,
   },
   instructionNumber: {
     width: 24,
@@ -289,8 +329,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#27272A",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
+    marginRight: 12,
     marginTop: 2,
+    flexShrink: 0,
   },
   instructionNumberText: {
     color: "#fff",
@@ -298,53 +339,36 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   instructionText: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
     color: "#2C3E50",
+    paddingTop: 4,
     flex: 1,
+    flexWrap: "wrap",
   },
   emptyText: {
     fontSize: 14,
-    lineHeight: 18,
+    lineHeight: 20,
     color: "#7F8C8D",
     textAlign: "center",
     fontStyle: "italic",
     paddingVertical: 20,
-  },
-  prevButton: {
-    position: "absolute",
-    left: 8,
-    top: "50%",
-    transform: [{ translateY: -15 }],
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    borderRadius: 15,
-    width: 30,
-    height: 30,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  nextButton: {
-    position: "absolute",
-    right: 8,
-    top: "50%",
-    transform: [{ translateY: -15 }],
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    borderRadius: 15,
-    width: 30,
-    height: 30,
-    justifyContent: "center",
-    alignItems: "center",
+    flex: 1,
+    textAlignVertical: "center",
   },
   nutritionRow: {
     flexDirection: "row",
     justifyContent: "space-around",
     backgroundColor: "#F8F9FA",
     borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    flexWrap: "wrap",
   },
   nutritionItem: {
     alignItems: "center",
+    minWidth: "20%",
+    marginVertical: 4,
   },
   nutritionValue: {
     fontSize: 16,
@@ -382,10 +406,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
     marginTop: 8,
-  },
-  instructionsContainer: {
-    paddingVertical: 4,
-    paddingBottom: 45,
   },
 });
 

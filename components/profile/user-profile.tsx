@@ -1,10 +1,12 @@
-import React, { Dispatch, SetStateAction } from "react";
+import React, { Dispatch, SetStateAction, useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
 import { Settings } from "lucide-react-native";
 import AvatarImage from "./avatar";
 import { BottomSpace } from "../bottom-space";
 import ResultsPreview from "./results-preview";
 import { Usertype } from "@/assets/types";
+import { calculateGoalsMet } from "@/utils/goalsCalculation";
+
 interface MenuItem {
   icon: JSX.Element;
   label: string;
@@ -18,15 +20,17 @@ interface UserProfileProps {
   setUserEditProfile: Dispatch<SetStateAction<boolean>>;
 }
 
-function calculateUsageDays(createdAt: string | undefined | { $date: string }): number {
+function calculateUsageDays(
+  createdAt: string | undefined | { $date: string }
+): number {
   if (!createdAt) {
     return 0;
   }
-  
+
   let dateString: string;
-  if (typeof createdAt === 'object' && createdAt.$date) {
+  if (typeof createdAt === "object" && createdAt.$date) {
     dateString = createdAt.$date;
-  } else if (typeof createdAt === 'string') {
+  } else if (typeof createdAt === "string") {
     dateString = createdAt;
   } else {
     return 0;
@@ -48,11 +52,20 @@ export default function UserProfile({
   setShowSettings,
   setUserEditProfile,
 }: UserProfileProps) {
+  const [goalsMet, setGoalsMet] = useState<number>(0);
   const daysUsingApp = calculateUsageDays(user.createdAt);
+
+  useEffect(() => {
+    if (user._id) {
+      calculateGoalsMet(user._id).then(setGoalsMet);
+    }
+  }, [user._id]);
+
   const handleMissingData = () => {
     setUserEditProfile(true);
     setShowSettings(true);
   };
+
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="bg-gwhite px-4 pb-6 pt-12">
@@ -107,8 +120,10 @@ export default function UserProfile({
             }}
           />
           <View className="items-center flex-1">
-            <Text className="text-lg font-semibold text-gray-900">85%</Text>
-            <Text className="text-sm text-gray-500">Goals met</Text>
+            <Text className="text-lg font-semibold text-gray-900">
+              {goalsMet}%
+            </Text>
+            <Text className="text-sm text-gray-500">Monthly goal</Text>
           </View>
         </View>
       </View>
