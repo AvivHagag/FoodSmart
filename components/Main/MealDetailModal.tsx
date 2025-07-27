@@ -15,7 +15,9 @@ import {
   Keyboard,
   Platform,
   LayoutAnimation,
+  Share,
 } from "react-native";
+import * as FileSystem from 'expo-file-system';
 import {
   DropletIcon,
   FlameIcon,
@@ -27,9 +29,11 @@ import {
   PlusIcon,
   CheckIcon,
   AlertTriangle,
+  ShareIcon,
 } from "lucide-react-native";
 import { Card } from "../ui/card";
 import { BASE_URL } from "@/constants/constants";
+import ShareButton from "../ui/ShareButton";
 
 export interface MealItem {
   name: string;
@@ -256,8 +260,21 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
             >
               <Card className="w-full max-w-md bg-white rounded-xl overflow-hidden relative">
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <XIcon size={24} color="#000" />
+                  <XIcon size={20} color="white" />
                 </TouchableOpacity>
+                <ShareButton
+                  imageUri={meal.imageUri}
+                  nutritionData={[{
+                    name: meal.name,
+                    calories: meal.calories,
+                    protein: meal.protein,
+                    carbo: meal.carbo,
+                    fat: meal.fat,
+                  }]}
+                  details={details}
+                  time={meal.time}
+                  style={styles.shareButton}
+                />
 
                 {meal.imageUri ? (
                   <Image
@@ -495,7 +512,16 @@ const styles = StyleSheet.create({
     top: 8,
     right: 8,
     zIndex: 10,
-    backgroundColor: "#ffffffcc",
+    backgroundColor: "#000000b3",
+    borderRadius: 16,
+    padding: 4,
+  },
+  shareButton: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    zIndex: 10,
+    backgroundColor: "#000000b3",
     borderRadius: 16,
     padding: 4,
   },
