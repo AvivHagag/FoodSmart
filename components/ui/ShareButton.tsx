@@ -25,14 +25,24 @@ export interface ShareButtonProps {
 const buildShareMessage = (nutritionData?: ShareButtonProps["nutritionData"], details?: string[], time?: string) => {
   let message = `Check out this meal!\n\n`;
   if (time) message += `Time 🕒 ${time}\n`;
+  
   if (nutritionData && nutritionData.length > 0) {
-    nutritionData.forEach((item) => {
-      if (item.calories !== undefined) message += `\nCalories 🔥 ${item.calories} kcal`;
-      if (item.protein !== undefined) message += `\nProtein 🥩 ${item.protein}g`;
-      if (item.carbo !== undefined) message += `\nCarbs 🍚 ${item.carbo}g`;
-      if (item.fat !== undefined) message += `\nFat 🥑 ${item.fat}g`;
-    });
+    // Calculate totals
+    const totals = nutritionData.reduce((acc, item) => {
+      acc.calories += item.calories || 0;
+      acc.protein += item.protein || 0;
+      acc.carbo += item.carbo || 0;
+      acc.fat += item.fat || 0;
+      return acc;
+    }, { calories: 0, protein: 0, carbo: 0, fat: 0 });
+
+    // Add totals to message
+    message += `\nCalories 🔥 ${Math.round(totals.calories)} kcal`;
+    message += `\nProtein 🥩 ${Math.round(totals.protein)}g`;
+    message += `\nCarbs 🍚 ${Math.round(totals.carbo)}g`;
+    message += `\nFat 🥑 ${Math.round(totals.fat)}g`;
   }
+  
   if (details && details.length > 0) {
     message += `\n\nDetails: 📝  \n${details.join(", ")}`;
   }
