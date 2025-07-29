@@ -130,7 +130,7 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
     });
 
     return {
-      calories: totalCal || 0,
+      calories: (totalCal || 0).toFixed(1),
       carbs: totalCarbs.toFixed(1),
       protein: totalProtein.toFixed(1),
       fat: totalFat.toFixed(1),
@@ -140,7 +140,7 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
   useEffect(() => {
     const totals = calculateTotals();
     const parsedTotals = {
-      calories: totals.calories,
+      calories: parseFloat(totals.calories),
       carbs: parseFloat(totals.carbs),
       protein: parseFloat(totals.protein),
       fat: parseFloat(totals.fat),

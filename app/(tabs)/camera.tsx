@@ -12,6 +12,7 @@ import { BASE_URL } from "@/constants/constants";
 import { ArrowLeftIcon, ShareIcon, SearchXIcon } from "lucide-react-native";
 import FoodDetectionResults from "../../components/camera/FoodDetectionResults";
 import SavingModal from "@/components/camera/saving-moda";
+import ShareButton from "../../components/ui/ShareButton";
 
 interface DetectionResult {
   label: string;
@@ -134,14 +135,19 @@ const CameraScreen: React.FC = () => {
           <ArrowLeftIcon size={20} color="white" />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          className="absolute top-14 right-4 bg-black/70 p-2 rounded-full"
-          onPress={() => {
-            Alert.alert("Share", "Share functionality to be implemented");
-          }}
-        >
-          <ShareIcon size={20} color="white" />
-        </TouchableOpacity>
+        <ShareButton
+          imageUri={imageUri}
+          nutritionData={Object.values(nutritionData).filter(Boolean).map((item) => ({
+            name: item!.name,
+            calories: item!.cal,
+            protein: item!.protein,
+            carbo: item!.carbohydrates,
+            fat: item!.fat,
+            unit: item!.unit,
+          }))}
+          details={Object.keys(aggregatedDetections)}
+          style={{ position: "absolute", top: 50, right: 16, backgroundColor: "#000000b3", padding: 8, borderRadius: 9999 }}
+        />
       </View>
 
       <View className="flex-1 -mt-8 bg-white rounded-t-3xl shadow-lg p-4">
