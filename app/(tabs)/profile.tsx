@@ -1,5 +1,6 @@
-import { SafeAreaView, ScrollView, RefreshControl } from "react-native";
+import { ScrollView, RefreshControl } from "react-native";
 import React, { useState, useEffect } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useGlobalContext } from "../context/authprovider";
 import EditPersonalInfoScreen from "@/components/profile/edit-personal-info";
 import EditAccount from "@/components/profile/edit-account";

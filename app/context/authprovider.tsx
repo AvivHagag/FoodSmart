@@ -3,9 +3,10 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useCallback,
   ReactNode,
 } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import { BASE_URL } from "@/constants/constants";
 import moment from "moment";
 
@@ -66,10 +67,11 @@ interface GlobalContextProps {
   userMeals: Meal[];
   hasCompleteProfile: boolean;
   fetchMeals: () => Promise<void>;
+  authFetch: (url: string, options?: RequestInit) => Promise<Response>;
   register: (
     email: string,
     fullname: string,
-    password: string
+    password: string,
   ) => Promise<RegisterResponse>;
   login: (email: string, password: string) => Promise<LoginResponse>;
   logout: () => Promise<void>;
@@ -87,6 +89,7 @@ const GlobalContext = createContext<GlobalContextProps>({
   userMeals: [],
   hasCompleteProfile: false,
   fetchMeals: async () => {},
+  authFetch: (url) => fetch(url),
   register: async () => ({ success: false, message: "Default implementation" }),
   login: async () => ({
     success: false,
@@ -99,48 +102,79 @@ const GlobalContext = createContext<GlobalContextProps>({
 export const useGlobalContext = () => useContext(GlobalContext);
 
 const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isLogged, setIsLogged] = useState<boolean>(false);
+  const [isLogged, setIsLogged] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [userMeals, setUserMeals] = useState<Meal[]>([]);
-  const [hasCompleteProfile, setHasCompleteProfile] = useState<boolean>(false);
+  const [hasCompleteProfile, setHasCompleteProfile] = useState(false);
 
-  const getTodayString = () =>
-    moment().tz("Asia/Jerusalem").format("YYYY-MM-DD");
+  const authFetch = useCallback(
+    async (url: string, options: RequestInit = {}): Promise<Response> => {
+      const token = await SecureStore.getItemAsync("token");
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
 
-  const fetchMeals = async () => {
-    if (!user) return;
-    const dateStr = getTodayString();
-    try {
-      const res = await fetch(
-        `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateStr}`
-      );
-      const data = await res.json();
-      if (res.ok) {
-        setUserMeals(data.meals || []);
-      } else {
-        console.log("Fetch meals error:", data.message);
+      // Auto-logout on 401 (expired / revoked token)
+      if (res.status === 401) {
+        await _clearSession();
       }
-    } catch (err) {
-      console.log("Error fetching meals:", err);
-    }
+
+      return res;
+    },
+    [],
+  );
+
+  const _clearSession = async () => {
+    await SecureStore.deleteItemAsync("token");
+    await SecureStore.deleteItemAsync("user");
+    setIsLogged(false);
+    setUser(null);
+    setUserMeals([]);
+  };
+
+  const _persistSession = async (token: string, fetchedUser: User) => {
+    await SecureStore.setItemAsync("token", token);
+    await SecureStore.setItemAsync("user", JSON.stringify(fetchedUser));
+    setIsLogged(true);
+    setUser(fetchedUser);
   };
 
   useEffect(() => {
     const checkToken = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
-        const userString = await AsyncStorage.getItem("user");
-        if (token && userString) {
-          const parsedUser: User = JSON.parse(userString);
-          setIsLogged(true);
-          setUser(parsedUser);
-        } else {
+        const token = await SecureStore.getItemAsync("token");
+        const userString = await SecureStore.getItemAsync("user");
+
+        if (!token || !userString) {
           setIsLogged(false);
           setUser(null);
+          return;
+        }
+
+        const parsedUser: User = JSON.parse(userString);
+
+        // Validate token by fetching the user from the server
+        const res = await fetch(`${BASE_URL}/api/user/${parsedUser._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const freshUser = data.user || parsedUser;
+          await SecureStore.setItemAsync("user", JSON.stringify(freshUser));
+          setIsLogged(true);
+          setUser(freshUser);
+        } else {
+          // Token expired or invalid
+          await _clearSession();
         }
       } catch (error) {
-        console.log("Error reading storage:", error);
+        console.log("Error restoring session:", error);
         setIsLogged(false);
         setUser(null);
       } finally {
@@ -169,10 +203,28 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [user]);
 
+  const fetchMeals = async () => {
+    if (!user) return;
+    const dateStr = moment().tz("Asia/Jerusalem").format("YYYY-MM-DD");
+    try {
+      const res = await authFetch(
+        `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateStr}`,
+      );
+      const data = await res.json();
+      if (res.ok) {
+        setUserMeals(data.meals || []);
+      } else {
+        console.log("Fetch meals error:", data.message);
+      }
+    } catch (err) {
+      console.log("Error fetching meals:", err);
+    }
+  };
+
   const register = async (
     email: string,
     fullname: string,
-    password: string
+    password: string,
   ): Promise<RegisterResponse> => {
     try {
       const res = await fetch(`${BASE_URL}/register`, {
@@ -184,14 +236,13 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!res.ok) throw new Error(data.error || data.message);
       return { success: true, message: null };
     } catch (error: any) {
-      console.log("Register error:", error);
       return { success: false, message: error.message };
     }
   };
 
   const login = async (
     email: string,
-    password: string
+    password: string,
   ): Promise<LoginResponse> => {
     try {
       const res = await fetch(`${BASE_URL}/login`, {
@@ -201,59 +252,51 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed");
+
       const { token, user: fetchedUser } = data;
-      await AsyncStorage.setItem("token", token);
-      await AsyncStorage.setItem("user", JSON.stringify(fetchedUser));
-      setIsLogged(true);
-      setUser(fetchedUser);
-      await fetchMeals();
+      await _persistSession(token, fetchedUser);
+      // fetchMeals needs user to be set — call after state settles
+      setTimeout(fetchMeals, 100);
       return { success: true, token, user: fetchedUser };
     } catch (error: any) {
-      console.log("Login error:", error);
       return { success: false, error: error.message };
     }
   };
 
   const logout = async (): Promise<void> => {
-    try {
-      await AsyncStorage.multiRemove(["token", "user"]);
-      setIsLogged(false);
-      setUser(null);
-      setUserMeals([]);
-    } catch (error) {
-      console.log("Logout error:", error);
-    }
+    await _clearSession();
   };
 
   const updateUser = async (updatedUser: User): Promise<void> => {
     try {
-      const res = await fetch(`${BASE_URL}/api/user/${updatedUser._id}`);
+      const res = await authFetch(`${BASE_URL}/api/user/${updatedUser._id}`);
       const data = await res.json();
       const freshUser = data.user || updatedUser;
-      await AsyncStorage.setItem("user", JSON.stringify(freshUser));
+      await SecureStore.setItemAsync("user", JSON.stringify(freshUser));
       setUser(freshUser);
     } catch (error) {
       console.log("Update user error:", error);
-      await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+      await SecureStore.setItemAsync("user", JSON.stringify(updatedUser));
       setUser(updatedUser);
     }
   };
 
-  const providerValue: GlobalContextProps = {
-    isLogged,
-    user,
-    loading,
-    userMeals,
-    hasCompleteProfile,
-    fetchMeals,
-    register,
-    login,
-    logout,
-    updateUser,
-  };
-
   return (
-    <GlobalContext.Provider value={providerValue}>
+    <GlobalContext.Provider
+      value={{
+        isLogged,
+        user,
+        loading,
+        userMeals,
+        hasCompleteProfile,
+        fetchMeals,
+        authFetch,
+        register,
+        login,
+        logout,
+        updateUser,
+      }}
+    >
       {children}
     </GlobalContext.Provider>
   );

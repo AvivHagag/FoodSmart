@@ -8,7 +8,7 @@ import { Usertype } from "@/assets/types";
 import { calculateGoalsMet } from "@/utils/goalsCalculation";
 
 interface MenuItem {
-  icon: JSX.Element;
+  icon: React.ReactElement;
   label: string;
   value?: string;
   onClick?: () => void;
@@ -21,7 +21,7 @@ interface UserProfileProps {
 }
 
 function calculateUsageDays(
-  createdAt: string | undefined | { $date: string }
+  createdAt: string | undefined | { $date: string },
 ): number {
   if (!createdAt) {
     return 0;

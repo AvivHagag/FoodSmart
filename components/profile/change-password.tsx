@@ -12,6 +12,7 @@ import {
 import { KeyRound, Eye, EyeOff } from "lucide-react-native";
 import Title from "../title";
 import { BASE_URL } from "@/constants/constants";
+import { useGlobalContext } from "@/app/context/authprovider";
 
 interface ChangePasswordProps {
   userID: string;
@@ -22,6 +23,7 @@ export default function ChangePassword({
   userID,
   handlePasswordOpen,
 }: ChangePasswordProps) {
+  const { authFetch } = useGlobalContext();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -67,7 +69,7 @@ export default function ChangePassword({
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/update_password`, {
+      const response = await authFetch(`${BASE_URL}/api/update_password`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

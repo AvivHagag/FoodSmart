@@ -1,6 +1,13 @@
 import React from "react";
-import { TouchableOpacity, Alert, Share, ActivityIndicator, StyleProp, ViewStyle } from "react-native";
-import * as FileSystem from "expo-file-system";
+import {
+  TouchableOpacity,
+  Alert,
+  Share,
+  ActivityIndicator,
+  StyleProp,
+  ViewStyle,
+} from "react-native";
+import * as FileSystem from "expo-file-system/legacy";
 import { ShareIcon } from "lucide-react-native";
 
 export interface ShareButtonProps {
@@ -22,19 +29,26 @@ export interface ShareButtonProps {
   loading?: boolean;
 }
 
-const buildShareMessage = (nutritionData?: ShareButtonProps["nutritionData"], details?: string[], time?: string) => {
+const buildShareMessage = (
+  nutritionData?: ShareButtonProps["nutritionData"],
+  details?: string[],
+  time?: string,
+) => {
   let message = `Check out this meal!\n\n`;
   if (time) message += `Time 🕒 ${time}\n`;
-  
+
   if (nutritionData && nutritionData.length > 0) {
     // Calculate totals
-    const totals = nutritionData.reduce((acc, item) => {
-      acc.calories += item.calories || 0;
-      acc.protein += item.protein || 0;
-      acc.carbo += item.carbo || 0;
-      acc.fat += item.fat || 0;
-      return acc;
-    }, { calories: 0, protein: 0, carbo: 0, fat: 0 });
+    const totals = nutritionData.reduce(
+      (acc, item) => {
+        acc.calories += item.calories || 0;
+        acc.protein += item.protein || 0;
+        acc.carbo += item.carbo || 0;
+        acc.fat += item.fat || 0;
+        return acc;
+      },
+      { calories: 0, protein: 0, carbo: 0, fat: 0 },
+    );
 
     // Add totals to message
     message += `\nCalories 🔥 ${Math.round(totals.calories)} kcal`;
@@ -42,7 +56,7 @@ const buildShareMessage = (nutritionData?: ShareButtonProps["nutritionData"], de
     message += `\nCarbs 🍚 ${Math.round(totals.carbo)}g`;
     message += `\nFat 🥑 ${Math.round(totals.fat)}g`;
   }
-  
+
   if (details && details.length > 0) {
     message += `\n\nDetails: 📝  \n${details.join(", ")}`;
   }
@@ -68,17 +82,26 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
       let shareOptions: any = { message };
       let localImageUri = undefined;
       if (imageUri) {
-        if (imageUri.startsWith("file://") || imageUri.startsWith("content://")) {
+        if (
+          imageUri.startsWith("file://") ||
+          imageUri.startsWith("content://")
+        ) {
           localImageUri = imageUri;
         } else {
           // Download remote image to local cache
-          const fileExt = imageUri.split('.').pop()?.split('?')[0] || 'jpg';
+          const fileExt = imageUri.split(".").pop()?.split("?")[0] || "jpg";
           const localUri = `${FileSystem.cacheDirectory}shared-meal.${fileExt}`;
-          const downloadRes = await FileSystem.downloadAsync(imageUri, localUri);
+          const downloadRes = await FileSystem.downloadAsync(
+            imageUri,
+            localUri,
+          );
           if (downloadRes.status === 200) {
             localImageUri = downloadRes.uri;
           } else {
-            Alert.alert("Image Download Failed", "Could not download the meal image for sharing. Only text will be shared.");
+            Alert.alert(
+              "Image Download Failed",
+              "Could not download the meal image for sharing. Only text will be shared.",
+            );
           }
         }
       }
@@ -87,7 +110,10 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
       }
       await Share.share(shareOptions);
     } catch (error) {
-      Alert.alert("Share failed", "Could not share the meal. Please try again.");
+      Alert.alert(
+        "Share failed",
+        "Could not share the meal. Please try again.",
+      );
     } finally {
       setIsSharing(false);
     }
@@ -110,4 +136,4 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
   );
 };
 
-export default ShareButton; 
+export default ShareButton;

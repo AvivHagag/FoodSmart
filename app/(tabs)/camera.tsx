@@ -12,18 +12,15 @@ import { BASE_URL } from "@/constants/constants";
 import { ArrowLeftIcon, ShareIcon, SearchXIcon } from "lucide-react-native";
 import FoodDetectionResults from "../../components/camera/FoodDetectionResults";
 import SavingModal from "@/components/camera/saving-moda";
-import ShareButton from "../../components/ui/ShareButton";
+import { useGlobalContext } from "../context/authprovider";
 
-interface DetectionResult {
+export interface AnalyzedFoodItem {
   label: string;
   confidence: number;
-}
-
-interface NutritionData {
-  name: string;
+  estimated_grams: number;
   unit: "piece" | "gram";
+  count: number | null;
   piece_avg_weight: number | null;
-  avg_gram: number | null;
   cal: number;
   protein: number;
   fat: number;
@@ -34,10 +31,8 @@ const CameraScreen: React.FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const imageUri = params.imageUri as string;
-  const [detectedObjects, setDetectedObjects] = useState<DetectionResult[]>([]);
-  const [nutritionData, setNutritionData] = useState<
-    Record<string, NutritionData | null>
-  >({});
+  const { authFetch } = useGlobalContext();
+  const [analyzedItems, setAnalyzedItems] = useState<AnalyzedFoodItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [onSaving, setOnSaving] = useState<boolean>(false);
 
@@ -60,16 +55,15 @@ const CameraScreen: React.FC = () => {
     } as any);
 
     try {
-      const response = await fetch(`${BASE_URL}/detect`, {
+      const response = await authFetch(`${BASE_URL}/analyze`, {
         method: "POST",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
         body: formData,
       });
 
       if (!response.ok) {
-        Alert.alert("Error", "Failed to process the image.");
+        const errBody = await response.json().catch(() => ({}));
+        console.error("Analyze 500 details:", JSON.stringify(errBody));
+        Alert.alert("Error", `Failed to process the image.\n${errBody?.details ?? errBody?.error ?? response.status}`);
         return;
       }
 
@@ -80,30 +74,7 @@ const CameraScreen: React.FC = () => {
         return;
       }
 
-      setDetectedObjects(result);
-
-      const labels = Array.from(new Set(result.map((r) => r.label)));
-      setNutritionData(Object.fromEntries(labels.map((lbl) => [lbl, null])));
-
-      const pairs = await Promise.all(
-        labels.map(async (label) => {
-          try {
-            const res = await fetch(`${BASE_URL}/food`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ name: label }),
-            });
-            const data = await res.json();
-            return [label, data as NutritionData];
-          } catch (err) {
-            console.error(`Nutrition fetch failed for ${label}:`, err);
-            return [label, null];
-          }
-        })
-      );
-      setNutritionData(Object.fromEntries(pairs));
+      setAnalyzedItems(result as AnalyzedFoodItem[]);
     } catch (error) {
       console.error("Error:", error);
       Alert.alert("Error", "An error occurred while processing the image.");
@@ -111,14 +82,6 @@ const CameraScreen: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const aggregatedDetections =
-    detectedObjects && detectedObjects.length > 0
-      ? detectedObjects.reduce((acc: Record<string, number>, item) => {
-          acc[item.label] = (acc[item.label] || 0) + 1;
-          return acc;
-        }, {})
-      : {};
   return (
     <View className="flex-1">
       {onSaving && <SavingModal />}
@@ -135,28 +98,23 @@ const CameraScreen: React.FC = () => {
           <ArrowLeftIcon size={20} color="white" />
         </TouchableOpacity>
 
-        <ShareButton
-          imageUri={imageUri}
-          nutritionData={Object.values(nutritionData).filter(Boolean).map((item) => ({
-            name: item!.name,
-            calories: item!.cal,
-            protein: item!.protein,
-            carbo: item!.carbohydrates,
-            fat: item!.fat,
-            unit: item!.unit,
-          }))}
-          details={Object.keys(aggregatedDetections)}
-          style={{ position: "absolute", top: 50, right: 16, backgroundColor: "#000000b3", padding: 8, borderRadius: 9999 }}
-        />
+        <TouchableOpacity
+          className="absolute top-14 right-4 bg-black/70 p-2 rounded-full"
+          onPress={() => {
+            Alert.alert("Share", "Share functionality to be implemented");
+          }}
+        >
+          <ShareIcon size={20} color="white" />
+        </TouchableOpacity>
       </View>
 
       <View className="flex-1 -mt-8 bg-white rounded-t-3xl shadow-lg p-4">
         <Text className="text-2xl font-bold mb-6 text-center">
           {loading
             ? "Analyzing your food..."
-            : Object.keys(aggregatedDetections).length > 0
-            ? "Detected Food"
-            : "No food detected"}
+            : analyzedItems.length > 0
+              ? "Detected Food"
+              : "No food detected"}
         </Text>
 
         {loading ? (
@@ -164,10 +122,9 @@ const CameraScreen: React.FC = () => {
             <ActivityIndicator size="large" color="#000" />
             <Text className="text-lg font-semibold mt-4">Processing...</Text>
           </View>
-        ) : Object.keys(aggregatedDetections).length > 0 ? (
+        ) : analyzedItems.length > 0 ? (
           <FoodDetectionResults
-            aggregatedDetections={aggregatedDetections}
-            nutritionData={nutritionData}
+            analyzedItems={analyzedItems}
             imageUri={imageUri}
             onSaving={onSaving}
             setOnSaving={setOnSaving}

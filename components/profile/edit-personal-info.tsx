@@ -74,17 +74,17 @@ export default function EditPersonalInfoScreen({
   updateUser,
   required,
 }: EditPersonalInfoScreenProps) {
-  const { logout } = useGlobalContext();
+  const { logout, authFetch } = useGlobalContext();
   const [age, setAge] = useState<string>(user.age ? user.age.toString() : "");
   const [weight, setWeight] = useState<string>(
-    user.weight ? user.weight.toString() : ""
+    user.weight ? user.weight.toString() : "",
   );
   const [height, setHeight] = useState<string>(
-    user.height ? user.height.toString() : ""
+    user.height ? user.height.toString() : "",
   );
   const [gender, setGender] = useState<string | null>(user.gender || "male");
   const [activityLevel, setActivityLevel] = useState<string | null>(
-    user.activityLevel || "sedentary"
+    user.activityLevel || "sedentary",
   );
   const [goal, setGoal] = useState<string | null>(user.goal || "maintain");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -106,7 +106,7 @@ export default function EditPersonalInfoScreen({
     age: number,
     gender: string | null,
     activityLevel: string | null,
-    goal: string | null
+    goal: string | null,
   ) => {
     let bmr: number;
     if (gender === "female") {
@@ -186,7 +186,7 @@ export default function EditPersonalInfoScreen({
       parsedAge,
       gender,
       activityLevel,
-      goal
+      goal,
     );
 
     const updatedUser: Usertype = {
@@ -202,7 +202,7 @@ export default function EditPersonalInfoScreen({
     };
 
     try {
-      const response = await fetch(`${BASE_URL}/api/update_user`, {
+      const response = await authFetch(`${BASE_URL}/api/update_user`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

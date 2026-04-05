@@ -15,7 +15,7 @@ const RecommendationsList: React.FC<RecommendationsListProps> = ({
   return (
     <View style={styles.recommendationsContainer}>
       <Text style={styles.recommendationsTitle}>Quick Tips:</Text>
-      {recommendations.slice(0, 2).map((recommendation, index) => (
+      {recommendations.map((recommendation, index) => (
         <View key={index} style={styles.recommendationItem}>
           <View style={styles.recommendationBullet} />
           <Text style={styles.recommendationText} numberOfLines={2}>

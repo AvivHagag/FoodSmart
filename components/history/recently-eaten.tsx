@@ -18,6 +18,7 @@ import {
 import { Card } from "../ui/card";
 import { MealDetailModal } from "../Main/MealDetailModal";
 import { BASE_URL } from "@/constants/constants";
+import { useGlobalContext } from "@/app/context/authprovider";
 
 type Meal = {
   _id?: string;
@@ -44,6 +45,7 @@ export function RecentlyEaten({
   userId,
   mealsID,
 }: RecentlyEatenProps) {
+  const { authFetch } = useGlobalContext();
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [mealOpenModal, setMealOpenModal] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -65,7 +67,7 @@ export function RecentlyEaten({
         return;
       }
       setIsDeleting(true);
-      const response = await fetch(
+      const response = await authFetch(
         `${BASE_URL}/api/user/${userId}/delete_meal`,
         {
           method: "DELETE",

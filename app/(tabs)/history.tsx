@@ -32,7 +32,7 @@ interface Meal {
 
 const History = () => {
   const [selectedDate, setSelectedDate] = useState(
-    moment().tz("Asia/Jerusalem").toDate()
+    moment().tz("Asia/Jerusalem").toDate(),
   );
   const [refreshing, setRefreshing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -100,7 +100,7 @@ const History = () => {
     try {
       const dateParam = formatDateForApi(selectedDate);
       const response = await fetch(
-        `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateParam}`
+        `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateParam}`,
       );
       const data = await response.json();
       if (response.ok && data.meals) {
@@ -142,7 +142,7 @@ const History = () => {
     try {
       const dateParam = formatDateForApi(selectedDate);
       const response = await fetch(
-        `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateParam}`
+        `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateParam}`,
       );
       const data = await response.json();
       if (response.ok && data.meals) {

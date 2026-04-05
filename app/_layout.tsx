@@ -3,6 +3,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { StatusBar } from "react-native";
 import { Stack, useRouter } from "expo-router";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css";
 import AuthProvider, { useGlobalContext } from "./context/authprovider";
 
@@ -54,8 +55,10 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

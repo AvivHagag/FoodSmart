@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  SafeAreaView,
   ScrollView,
   RefreshControl,
   StyleSheet,
@@ -10,6 +9,7 @@ import {
   FlatList,
 } from "react-native";
 import React, { useState, useEffect } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useGlobalContext } from "@/app/context/authprovider";
 import { LineChart } from "react-native-chart-kit";
 import { Dimensions } from "react-native";
@@ -78,7 +78,7 @@ const Statistics = () => {
     carbs: { current: 0, target: 250, unit: "g" },
     fats: { current: 0, target: 70, unit: "g" },
   });
-  const { user } = useGlobalContext();
+  const { user, authFetch } = useGlobalContext();
   const [activeDataset, setActiveDataset] = useState("calories");
 
   const screenWidth = Dimensions.get("window").width - 32;
@@ -125,13 +125,13 @@ const Statistics = () => {
   const generateLabelsForRange = (
     rangeType: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ) => {
     const labels = [];
     const currentDate = new Date(startDate);
     const daysCount =
       Math.ceil(
-        (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
+        (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000),
       ) + 1;
 
     for (let i = 0; i < daysCount; i++) {
@@ -170,7 +170,7 @@ const Statistics = () => {
     meals: MealData[],
     rangeType: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ) => {
     const dailyNutrition: {
       [key: string]: {
@@ -207,7 +207,7 @@ const Statistics = () => {
 
     const sortedDates = Object.keys(dailyNutrition).sort();
     const caloriesData = sortedDates.map(
-      (date) => dailyNutrition[date].calories
+      (date) => dailyNutrition[date].calories,
     );
     const proteinData = sortedDates.map((date) => dailyNutrition[date].protein);
     const carbsData = sortedDates.map((date) => dailyNutrition[date].carbs);
@@ -229,7 +229,7 @@ const Statistics = () => {
 
   const calculateGoalProgress = (
     dailyNutrition: any,
-    nutritionGoals: NutritionGoals
+    nutritionGoals: NutritionGoals,
   ): GoalProgress => {
     const values = Object.values(dailyNutrition) as any[];
     const daysWithData = values.filter((day) => day.calories > 0);
@@ -271,8 +271,8 @@ const Statistics = () => {
     if (!user?._id) return;
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${BASE_URL}/api/statistics/${user._id}?range=${selectedRange}`
+      const response = await authFetch(
+        `${BASE_URL}/api/statistics/${user._id}?range=${selectedRange}`,
       );
 
       if (!response.ok) {
@@ -288,11 +288,11 @@ const Statistics = () => {
         data.meals,
         selectedRange,
         startDate,
-        endDate
+        endDate,
       );
       const goalProgressData = calculateGoalProgress(
         processedData.dailyNutrition,
-        nutritionGoals
+        nutritionGoals,
       );
 
       setNutritionData(processedData);

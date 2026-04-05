@@ -14,10 +14,15 @@ import Title from "../title";
 import { Usertype } from "@/assets/types";
 
 interface MenuItem {
-  icon: JSX.Element;
+  icon: React.ReactElement;
   label: string;
   value?: string;
   onClick?: () => void;
+}
+
+function lucideIconColor(icon: React.ReactElement): string {
+  const { color } = icon.props as { color?: string };
+  return color ?? "#9ca3af";
 }
 
 interface UserSettingProps {
@@ -30,15 +35,17 @@ interface UserSettingProps {
   setShowUnderConstruction: Dispatch<SetStateAction<boolean>>;
 }
 
-function calculateUsageDays(createdAt: string | undefined | { $date: string }): number {
+function calculateUsageDays(
+  createdAt: string | undefined | { $date: string },
+): number {
   if (!createdAt) {
     return 0;
   }
-  
+
   let dateString: string;
-  if (typeof createdAt === 'object' && createdAt.$date) {
+  if (typeof createdAt === "object" && createdAt.$date) {
     dateString = createdAt.$date;
-  } else if (typeof createdAt === 'string') {
+  } else if (typeof createdAt === "string") {
     dateString = createdAt;
   } else {
     return 0;
@@ -152,7 +159,7 @@ export default function UserSetting({
                   )}
                   <ChevronRight
                     className="text-gray-400"
-                    color={`${item.icon.props.color}`}
+                    color={lucideIconColor(item.icon)}
                   />
                 </View>
               </TouchableOpacity>

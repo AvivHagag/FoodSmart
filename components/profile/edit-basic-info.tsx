@@ -43,7 +43,7 @@ export default function EditBasicInfo({
   const [fullname, setFullname] = useState<string>(user.fullname);
   const [email, setEmail] = useState<string>(user.email);
   const [image, setImage] = useState<string | null>(
-    user.image ? user.image : null
+    user.image ? user.image : null,
   );
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isImagePickerVisible, setIsImagePickerVisible] = useState(false);
@@ -53,7 +53,7 @@ export default function EditBasicInfo({
     email?: string;
   }>({});
 
-  const { logout, updateUser } = useGlobalContext();
+  const { logout, updateUser, authFetch } = useGlobalContext();
 
   const validateForm = () => {
     const newErrors: { fullname?: string; email?: string } = {};
@@ -105,7 +105,7 @@ export default function EditBasicInfo({
         } as any);
       }
 
-      const response = await fetch(`${BASE_URL}/api/update_basic_info`, {
+      const response = await authFetch(`${BASE_URL}/api/update_basic_info`, {
         method: "POST",
         body: formData,
       });
@@ -129,7 +129,7 @@ export default function EditBasicInfo({
         const errorData = await response.json();
         Alert.alert(
           "Error",
-          errorData.error || "Failed to update information."
+          errorData.error || "Failed to update information.",
         );
       }
     } catch (error) {
@@ -168,13 +168,13 @@ export default function EditBasicInfo({
       if (status !== "granted") {
         Alert.alert(
           "Permissions Required",
-          "Camera permissions are needed to take a photo."
+          "Camera permissions are needed to take a photo.",
         );
         return;
       }
 
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.7,
@@ -198,13 +198,13 @@ export default function EditBasicInfo({
       if (status !== "granted") {
         Alert.alert(
           "Permissions Required",
-          "Gallery permissions are needed to select a photo."
+          "Gallery permissions are needed to select a photo.",
         );
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.7,
@@ -231,7 +231,7 @@ export default function EditBasicInfo({
 
   const confirmDeleteAccount = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/delete_user`, {
+      const response = await authFetch(`${BASE_URL}/api/delete_user`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -251,7 +251,7 @@ export default function EditBasicInfo({
                 await logout();
               },
             },
-          ]
+          ],
         );
       } else {
         const errorData = await response.json();

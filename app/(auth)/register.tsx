@@ -18,7 +18,7 @@ import { Image } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function RegisterScreen() {
-  const [fullname, setfullname] = useState<string>("");
+  const [fullname, setFullName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [message, setMessage] = useState<string>("");
@@ -27,8 +27,8 @@ export default function RegisterScreen() {
   const { register } = useGlobalContext();
   const router = useRouter();
 
-  const handlefullnameChange = (text: string) => {
-    setfullname(text);
+  const handleFullNameChange = (text: string) => {
+    setFullName(text);
     setErrorMessage("");
   };
   const handleEmailChange = (text: string) => {
@@ -69,13 +69,18 @@ export default function RegisterScreen() {
       setErrorMessage("Please enter both your first and last name.");
       return;
     }
+    const allCapitalized = nameParts.every((part) => /^[A-Z]/.test(part));
+    if (!allCapitalized) {
+      setErrorMessage("Each name must start with a capital letter.");
+      return;
+    }
     if (!password) {
       setErrorMessage("Please enter Password");
       return;
     }
     if (!isValidPassword(password)) {
       setErrorMessage(
-        "Password must be at least 7 characters long and include at least one letter and one number"
+        "Password must be at least 7 characters long and include at least one letter and one number",
       );
       return;
     }
@@ -162,8 +167,8 @@ export default function RegisterScreen() {
                     className="h-12 bg-gray-100 border border-gray-300 rounded-md px-4"
                     placeholder="Enter your first and last name"
                     placeholderTextColor="#999"
-                    onChangeText={handlefullnameChange}
-                    autoCapitalize="none"
+                    onChangeText={handleFullNameChange}
+                    autoCapitalize="words"
                     value={fullname}
                   />
                 </View>

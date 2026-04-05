@@ -4,6 +4,7 @@ import { Save } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import moment from "moment-timezone";
 import { BASE_URL } from "@/constants/constants";
+import { useGlobalContext } from "@/app/context/authprovider";
 import { User, Recipe } from "@/assets/types";
 
 interface SaveRecipeButtonProps {
@@ -19,6 +20,7 @@ const SaveRecipeButton: React.FC<SaveRecipeButtonProps> = ({
   onRefresh,
   onClose,
 }) => {
+  const { authFetch } = useGlobalContext();
   const [isSaving, setIsSaving] = useState(false);
 
   const saveRecipeAsMeal = async () => {
@@ -60,7 +62,7 @@ const SaveRecipeButton: React.FC<SaveRecipeButtonProps> = ({
         mealsList: [mealEntry],
       };
 
-      const res = await fetch(`${BASE_URL}/meals`, {
+      const res = await authFetch(`${BASE_URL}/meals`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

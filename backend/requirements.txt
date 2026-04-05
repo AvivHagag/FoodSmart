@@ -4,7 +4,10 @@ flask-cors
 flask-pymongo
 flask-bcrypt
 flask-jwt-extended
+flask-limiter
 python-dotenv
-ultralytics
-numpy
 openai
+gunicorn
+boto3
+requests
+pymongo

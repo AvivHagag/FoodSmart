@@ -18,6 +18,7 @@ import {
   Share,
 } from "react-native";
 import * as FileSystem from 'expo-file-system';
+import { useGlobalContext } from "@/app/context/authprovider";
 import {
   DropletIcon,
   FlameIcon,
@@ -66,6 +67,7 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
   userId,
   mealsID,
 }) => {
+  const { authFetch } = useGlobalContext();
   const [isEditing, setIsEditing] = useState(isEditingProp || false);
   const [calories, setCalories] = useState(meal.calories.toString());
   const [protein, setProtein] = useState(meal.protein.toString());
@@ -200,7 +202,7 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
 
       setIsSaving(true);
 
-      const resp = await fetch(`${BASE_URL}/api/user/${userId}/update_meal`, {
+      const resp = await authFetch(`${BASE_URL}/api/user/${userId}/update_meal`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

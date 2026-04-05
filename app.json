@@ -7,10 +7,12 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "sdkVersion": "53.0.0",
-    "newArchEnabled": true,
+    "sdkVersion": "54.0.0",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -35,10 +37,20 @@
         }
       ],
       "expo-font",
+      "expo-web-browser",
+      "@react-native-community/datetimepicker",
+      "@react-native-community/datetimepicker",
+      "expo-secure-store",
       "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2bcbfbed-66a1-449c-a4ba-377d981591a8"
+      }
     }
   }
 }
