@@ -1,6 +1,14 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
 import { CalendarList, DateData } from "react-native-calendars";
+
+/** Local calendar day key — avoid UTC shift from toISOString(). */
+function toCalendarDateString(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 interface HighlightedDate {
   date: Date;
@@ -18,29 +26,28 @@ export default function DatePicker({
   onDateChange,
   highlightedDates = [],
 }: Props) {
-  const markedDates: Record<string, any> = {
-    [selectedDate.toISOString().slice(0, 10)]: {
-      selected: true,
-      selectedColor: "#BE123C",
-    },
-  };
-  highlightedDates.forEach(({ date, type }) => {
-    const key = date.toISOString().slice(0, 10);
-    markedDates[key] = {
-      ...markedDates[key],
-      [type === "ovulation" ? "dotColor" : "customStyles"]: {
-        container: {
-          backgroundColor: type === "ovulation" ? "#DDE7FF" : "#FFE3E2",
-          width: 6,
-          height: 6,
-          borderRadius: 3,
-          bottom: 4,
-        },
+  const selectedKey = toCalendarDateString(selectedDate);
+
+  const markedDates = useMemo(() => {
+    const marks: Record<string, object> = {
+      [selectedKey]: {
+        selected: true,
+        selectedColor: "#BE123C",
       },
     };
-  });
+    highlightedDates.forEach(({ date, type }) => {
+      const key = toCalendarDateString(date);
+      marks[key] = {
+        ...marks[key],
+        marked: true,
+        dotColor: type === "ovulation" ? "#4F46E5" : "#BE123C",
+      };
+    });
+    return marks;
+  }, [selectedKey, highlightedDates]);
 
   const screenWidth = Dimensions.get("window").width;
+  const calendarWidth = Math.max(screenWidth - 32, 280);
 
   return (
     <View style={styles.container}>
@@ -51,30 +58,31 @@ export default function DatePicker({
         futureScrollRange={100}
         scrollEnabled
         showScrollIndicator
-        disableScrollViewPanResponder={true}
-        staticHeader={true}
-        current={selectedDate.toISOString().slice(0, 10)}
-        onDayPress={(day: DateData) => onDateChange(new Date(day.dateString))}
+        calendarHeight={360}
+        calendarWidth={calendarWidth}
+        current={selectedKey}
+        onDayPress={(day: DateData) =>
+          onDateChange(new Date(day.year, day.month - 1, day.day))
+        }
         theme={{
-          backgroundColor: "transparent",
-          calendarBackground: "transparent",
-          textSectionTitleColor: "#666",
-          dayTextColor: "#333",
+          backgroundColor: "#ffffff",
+          calendarBackground: "#ffffff",
+          textSectionTitleColor: "#374151",
+          dayTextColor: "#111827",
+          textDisabledColor: "#d1d5db",
           todayTextColor: "#BE123C",
-          arrowColor: "#4F46E5",
-          monthTextColor: "#000",
+          arrowColor: "#BE123C",
+          monthTextColor: "#111827",
           textMonthFontSize: 16,
           textMonthFontWeight: "600",
-          textDayFontSize: 14,
-          textDayHeaderFontSize: 14,
-          textDayHeaderFontWeight: "500",
-          selectedDayTextColor: "#fff",
-          selectedDayBackgroundColor: "#4F46E5",
+          textDayFontSize: 15,
+          textDayHeaderFontSize: 13,
+          textDayHeaderFontWeight: "600",
+          selectedDayTextColor: "#ffffff",
+          selectedDayBackgroundColor: "#BE123C",
         }}
-        markingType={"custom"}
         markedDates={markedDates}
         style={styles.calendarList}
-        calendarWidth={screenWidth - 32}
       />
     </View>
   );
@@ -82,16 +90,17 @@ export default function DatePicker({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    marginHorizontal: 16,
+    flexGrow: 1,
+    flexShrink: 1,
+    minHeight: 360,
+    marginHorizontal: 0,
     overflow: "hidden",
     borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#ffffff",
   },
   calendarList: {
     paddingBottom: 8,
-    alignSelf: "center",
     width: "100%",
+    minHeight: 360,
   },
 });

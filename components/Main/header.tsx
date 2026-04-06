@@ -1,5 +1,5 @@
 import { View, Image, Text, TouchableOpacity } from "react-native";
-import { Brain, Flame } from "lucide-react-native";
+import { Brain } from "lucide-react-native";
 
 interface MainPageHeaderProps {
   burning: number;

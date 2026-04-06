@@ -15,9 +15,7 @@ import {
   Keyboard,
   Platform,
   LayoutAnimation,
-  Share,
 } from "react-native";
-import * as FileSystem from 'expo-file-system';
 import { useGlobalContext } from "@/app/context/authprovider";
 import {
   DropletIcon,
@@ -30,7 +28,6 @@ import {
   PlusIcon,
   CheckIcon,
   AlertTriangle,
-  ShareIcon,
 } from "lucide-react-native";
 import { Card } from "../ui/card";
 import { BASE_URL } from "@/constants/constants";
@@ -74,7 +71,7 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
   const [carbo, setCarbo] = useState(meal.carbo.toString());
   const [fat, setFat] = useState(meal.fat.toString());
   const [details, setDetails] = useState<string[]>(
-    meal.items.split(",").map((d) => d.trim())
+    meal.items.split(",").map((d) => d.trim()),
   );
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -202,21 +199,24 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
 
       setIsSaving(true);
 
-      const resp = await authFetch(`${BASE_URL}/api/user/${userId}/update_meal`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mealId: mealsID,
-          mealName: meal.name,
-          mealData: {
-            calories: cal,
-            protein: pro,
-            carbo: car,
-            fat: fa,
-            items: trimmedDetails.join(", "),
-          },
-        }),
-      });
+      const resp = await authFetch(
+        `${BASE_URL}/api/user/${userId}/update_meal`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mealId: mealsID,
+            mealName: meal.name,
+            mealData: {
+              calories: cal,
+              protein: pro,
+              carbo: car,
+              fat: fa,
+              items: trimmedDetails.join(", "),
+            },
+          }),
+        },
+      );
 
       if (resp.status === 200) {
         setIsEditing(false);
@@ -266,13 +266,15 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
                 </TouchableOpacity>
                 <ShareButton
                   imageUri={meal.imageUri}
-                  nutritionData={[{
-                    name: meal.name,
-                    calories: meal.calories,
-                    protein: meal.protein,
-                    carbo: meal.carbo,
-                    fat: meal.fat,
-                  }]}
+                  nutritionData={[
+                    {
+                      name: meal.name,
+                      calories: meal.calories,
+                      protein: meal.protein,
+                      carbo: meal.carbo,
+                      fat: meal.fat,
+                    },
+                  ]}
                   details={details}
                   time={meal.time}
                   style={styles.shareButton}
@@ -469,7 +471,7 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
                             setCarbo(meal.carbo.toString());
                             setFat(meal.fat.toString());
                             setDetails(
-                              meal.items.split(",").map((d) => d.trim())
+                              meal.items.split(",").map((d) => d.trim()),
                             );
                           }}
                           style={[styles.actionButton, styles.cancelButton]}

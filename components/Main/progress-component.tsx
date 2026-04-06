@@ -59,22 +59,22 @@ export function DashboardScreen(props: DashboardScreenProps = {}) {
       ? Math.min(
           100,
           Math.round(
-            (userData.totalProtein / recommendedNutrition.protein) * 100
-          )
+            (userData.totalProtein / recommendedNutrition.protein) * 100,
+          ),
         )
       : 0;
   const carbsPercentage =
     recommendedNutrition.carbs > 0
       ? Math.min(
           100,
-          Math.round((userData.totalCarbs / recommendedNutrition.carbs) * 100)
+          Math.round((userData.totalCarbs / recommendedNutrition.carbs) * 100),
         )
       : 0;
   const fatsPercentage =
     recommendedNutrition.fat > 0
       ? Math.min(
           100,
-          Math.round((userData.totalFats / recommendedNutrition.fat) * 100)
+          Math.round((userData.totalFats / recommendedNutrition.fat) * 100),
         )
       : 0;
 
@@ -121,7 +121,7 @@ export function DashboardScreen(props: DashboardScreenProps = {}) {
               <DumbbellIcon className="h-5 w-5" color="#000000" />
               <Text style={{ color: "#BE123C", marginTop: 4, fontSize: 10 }}>
                 {Math.round(
-                  (userData.totalProtein / recommendedNutrition.protein) * 100
+                  (userData.totalProtein / recommendedNutrition.protein) * 100,
                 )}
                 %
               </Text>
@@ -143,7 +143,7 @@ export function DashboardScreen(props: DashboardScreenProps = {}) {
               <WheatIcon className="h-5 w-5" color="#000000" />
               <Text style={{ color: "#F59E0B", marginTop: 4, fontSize: 10 }}>
                 {Math.round(
-                  (userData.totalCarbs / recommendedNutrition.carbs) * 100
+                  (userData.totalCarbs / recommendedNutrition.carbs) * 100,
                 )}
                 %
               </Text>
@@ -165,7 +165,7 @@ export function DashboardScreen(props: DashboardScreenProps = {}) {
               <DropletIcon className="h-5 w-5" color="#000000" />
               <Text style={{ color: "#2563EB", marginTop: 4, fontSize: 10 }}>
                 {Math.round(
-                  (userData.totalFats / recommendedNutrition.fat) * 100
+                  (userData.totalFats / recommendedNutrition.fat) * 100,
                 )}
                 %
               </Text>

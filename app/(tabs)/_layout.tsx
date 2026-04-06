@@ -94,7 +94,7 @@ const TabsLayout: React.FC = () => {
       if (status !== "granted") {
         Alert.alert(
           "Permissions Required",
-          "Sorry, we need camera permissions to make this work!"
+          "Sorry, we need camera permissions to make this work!",
         );
         return;
       }
@@ -127,7 +127,7 @@ const TabsLayout: React.FC = () => {
       if (status !== "granted") {
         Alert.alert(
           "Permissions Required",
-          "Sorry, we need gallery permissions to make this work!"
+          "Sorry, we need gallery permissions to make this work!",
         );
         return;
       }

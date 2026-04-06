@@ -1,6 +1,5 @@
 import {
   View,
-  SafeAreaView,
   Text,
   StyleSheet,
   TouchableOpacity,
@@ -9,6 +8,10 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import React, { useState, useEffect } from "react";
 import DatePicker from "@/components/history/DatePicker";
 import { Calendar } from "lucide-react-native";
@@ -31,6 +34,7 @@ interface Meal {
 }
 
 const History = () => {
+  const insets = useSafeAreaInsets();
   const [selectedDate, setSelectedDate] = useState(
     moment().tz("Asia/Jerusalem").toDate(),
   );
@@ -38,7 +42,7 @@ const History = () => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [meals, setMeals] = useState<Meal[]>([]);
-  const { user } = useGlobalContext();
+  const { user, authFetch } = useGlobalContext();
   const [mealsID, setMealsID] = useState<string>("");
 
   const formatDate = (date: Date) => {
@@ -84,7 +88,7 @@ const History = () => {
         newMeal.calories !== currentMeal.calories ||
         newMeal.protein !== currentMeal.protein ||
         newMeal.fat !== currentMeal.fat ||
-        newMeal.fat !== currentMeal.fat ||
+        newMeal.carbo !== currentMeal.carbo ||
         newMeal.items !== currentMeal.items
       ) {
         return true;
@@ -99,7 +103,7 @@ const History = () => {
     setIsLoading(true);
     try {
       const dateParam = formatDateForApi(selectedDate);
-      const response = await fetch(
+      const response = await authFetch(
         `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateParam}`,
       );
       const data = await response.json();
@@ -111,7 +115,7 @@ const History = () => {
             name: meal.name,
             time: formatTimeFromDate(meal.time),
             calories: meal.calories,
-            protein: meal.protein || meal.fat,
+            protein: meal.protein ?? 0,
             carbo: meal.carbo,
             fat: meal.fat,
             imageUri: meal.imageUri,
@@ -119,6 +123,7 @@ const History = () => {
           }));
           setMeals(processedMeals);
         } else {
+          if (data.meals.length === 0) setMealsID("");
           setMeals(data.meals);
         }
       } else {
@@ -139,20 +144,22 @@ const History = () => {
 
   const onRefresh = async () => {
     if (!user?._id) return;
+    setRefreshing(true);
     try {
       const dateParam = formatDateForApi(selectedDate);
-      const response = await fetch(
+      const response = await authFetch(
         `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateParam}`,
       );
       const data = await response.json();
       if (response.ok && data.meals) {
         if (data.meals.length > 0 && data.meals[0].mealsList) {
+          setMealsID(data.meals[0]._id);
           const processedMeals = data.meals[0].mealsList.map((meal: Meal) => ({
             _id: meal._id,
             name: meal.name,
             time: formatTimeFromDate(meal.time),
             calories: meal.calories,
-            protein: meal.protein || meal.fat,
+            protein: meal.protein ?? 0,
             carbo: meal.carbo,
             fat: meal.fat,
             imageUri: meal.imageUri,
@@ -161,22 +168,27 @@ const History = () => {
           const mealsChanged = areMealsDifferent(processedMeals, meals);
           if (mealsChanged) {
             setMeals(processedMeals);
-          } else {
-            return;
           }
         } else {
-          console.log("Failed to fetch meals:", data.message);
-          setMeals([]);
+          if (data.meals.length === 0) setMealsID("");
+          setMeals(data.meals);
         }
+      } else {
+        console.log("Failed to fetch meals:", data.message);
+        setMeals([]);
+        setMealsID("");
       }
     } catch (error) {
       console.log("Error fetching meals:", error);
       setMeals([]);
+      setMealsID("");
+    } finally {
+      setRefreshing(false);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>History</Text>
         <View style={styles.headerIcons}>
@@ -190,7 +202,12 @@ const History = () => {
       </View>
 
       {showCalendar ? (
-        <View style={styles.calendarContainer}>
+        <View
+          style={[
+            styles.calendarContainer,
+            { paddingBottom: Math.max(insets.bottom, 16) },
+          ]}
+        >
           <View style={styles.mealHeader}>
             <View style={styles.mealHeaderLine} />
             <Text style={styles.mealHeaderText}>Select a date</Text>
@@ -212,6 +229,9 @@ const History = () => {
           />
           <ScrollView
             style={styles.content}
+            contentContainerStyle={{
+              paddingBottom: Math.max(insets.bottom, 24) + 8,
+            }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -263,13 +283,16 @@ const History = () => {
           </ScrollView>
         </>
       )}
-      <View className="bg-white -mt-52 h-12"></View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",

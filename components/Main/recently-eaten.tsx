@@ -61,7 +61,7 @@ export function RecentlyEaten({
     initialRaw.map((meal) => ({
       ...meal,
       time: moment(meal.time).tz("Asia/Jerusalem").format("DD/MM/YYYY HH:mm"),
-    }))
+    })),
   );
   const [selectedMeal, setSelectedMeal] = useState<MealItem | null>(null);
   const [mealOpenModal, setMealOpenModal] = useState(false);
@@ -78,7 +78,7 @@ export function RecentlyEaten({
       newRaw.map((meal) => ({
         ...meal,
         time: moment(meal.time).tz("Asia/Jerusalem").format("DD/MM/YYYY HH:mm"),
-      }))
+      })),
     );
   }, [meals]);
 
@@ -122,7 +122,7 @@ export function RecentlyEaten({
             mealId: mealsID,
             mealName: meal.name,
           }),
-        }
+        },
       );
 
       if (response.status === 200) {
@@ -138,7 +138,7 @@ export function RecentlyEaten({
       console.error("Error deleting meal:", error);
       Alert.alert(
         "Error",
-        "An error occurred while deleting the meal. Please try again."
+        "An error occurred while deleting the meal. Please try again.",
       );
     } finally {
       setIsDeleting(false);

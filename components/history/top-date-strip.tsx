@@ -30,7 +30,7 @@ const TopDateStrip = ({ selectedDate, onDateChange }: Props) => {
   });
 
   return (
-    <View>
+    <View style={styles.wrapper}>
       <Text style={styles.monthText}>{currentMonth}</Text>
       <FlatList
         data={weekDates}
@@ -65,10 +65,15 @@ const TopDateStrip = ({ selectedDate, onDateChange }: Props) => {
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    backgroundColor: "#000",
+    paddingHorizontal: 8,
+    paddingBottom: 4,
+  },
   monthText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#fff",
+    color: "#f9fafb",
     textAlign: "center",
     marginBottom: 8,
   },
@@ -80,25 +85,27 @@ const styles = StyleSheet.create({
   },
   dayContainer: {
     alignItems: "center",
-    paddingVertical: 24,
-    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     borderRadius: 16,
+    minWidth: 48,
   },
   selectedDay: {
     backgroundColor: "#BE123C",
-    paddingVertical: 24,
+    paddingVertical: 12,
   },
   dayText: {
-    color: "#999",
-    fontSize: 14,
+    color: "#9ca3af",
+    fontSize: 13,
+    fontWeight: "500",
   },
   selectedDayText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontWeight: "700",
   },
   dateText: {
-    opacity: 0.6,
-    color: "#fff",
+    marginTop: 2,
+    color: "#d1d5db",
     fontSize: 16,
     fontWeight: "600",
   },
