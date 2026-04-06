@@ -84,13 +84,17 @@ const TabsLayout: React.FC = () => {
     });
   };
 
+  const openImagePickerOptions = () => {
+    toggleModal();
+  };
+
   const openCamera = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
           "Permissions Required",
-          "Sorry, we need camera permissions to make this work!",
+          "Sorry, we need camera permissions to make this work!"
         );
         return;
       }
@@ -123,7 +127,7 @@ const TabsLayout: React.FC = () => {
       if (status !== "granted") {
         Alert.alert(
           "Permissions Required",
-          "Sorry, we need gallery permissions to make this work!",
+          "Sorry, we need gallery permissions to make this work!"
         );
         return;
       }
@@ -146,6 +150,22 @@ const TabsLayout: React.FC = () => {
     } catch (error) {
       console.error("Error opening gallery:", error);
     }
+  };
+
+  const CameraTabBarButton = () => {
+    return (
+      <TouchableOpacity
+        onPress={openImagePickerOptions}
+        activeOpacity={0.7}
+        className="bg-white shadow shadow-zinc-500 w-20 h-20 -mt-6 rounded-full items-center justify-center transition-all"
+      >
+        {isModalVisible ? (
+          <X size={32} color={"#000"} />
+        ) : (
+          <CameraIcon size={32} color={"#000"} />
+        )}
+      </TouchableOpacity>
+    );
   };
 
   const openModal = () => {
@@ -212,8 +232,7 @@ const TabsLayout: React.FC = () => {
                 title: tab.title,
                 ...(isCameraTab
                   ? {
-                      tabBarIcon: () => <View />,
-                      tabBarStyle: { display: "none" },
+                      tabBarButton: () => <CameraTabBarButton />,
                     }
                   : {
                       tabBarIcon: ({ focused }) => {
@@ -238,39 +257,6 @@ const TabsLayout: React.FC = () => {
           );
         })}
       </Tabs>
-
-      {/* Camera button — positioned over the tab bar center */}
-      {hasCompleteProfile && (
-        <TouchableOpacity
-          onPress={toggleModal}
-          activeOpacity={0.7}
-          style={{
-            position: "absolute",
-            bottom: 46,
-            alignSelf: "center",
-            width: 80,
-            height: 80,
-            borderRadius: 40,
-            backgroundColor: "#ffffff",
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: "#71717a",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-            zIndex: 10,
-          }}
-        >
-          {isModalVisible ? (
-            <X size={32} color={"#000"} />
-          ) : (
-            <CameraIcon size={32} color={"#000"} />
-          )}
-        </TouchableOpacity>
-      )}
-
-      {/* Modal with Take Photo / Choose From Gallery */}
       {isModalVisible && hasCompleteProfile && (
         <Animated.View
           style={{
