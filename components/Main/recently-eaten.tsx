@@ -28,6 +28,54 @@ import moment from "moment-timezone";
 import { BASE_URL } from "@/constants/constants";
 import { useGlobalContext } from "@/app/context/authprovider";
 
+/** API may return ISO string, epoch ms/s, Mongo-style {$date}, or Firestore-style {seconds}. */
+function formatMealListTime(raw: unknown): string {
+  if (raw == null) return "—";
+
+  if (typeof raw === "number" && !Number.isNaN(raw)) {
+    const ms = raw < 1e12 ? raw * 1000 : raw;
+    const m = moment(ms);
+    return m.isValid()
+      ? m.tz("Asia/Jerusalem").format("DD/MM/YYYY HH:mm")
+      : "—";
+  }
+
+  if (typeof raw === "string") {
+    const s = raw.trim();
+    if (!s || s === "undefined" || s === "null") return "—";
+    if (/^\d+$/.test(s)) {
+      const n = Number(s);
+      const ms = n < 1e12 ? n * 1000 : n;
+      const m = moment(ms);
+      return m.isValid()
+        ? m.tz("Asia/Jerusalem").format("DD/MM/YYYY HH:mm")
+        : "—";
+    }
+    const m = moment(s);
+    return m.isValid()
+      ? m.tz("Asia/Jerusalem").format("DD/MM/YYYY HH:mm")
+      : "—";
+  }
+
+  if (typeof raw === "object") {
+    const o = raw as Record<string, unknown>;
+    if ("$date" in o) {
+      return formatMealListTime(o.$date);
+    }
+    const sec = o.seconds ?? o._seconds;
+    if (typeof sec === "number") {
+      const nano = (o.nanoseconds ?? o._nanoseconds ?? 0) as number;
+      const ms = sec * 1000 + Math.floor(Number(nano) / 1e6);
+      const m = moment(ms);
+      return m.isValid()
+        ? m.tz("Asia/Jerusalem").format("DD/MM/YYYY HH:mm")
+        : "—";
+    }
+  }
+
+  return "—";
+}
+
 interface MealItem {
   name: string;
   time: string;
@@ -60,7 +108,7 @@ export function RecentlyEaten({
   const [dataMeals, setDataMeals] = useState<MealItem[]>(
     initialRaw.map((meal) => ({
       ...meal,
-      time: moment(meal.time).tz("Asia/Jerusalem").format("DD/MM/YYYY HH:mm"),
+      time: formatMealListTime(meal.time as unknown),
     })),
   );
   const [selectedMeal, setSelectedMeal] = useState<MealItem | null>(null);
@@ -77,7 +125,7 @@ export function RecentlyEaten({
     setDataMeals(
       newRaw.map((meal) => ({
         ...meal,
-        time: moment(meal.time).tz("Asia/Jerusalem").format("DD/MM/YYYY HH:mm"),
+        time: formatMealListTime(meal.time as unknown),
       })),
     );
   }, [meals]);
