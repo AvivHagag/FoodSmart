@@ -11,8 +11,7 @@ import {
 } from "react-native";
 import { KeyRound, Eye, EyeOff } from "lucide-react-native";
 import Title from "../title";
-import { BASE_URL } from "@/constants/constants";
-import { useGlobalContext } from "@/app/context/authprovider";
+import { updatePassword as updatePasswordRequest } from "@/api/userApi";
 
 interface ChangePasswordProps {
   userID: string;
@@ -23,7 +22,7 @@ export default function ChangePassword({
   userID,
   handlePasswordOpen,
 }: ChangePasswordProps) {
-  const { authFetch } = useGlobalContext();
+  void userID;
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -69,29 +68,13 @@ export default function ChangePassword({
 
     setIsLoading(true);
     try {
-      const response = await authFetch(`${BASE_URL}/api/update_password`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-          userID,
-        }),
-      });
-
-      if (response.ok) {
-        Alert.alert("Success", "Your password has been updated.", [
-          { text: "OK", onPress: handlePasswordOpen },
-        ]);
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      } else {
-        const errorData = await response.json();
-        Alert.alert("Error", errorData.message || "Something went wrong.");
-      }
+      await updatePasswordRequest(currentPassword, newPassword);
+      Alert.alert("Success", "Your password has been updated.", [
+        { text: "OK", onPress: handlePasswordOpen },
+      ]);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     } catch (error) {
       Alert.alert("Error", "Failed to update password. Please try again.");
     } finally {
@@ -119,7 +102,7 @@ export default function ChangePassword({
             <View style={styles.marginLeft1}>
               <Text style={styles.alertTitle}>Security First</Text>
               <Text style={styles.alertText}>
-                Choose a strong password that you haven't used before.
+                Choose a strong password that you have not used before.
               </Text>
             </View>
           </View>

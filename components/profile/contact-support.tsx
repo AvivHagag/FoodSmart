@@ -30,7 +30,7 @@ import {
 } from "lucide-react-native";
 import Title from "../title";
 import { LinearGradient } from "expo-linear-gradient";
-import { BASE_URL } from "@/constants/constants";
+import { submitSupportMessage } from "@/api/supportApi";
 
 interface ContactSupportProps {
   setShowContactSupport: Dispatch<SetStateAction<boolean>>;
@@ -121,40 +121,27 @@ export default function ContactSupport({
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${BASE_URL}/api/support_message`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          email: email.trim(),
-          phone: phone.trim() || null,
-          inquiryType,
-          priority,
-          subject: subject.trim(),
-          message: message.trim(),
-        }),
+      const data = await submitSupportMessage({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim() || null,
+        inquiryType,
+        priority: priority || "medium",
+        subject: subject.trim(),
+        message: message.trim(),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setIsLoading(false);
-        Alert.alert(
-          "Support Request Submitted",
-          `Thank you for contacting us! Your ticket ID is ${data.ticketId}. We'll get back to you within 24 hours.`,
-          [
-            {
-              text: "OK",
-              onPress: () => setShowContactSupport(false),
-            },
-          ]
-        );
-      } else {
-        setIsLoading(false);
-        Alert.alert("Error", data.error || "Failed to submit support request");
-      }
+      setIsLoading(false);
+      Alert.alert(
+        "Support Request Submitted",
+        `Thank you for contacting us! Your ticket ID is ${data.ticketId}. We'll get back to you within 24 hours.`,
+        [
+          {
+            text: "OK",
+            onPress: () => setShowContactSupport(false),
+          },
+        ]
+      );
     } catch (error) {
       setIsLoading(false);
       console.error("Support request error:", error);
@@ -213,7 +200,7 @@ export default function ContactSupport({
                 </View>
               </View>
             </View>
-            <Text style={styles.headerTitle}>We're Here to Help</Text>
+            <Text style={styles.headerTitle}>We Are Here to Help</Text>
             <Text style={styles.headerSubtitle}>
               Our support team is ready to assist you with any questions or
               issues

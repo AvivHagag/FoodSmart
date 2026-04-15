@@ -14,7 +14,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useGlobalContext } from "../context/authprovider";
+import { useGlobalContext } from "@/context/authprovider";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function LoginScreen() {

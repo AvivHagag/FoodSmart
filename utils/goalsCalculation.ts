@@ -1,16 +1,10 @@
-import { BASE_URL } from "@/constants/constants";
+import { getStatistics } from "@/api/statisticsApi";
 
 export async function calculateGoalsMet(userId: string): Promise<number> {
   try {
+    void userId;
     // Fetch 30-day statistics to calculate goals met percentage
-    const response = await fetch(
-      `${BASE_URL}/api/statistics/${userId}?range=30 Days`
-    );
-    if (!response.ok) {
-      return 0;
-    }
-
-    const data = await response.json();
+    const data = await getStatistics("30 Days");
     const userGoals = data.userGoals;
     const meals = data.meals;
 

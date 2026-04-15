@@ -17,8 +17,7 @@ import {
 } from "lucide-react-native";
 import { Card } from "../ui/card";
 import { MealDetailModal } from "../Main/MealDetailModal";
-import { BASE_URL } from "@/constants/constants";
-import { useGlobalContext } from "@/app/context/authprovider";
+import { deleteMeal } from "@/api/mealsApi";
 
 type Meal = {
   _id?: string;
@@ -29,23 +28,20 @@ type Meal = {
   protein: number;
   carbo: number;
   items: string;
-  imageUri?: string;
+  imageUri?: string | null;
 };
 
 interface RecentlyEatenProps {
   recentMeals: Meal[];
   onRefresh: () => void;
-  userId: string;
   mealsID: string;
 }
 
 export function RecentlyEaten({
   recentMeals,
   onRefresh,
-  userId,
   mealsID,
 }: RecentlyEatenProps) {
-  const { authFetch } = useGlobalContext();
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [mealOpenModal, setMealOpenModal] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -62,31 +58,14 @@ export function RecentlyEaten({
 
   const handleDelete = async (meal: Meal) => {
     try {
-      if (!mealsID || !userId) {
-        Alert.alert("Error", "Missing meal or user information");
+      if (!mealsID) {
+        Alert.alert("Error", "Missing meal information");
         return;
       }
       setIsDeleting(true);
-      const response = await authFetch(
-        `${BASE_URL}/api/user/${userId}/delete_meal`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            mealId: mealsID,
-            mealName: meal.name,
-          }),
-        }
-      );
-
-      if (response.status === 200) {
-        handleCloseModal();
-        onRefresh();
-      } else {
-        Alert.alert("Error", "Failed to delete meal");
-      }
+      await deleteMeal(mealsID, meal.name);
+      handleCloseModal();
+      onRefresh();
     } catch (error) {
       console.error("Error deleting meal:", error);
       Alert.alert(
@@ -205,7 +184,6 @@ export function RecentlyEaten({
           onClose={handleCloseModal}
           onDelete={() => handleDelete(selectedMeal)}
           onRefresh={onRefresh}
-          userId={userId}
           mealsID={mealsID}
         />
       )}

@@ -182,7 +182,7 @@ export default function UnderConstruction({
       >
         <Text className="text-2xl text-center mb-4">🛠️</Text>
         <Text className="text-xl font-bold text-gray-800 text-center mb-3">
-          Oops! We're Still Building This!
+          Oops! We Are Still Building This!
         </Text>
         <Text className="text-gray-600 text-center leading-6 mb-4">
           Our developers are working harder than a one-legged cat in a sandbox

@@ -644,30 +644,18 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { BASE_URL } from "@/constants/constants";
 import { ArrowLeftIcon, ShareIcon, SearchXIcon } from "lucide-react-native";
+import * as FileSystem from "expo-file-system/legacy";
 import FoodDetectionResults from "../../components/camera/FoodDetectionResults";
 import SavingModal from "@/components/camera/saving-moda";
-import { useGlobalContext } from "../context/authprovider";
-
-export interface AnalyzedFoodItem {
-  label: string;
-  confidence: number;
-  estimated_grams: number;
-  unit: "piece" | "gram";
-  count: number | null;
-  piece_avg_weight: number | null;
-  cal: number;
-  protein: number;
-  fat: number;
-  carbohydrates: number;
-}
+import { analyzeMealImage } from "@/api/detectionApi";
+import { APIError } from "@/api/client";
+import type { AnalyzedFoodItem } from "@/api/types";
 
 const CameraScreen: React.FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const imageUri = params.imageUri as string;
-  const { authFetch } = useGlobalContext();
 
   const [analyzedItems, setAnalyzedItems] = useState<AnalyzedFoodItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -681,43 +669,45 @@ const CameraScreen: React.FC = () => {
     }
 
     sendImageToBackend(imageUri);
-  }, [imageUri]);
+  }, [imageUri, router]);
 
   const sendImageToBackend = async (uri: string) => {
     setLoading(true);
 
-    const formData = new FormData();
-    formData.append("image", {
-      uri,
-      name: "photo.jpg",
-      type: "image/jpeg",
-    } as any);
-
     try {
-      const response = await authFetch(`${BASE_URL}/analyze`, {
-        method: "POST",
-        body: formData,
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      console.log("Submitting detection image", {
+        uri,
+        exists: fileInfo.exists,
+        size: "size" in fileInfo ? fileInfo.size : undefined,
       });
 
-      if (!response.ok) {
-        const errBody = await response.json().catch(() => ({}));
-        console.error("Analyze error:", JSON.stringify(errBody));
-        Alert.alert(
-          "Error",
-          `Failed to process the image.\n${errBody?.details ?? errBody?.error ?? response.status}`,
-        );
-        return;
-      }
-
-      const result = await response.json();
+      const result = await analyzeMealImage(uri);
 
       if (!result || !Array.isArray(result)) {
         Alert.alert("Error", "Invalid response format from the server.");
         return;
       }
 
+      if (result.length === 0) {
+        console.warn("Detection returned no items", {
+          uri,
+          size: "size" in fileInfo ? fileInfo.size : undefined,
+        });
+      }
+
       setAnalyzedItems(result as AnalyzedFoodItem[]);
     } catch (error) {
+      if (error instanceof APIError) {
+        console.error("Analyze request failed:", {
+          status: error.status,
+          code: error.code,
+          payload: error.payload,
+        });
+        Alert.alert("Detection failed", error.message);
+        return;
+      }
+
       console.error("Analyze request failed:", error);
       Alert.alert("Error", "An error occurred while processing the image.");
     } finally {
@@ -785,7 +775,7 @@ const CameraScreen: React.FC = () => {
             </Text>
 
             <Text className="text-gray-600 text-center mb-8">
-              We couldn't identify any food items in this image.
+              We could not identify any food items in this image.
             </Text>
 
             <TouchableOpacity

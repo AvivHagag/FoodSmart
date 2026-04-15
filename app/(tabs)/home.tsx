@@ -11,11 +11,11 @@ import { RecentlyEaten } from "@/components/Main/recently-eaten";
 import { ProgressBarDashboard } from "@/components/Main/progress-bar-component";
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useGlobalContext } from "../context/authprovider";
+import { useGlobalContext } from "@/context/authprovider";
 import { ProgressTypeToggle } from "@/components/Main/ProgressTypeToggle";
 import AnimatedSphere from "@/components/CirclesLightShow";
-import { BASE_URL } from "@/constants/constants";
 import AIAdviceCard from "@/components/Ai-Advice/AIAdviceCard";
+import { getDailyAdvice } from "@/api/aiAdviceApi";
 
 export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
@@ -24,8 +24,8 @@ export default function Home() {
   const [showAIAdvice, setShowAIAdvice] = useState(false);
   const [aiAdvice, setAIAdvice] = useState<any>(null);
   const [aiError, setAIError] = useState<string | null>(null);
-  const { userMeals, fetchMeals, user, authFetch } = useGlobalContext();
-  const meals = userMeals.map((meal) => meal.mealsList);
+  const { userMeals, fetchMeals, user } = useGlobalContext();
+  const meals = userMeals[0]?.mealsList ?? [];
   const userData = {
     totalCalories: userMeals.reduce(
       (sum, meal) => sum + (meal.totalCalories || 0),
@@ -103,34 +103,9 @@ export default function Home() {
     setAIError(null);
 
     try {
-      const response = await authFetch(
-        `${BASE_URL}/api/user/${user?._id}/ai-nutrition-advice`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            date: new Date().toISOString().split("T")[0],
-          }),
-        },
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        try {
-          const parsed = JSON.parse(data.ai_advice);
-          setAIAdvice(parsed);
-          setShowAIAdvice(true);
-        } catch {
-          setAIError(
-            "Received an unexpected response from the AI. Please try again.",
-          );
-        }
-      } else {
-        setAIError(
-          data.message || "Could not generate advice. Please try again.",
-        );
-      }
+      const data = await getDailyAdvice(new Date().toISOString().split("T")[0]);
+      setAIAdvice(data.advice);
+      setShowAIAdvice(true);
     } catch (error) {
       console.error("Error fetching AI advice:", error);
       setAIError("Network error. Please check your connection and try again.");
@@ -208,7 +183,6 @@ export default function Home() {
 
         <RecentlyEaten
           meals={meals}
-          userId={user?._id}
           mealsID={userMeals[0]?._id}
           onRefresh={onRefresh}
         />

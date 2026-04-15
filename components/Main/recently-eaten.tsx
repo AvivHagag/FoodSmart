@@ -25,8 +25,7 @@ import {
 import { Card } from "../ui/card";
 import { MealDetailModal } from "./MealDetailModal";
 import moment from "moment-timezone";
-import { BASE_URL } from "@/constants/constants";
-import { useGlobalContext } from "@/app/context/authprovider";
+import { deleteMeal } from "@/api/mealsApi";
 
 /** API may return ISO string, epoch ms/s, Mongo-style {$date}, or Firestore-style {seconds}. */
 function formatMealListTime(raw: unknown): string {
@@ -84,23 +83,20 @@ interface MealItem {
   protein: number;
   carbo: number;
   items: string;
-  imageUri?: string;
+  imageUri?: string | null;
 }
 
 interface RecentlyEatenProps {
   meals?: MealItem[][] | MealItem[];
-  userId?: string;
   mealsID?: string;
   onRefresh: () => void;
 }
 
 export function RecentlyEaten({
   meals = [],
-  userId,
   mealsID,
   onRefresh,
 }: RecentlyEatenProps) {
-  const { authFetch } = useGlobalContext();
   const initialRaw: MealItem[] = Array.isArray(meals[0])
     ? (meals[0] as MealItem[])
     : (meals as MealItem[]);
@@ -154,33 +150,16 @@ export function RecentlyEaten({
 
   const handleDelete = async (meal: MealItem) => {
     try {
-      if (!mealsID || !userId) {
-        Alert.alert("Error", "Missing meal or user information");
+      if (!mealsID) {
+        Alert.alert("Error", "Missing meal information");
         return;
       }
       setIsDeleting(true);
-      const response = await authFetch(
-        `${BASE_URL}/api/user/${userId}/delete_meal`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            mealId: mealsID,
-            mealName: meal.name,
-          }),
-        },
-      );
-
-      if (response.status === 200) {
-        handleCloseModal();
-        onRefresh();
-        if (openIndex !== null) {
-          setOpenIndex(null);
-        }
-      } else {
-        Alert.alert("Error", "Failed to delete meal");
+      await deleteMeal(mealsID, meal.name);
+      handleCloseModal();
+      onRefresh();
+      if (openIndex !== null) {
+        setOpenIndex(null);
       }
     } catch (error) {
       console.error("Error deleting meal:", error);
@@ -334,7 +313,6 @@ export function RecentlyEaten({
           onDelete={() => handleDelete(selectedMeal)}
           onRefresh={handleRefresh}
           isEditing={isEditing}
-          userId={userId}
           mealsID={mealsID}
         />
       )}

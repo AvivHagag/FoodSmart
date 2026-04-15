@@ -3,9 +3,8 @@ import { TouchableOpacity, Text, StyleSheet, Alert } from "react-native";
 import { Save } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import moment from "moment-timezone";
-import { BASE_URL } from "@/constants/constants";
-import { useGlobalContext } from "@/app/context/authprovider";
 import { User, Recipe } from "@/assets/types";
+import { createMeal } from "@/api/mealsApi";
 
 interface SaveRecipeButtonProps {
   recipe: Recipe;
@@ -20,7 +19,6 @@ const SaveRecipeButton: React.FC<SaveRecipeButtonProps> = ({
   onRefresh,
   onClose,
 }) => {
-  const { authFetch } = useGlobalContext();
   const [isSaving, setIsSaving] = useState(false);
 
   const saveRecipeAsMeal = async () => {
@@ -38,7 +36,7 @@ const SaveRecipeButton: React.FC<SaveRecipeButtonProps> = ({
       setIsSaving(true);
 
       const now = new Date();
-      const day = moment().tz("Asia/Jerusalem").format("DD/MM/YYYY");
+      const day = moment().tz("Asia/Jerusalem").format("YYYY-MM-DD");
 
       const items = recipe.ingredients.join(", ");
 
@@ -52,23 +50,7 @@ const SaveRecipeButton: React.FC<SaveRecipeButtonProps> = ({
         imageUri: recipe.image || null,
       };
 
-      const payload = {
-        userId: user._id,
-        date: day,
-        totalCalories: recipe.nutrition.calories,
-        totalFat: recipe.nutrition.fat,
-        totalProtein: recipe.nutrition.protein,
-        totalCarbo: recipe.nutrition.carbs,
-        mealsList: [mealEntry],
-      };
-
-      const res = await authFetch(`${BASE_URL}/meals`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Failed to save recipe");
+      await createMeal(day, [mealEntry]);
 
       onRefresh();
       onClose();

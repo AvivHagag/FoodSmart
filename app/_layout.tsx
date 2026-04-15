@@ -5,7 +5,7 @@ import { StatusBar } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css";
-import AuthProvider, { useGlobalContext } from "./context/authprovider";
+import AuthProvider, { useGlobalContext } from "@/context/authprovider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,7 +25,7 @@ function RootLayoutNav() {
         router.replace("/(auth)/login");
       }
     }
-  }, [isLogged, loading, hasCompleteProfile]);
+  }, [hasCompleteProfile, isLogged, loading, router]);
 
   return (
     <>

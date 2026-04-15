@@ -16,10 +16,10 @@ import React, { useState, useEffect } from "react";
 import DatePicker from "@/components/history/DatePicker";
 import { Calendar } from "lucide-react-native";
 import TopDateStrip from "@/components/history/top-date-strip";
-import { useGlobalContext } from "@/app/context/authprovider";
-import { BASE_URL } from "@/constants/constants";
+import { useGlobalContext } from "@/context/authprovider";
 import { RecentlyEaten } from "@/components/history/recently-eaten";
 import moment from "moment";
+import { getMealsByDate } from "@/api/mealsApi";
 
 interface Meal {
   _id?: string;
@@ -30,7 +30,7 @@ interface Meal {
   protein: number;
   carbo: number;
   items: string;
-  imageUri?: string;
+  imageUri?: string | null;
 }
 
 const History = () => {
@@ -42,7 +42,7 @@ const History = () => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [meals, setMeals] = useState<Meal[]>([]);
-  const { user, authFetch } = useGlobalContext();
+  const { user } = useGlobalContext();
   const [mealsID, setMealsID] = useState<string>("");
 
   const formatDate = (date: Date) => {
@@ -103,31 +103,23 @@ const History = () => {
     setIsLoading(true);
     try {
       const dateParam = formatDateForApi(selectedDate);
-      const response = await authFetch(
-        `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateParam}`,
-      );
-      const data = await response.json();
-      if (response.ok && data.meals) {
-        if (data.meals.length > 0 && data.meals[0].mealsList) {
-          setMealsID(data.meals[0]._id);
-          const processedMeals = data.meals[0].mealsList.map((meal: Meal) => ({
-            _id: meal._id,
-            name: meal.name,
-            time: formatTimeFromDate(meal.time),
-            calories: meal.calories,
-            protein: meal.protein ?? 0,
-            carbo: meal.carbo,
-            fat: meal.fat,
-            imageUri: meal.imageUri,
-            items: meal.items,
-          }));
-          setMeals(processedMeals);
-        } else {
-          if (data.meals.length === 0) setMealsID("");
-          setMeals(data.meals);
-        }
+      const data = await getMealsByDate(dateParam);
+      if (data.mealDay?.mealsList) {
+        setMealsID(data.mealDay._id);
+        const processedMeals = data.mealDay.mealsList.map((meal: Meal) => ({
+          _id: meal._id,
+          name: meal.name,
+          time: formatTimeFromDate(meal.time),
+          calories: meal.calories,
+          protein: meal.protein ?? 0,
+          carbo: meal.carbo,
+          fat: meal.fat,
+          imageUri: meal.imageUri,
+          items: meal.items,
+        }));
+        setMeals(processedMeals);
       } else {
-        console.log("Failed to fetch meals:", data.message);
+        setMealsID("");
         setMeals([]);
       }
     } catch (error) {
@@ -147,34 +139,25 @@ const History = () => {
     setRefreshing(true);
     try {
       const dateParam = formatDateForApi(selectedDate);
-      const response = await authFetch(
-        `${BASE_URL}/api/user/${user._id}/get_meals?date=${dateParam}`,
-      );
-      const data = await response.json();
-      if (response.ok && data.meals) {
-        if (data.meals.length > 0 && data.meals[0].mealsList) {
-          setMealsID(data.meals[0]._id);
-          const processedMeals = data.meals[0].mealsList.map((meal: Meal) => ({
-            _id: meal._id,
-            name: meal.name,
-            time: formatTimeFromDate(meal.time),
-            calories: meal.calories,
-            protein: meal.protein ?? 0,
-            carbo: meal.carbo,
-            fat: meal.fat,
-            imageUri: meal.imageUri,
-            items: meal.items,
-          }));
-          const mealsChanged = areMealsDifferent(processedMeals, meals);
-          if (mealsChanged) {
-            setMeals(processedMeals);
-          }
-        } else {
-          if (data.meals.length === 0) setMealsID("");
-          setMeals(data.meals);
+      const data = await getMealsByDate(dateParam);
+      if (data.mealDay?.mealsList) {
+        setMealsID(data.mealDay._id);
+        const processedMeals = data.mealDay.mealsList.map((meal: Meal) => ({
+          _id: meal._id,
+          name: meal.name,
+          time: formatTimeFromDate(meal.time),
+          calories: meal.calories,
+          protein: meal.protein ?? 0,
+          carbo: meal.carbo,
+          fat: meal.fat,
+          imageUri: meal.imageUri,
+          items: meal.items,
+        }));
+        const mealsChanged = areMealsDifferent(processedMeals, meals);
+        if (mealsChanged) {
+          setMeals(processedMeals);
         }
       } else {
-        console.log("Failed to fetch meals:", data.message);
         setMeals([]);
         setMealsID("");
       }
@@ -260,7 +243,6 @@ const History = () => {
                   <RecentlyEaten
                     recentMeals={meals}
                     onRefresh={onRefresh}
-                    userId={user?._id || ""}
                     mealsID={mealsID}
                   />
                 </View>

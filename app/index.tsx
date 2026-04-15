@@ -3,7 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Image, ScrollView, View, Text, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { useGlobalContext } from "./context/authprovider";
+import { useGlobalContext } from "@/context/authprovider";
 
 export default function App() {
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function App() {
         router.replace("/(tabs)/home");
       }
     }
-  }, [isLogged, loading]);
+  }, [isLogged, loading, router]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">

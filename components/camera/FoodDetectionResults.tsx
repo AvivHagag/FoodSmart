@@ -20,11 +20,11 @@ import {
   X,
   AlertTriangle,
 } from "lucide-react-native";
-import { BASE_URL } from "@/constants/constants";
-import { useGlobalContext } from "../../app/context/authprovider";
+import { useGlobalContext } from "@/context/authprovider";
 import { useRouter } from "expo-router";
 import moment from "moment-timezone";
-import type { AnalyzedFoodItem } from "@/app/(tabs)/camera";
+import type { AnalyzedFoodItem } from "@/api/types";
+import { createMeal, uploadMealImage } from "@/api/mealsApi";
 
 interface FoodDetectionResultsProps {
   analyzedItems: AnalyzedFoodItem[];
@@ -113,7 +113,7 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
   onSaving,
   setOnSaving,
 }) => {
-  const { user, authFetch } = useGlobalContext();
+  const { user } = useGlobalContext();
   const router = useRouter();
 
   const [quantities, setQuantities] = useState<FoodQuantities>({});
@@ -357,38 +357,6 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
     setEditMode((v) => !v);
   };
 
-  const uploadImage = async (uri: string): Promise<string> => {
-    const ext = uri.split(".").pop()?.toLowerCase() || "jpg";
-
-    const mimeType =
-      ext === "jpg" || ext === "jpeg"
-        ? "image/jpeg"
-        : ext === "png"
-          ? "image/png"
-          : ext === "webp"
-            ? "image/webp"
-            : "image/jpeg";
-
-    const formData = new FormData();
-    formData.append("image", {
-      uri,
-      name: `photo.${ext}`,
-      type: mimeType,
-    } as any);
-
-    const res = await authFetch(`${BASE_URL}/meals/upload`, {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || "Image upload failed");
-    }
-
-    return data.url;
-  };
-
   const saveMeal = async () => {
     if (!user) {
       Alert.alert("Error", "You must be logged in to save a meal");
@@ -398,8 +366,8 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
     setOnSaving(true);
 
     try {
-      const imageUrl = await uploadImage(imageUri);
-      const day = moment().tz("Asia/Jerusalem").format("DD/MM/YYYY");
+      const upload = await uploadMealImage(imageUri);
+      const day = moment().tz("Asia/Jerusalem").format("YYYY-MM-DD");
       const items = buildItemsString(activeItems, quantities);
 
       const mealEntry = {
@@ -409,28 +377,9 @@ const FoodDetectionResults: React.FC<FoodDetectionResultsProps> = ({
         fat: editedNutrition.fat,
         protein: editedNutrition.protein,
         carbo: editedNutrition.carbs,
-        imageUri: imageUrl,
+        imageUri: upload.url,
       };
-
-      const payload = {
-        userId: user._id,
-        date: day,
-        totalCalories: editedNutrition.calories,
-        totalFat: editedNutrition.fat,
-        totalProtein: editedNutrition.protein,
-        totalCarbo: editedNutrition.carbs,
-        mealsList: [mealEntry],
-      };
-
-      const res = await authFetch(`${BASE_URL}/meals`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to save meal");
-      }
+      await createMeal(day, [mealEntry]);
 
       router.replace("/(tabs)/home");
     } catch (e) {

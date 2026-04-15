@@ -123,6 +123,8 @@ const FoodItem: React.FC<FoodItemProps> = memo(
   },
 );
 
+FoodItem.displayName = "FoodItem";
+
 const styles = StyleSheet.create({
   input: { height: 25, paddingVertical: 0, lineHeight: 0 },
 });

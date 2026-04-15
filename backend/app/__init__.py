@@ -1,0 +1,1 @@
+"""FoodSmart FastAPI application package."""

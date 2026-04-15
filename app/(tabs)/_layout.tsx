@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
-import { useGlobalContext } from "../context/authprovider";
+import { useGlobalContext } from "@/context/authprovider";
 import {
   View,
   Text,

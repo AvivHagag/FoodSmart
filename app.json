@@ -4,10 +4,9 @@
     "slug": "FoodSmart",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/adaptive-icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "sdkVersion": "53.0.0",
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -16,7 +15,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       }
     },
@@ -39,9 +38,7 @@
       "expo-font",
       "expo-web-browser",
       "@react-native-community/datetimepicker",
-      "@react-native-community/datetimepicker",
-      "expo-secure-store",
-      "expo-web-browser"
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

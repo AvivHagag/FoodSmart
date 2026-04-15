@@ -21,10 +21,10 @@ import {
   Target as TargetIcon,
   HeartHandshake,
 } from "lucide-react-native";
-import { BASE_URL } from "@/constants/constants";
 import Title from "../title";
 import { LinearGradient } from "expo-linear-gradient";
-import { useGlobalContext } from "@/app/context/authprovider";
+import { useGlobalContext } from "@/context/authprovider";
+import { updateProfile as updateProfileRequest } from "@/api/userApi";
 
 interface Usertype {
   _id: string;
@@ -74,7 +74,7 @@ export default function EditPersonalInfoScreen({
   updateUser,
   required,
 }: EditPersonalInfoScreenProps) {
-  const { logout, authFetch } = useGlobalContext();
+  const { logout } = useGlobalContext();
   const [age, setAge] = useState<string>(user.age ? user.age.toString() : "");
   const [weight, setWeight] = useState<string>(
     user.weight ? user.weight.toString() : "",
@@ -202,21 +202,19 @@ export default function EditPersonalInfoScreen({
     };
 
     try {
-      const response = await authFetch(`${BASE_URL}/api/update_user`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedUser),
+      const freshUser = await updateProfileRequest({
+        age: parsedAge,
+        weight: parsedWeight,
+        height: parsedHeight,
+        gender: gender || "male",
+        activityLevel: activityLevel || "sedentary",
+        goal: goal || "maintain",
+        bmi,
+        tdee,
       });
       setIsLoading(false);
-      if (response.ok) {
-        await updateUser(updatedUser);
-        setUserEditProfile(false);
-      } else {
-        const errorData = await response.json();
-        Alert.alert("Error", errorData.message || "Something went wrong.");
-      }
+      await updateUser(freshUser as Usertype);
+      setUserEditProfile(false);
     } catch (error) {
       setIsLoading(false);
       Alert.alert("Error", "Failed to update personal information.");

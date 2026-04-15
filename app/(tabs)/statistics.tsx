@@ -10,10 +10,10 @@ import {
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useGlobalContext } from "@/app/context/authprovider";
+import { useGlobalContext } from "@/context/authprovider";
 import { LineChart } from "react-native-chart-kit";
 import { Dimensions } from "react-native";
-import { BASE_URL } from "@/constants/constants";
+import { getStatistics } from "@/api/statisticsApi";
 
 const RANGE_OPTIONS = ["Week", "30 Days", "60 Days", "90 Days"];
 
@@ -37,12 +37,12 @@ interface MealData {
 
 interface UserGoals {
   tdee: number;
-  goal: string;
-  age?: number;
-  weight?: number;
-  height?: number;
-  gender?: string;
-  activityLevel?: string;
+  goal?: string | null;
+  age?: number | null;
+  weight?: number | null;
+  height?: number | null;
+  gender?: string | null;
+  activityLevel?: string | null;
 }
 
 interface NutritionGoals {
@@ -78,7 +78,7 @@ const Statistics = () => {
     carbs: { current: 0, target: 250, unit: "g" },
     fats: { current: 0, target: 70, unit: "g" },
   });
-  const { user, authFetch } = useGlobalContext();
+  const { user } = useGlobalContext();
   const [activeDataset, setActiveDataset] = useState("calories");
 
   const screenWidth = Dimensions.get("window").width - 32;
@@ -271,17 +271,7 @@ const Statistics = () => {
     if (!user?._id) return;
     setIsLoading(true);
     try {
-      const response = await authFetch(
-        `${BASE_URL}/api/statistics/${user._id}?range=${selectedRange}`,
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log("API Error:", response.status, errorText);
-        throw new Error(`Failed to fetch statistics: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await getStatistics(selectedRange);
       const nutritionGoals = calculateNutritionGoals(data.userGoals);
       const { startDate, endDate } = getDateRange(selectedRange);
       const processedData = processNutritionData(

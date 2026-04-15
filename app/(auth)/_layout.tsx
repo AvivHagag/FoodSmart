@@ -1,5 +1,5 @@
 import { Stack, useRouter } from "expo-router";
-import { useGlobalContext } from "../context/authprovider";
+import { useGlobalContext } from "@/context/authprovider";
 import { useEffect } from "react";
 
 export default function Layout() {
@@ -10,7 +10,7 @@ export default function Layout() {
     if (isLogged) {
       router.replace("/(tabs)/home");
     }
-  }, [isLogged]);
+  }, [isLogged, router]);
 
   return (
     <Stack

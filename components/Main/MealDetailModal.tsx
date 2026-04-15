@@ -16,7 +16,6 @@ import {
   Platform,
   LayoutAnimation,
 } from "react-native";
-import { useGlobalContext } from "@/app/context/authprovider";
 import {
   DropletIcon,
   FlameIcon,
@@ -30,8 +29,8 @@ import {
   AlertTriangle,
 } from "lucide-react-native";
 import { Card } from "../ui/card";
-import { BASE_URL } from "@/constants/constants";
 import ShareButton from "../ui/ShareButton";
+import { updateMeal as updateMealRequest } from "@/api/mealsApi";
 
 export interface MealItem {
   name: string;
@@ -41,7 +40,7 @@ export interface MealItem {
   protein: number;
   carbo: number;
   items: string;
-  imageUri?: string;
+  imageUri?: string | null;
 }
 interface MealDetailModalProps {
   meal: MealItem;
@@ -50,7 +49,6 @@ interface MealDetailModalProps {
   onDelete: () => void;
   onRefresh: () => void;
   isEditing?: boolean;
-  userId?: string;
   mealsID?: string;
 }
 
@@ -61,10 +59,8 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
   onDelete,
   onRefresh,
   isEditing: isEditingProp,
-  userId,
   mealsID,
 }) => {
-  const { authFetch } = useGlobalContext();
   const [isEditing, setIsEditing] = useState(isEditingProp || false);
   const [calories, setCalories] = useState(meal.calories.toString());
   const [protein, setProtein] = useState(meal.protein.toString());
@@ -94,8 +90,8 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
 
   const handleSave = async () => {
     try {
-      if (!mealsID || !userId) {
-        setErrorMessage("Missing meal or user information");
+      if (!mealsID) {
+        setErrorMessage("Missing meal information");
         return;
       }
       setFieldErrors({
@@ -198,35 +194,18 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
       }
 
       setIsSaving(true);
-
-      const resp = await authFetch(
-        `${BASE_URL}/api/user/${userId}/update_meal`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            mealId: mealsID,
-            mealName: meal.name,
-            mealData: {
-              calories: cal,
-              protein: pro,
-              carbo: car,
-              fat: fa,
-              items: trimmedDetails.join(", "),
-            },
-          }),
-        },
-      );
-
-      if (resp.status === 200) {
-        setIsEditing(false);
-        setErrorMessage("");
-        onRefresh();
-        Alert.alert("Success", "Meal updated successfully!");
-      } else {
-        const err = await resp.json();
-        setErrorMessage(err.message || "Failed to update meal");
-      }
+      await updateMealRequest(mealsID, {
+        entryName: meal.name,
+        calories: cal,
+        protein: pro,
+        carbo: car,
+        fat: fa,
+        items: trimmedDetails.join(", "),
+      });
+      setIsEditing(false);
+      setErrorMessage("");
+      onRefresh();
+      Alert.alert("Success", "Meal updated successfully!");
     } catch (e) {
       console.error(e);
       setErrorMessage("An error occurred; please try again.");
@@ -265,7 +244,7 @@ export const MealDetailModal: React.FC<MealDetailModalProps> = ({
                   <XIcon size={20} color="white" />
                 </TouchableOpacity>
                 <ShareButton
-                  imageUri={meal.imageUri}
+                  imageUri={meal.imageUri ?? undefined}
                   nutritionData={[
                     {
                       name: meal.name,

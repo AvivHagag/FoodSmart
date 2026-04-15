@@ -22,12 +22,12 @@ import {
 } from "lucide-react-native";
 import AvatarImage from "./avatar";
 import Title from "../title";
-import { useGlobalContext } from "@/app/context/authprovider";
+import { useGlobalContext } from "@/context/authprovider";
 import { useNavigation } from "@react-navigation/native";
-import { BASE_URL } from "@/constants/constants";
 import { Usertype } from "@/assets/types";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
+import { deleteCurrentUser, updateBasicInfo } from "@/api/userApi";
 
 interface EditBasicInfoProps {
   user: Usertype;
@@ -53,7 +53,7 @@ export default function EditBasicInfo({
     email?: string;
   }>({});
 
-  const { logout, updateUser, authFetch } = useGlobalContext();
+  const { logout, updateUser } = useGlobalContext();
 
   const validateForm = () => {
     const newErrors: { fullname?: string; email?: string } = {};
@@ -90,48 +90,24 @@ export default function EditBasicInfo({
     setIsLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("userID", user._id);
-      formData.append("fullname", fullname.trim());
-      formData.append("email", email.trim().toLowerCase());
+      const updated = await updateBasicInfo(
+        fullname.trim(),
+        email.trim().toLowerCase(),
+        image,
+      );
 
-      if (image && image !== user.image && image.startsWith("file://")) {
-        const filename = image.split("/").pop() || "image.jpg";
-
-        formData.append("image", {
-          uri: image,
-          type: "image/jpeg",
-          name: filename,
-        } as any);
+      if (updateUser) {
+        updateUser(updated as Usertype);
       }
 
-      const response = await authFetch(`${BASE_URL}/api/update_basic_info`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-
-        if (updateUser) {
-          updateUser(result.user);
-        }
-
-        Alert.alert("Success", "Your personal information has been updated.", [
-          {
-            text: "OK",
-            onPress: () => {
-              backBottom();
-            },
+      Alert.alert("Success", "Your personal information has been updated.", [
+        {
+          text: "OK",
+          onPress: () => {
+            backBottom();
           },
-        ]);
-      } else {
-        const errorData = await response.json();
-        Alert.alert(
-          "Error",
-          errorData.error || "Failed to update information.",
-        );
-      }
+        },
+      ]);
     } catch (error) {
       console.error("Error updating profile:", error);
       Alert.alert("Error", "An error occurred while updating your profile.");
@@ -231,32 +207,20 @@ export default function EditBasicInfo({
 
   const confirmDeleteAccount = async () => {
     try {
-      const response = await authFetch(`${BASE_URL}/api/delete_user`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userID: user._id }),
-      });
-
-      if (response.ok) {
-        setIsDeleteModalVisible(false);
-        Alert.alert(
-          "Account Deleted",
-          "Your account has been successfully deleted.",
-          [
-            {
-              text: "OK",
-              onPress: async () => {
-                await logout();
-              },
+      await deleteCurrentUser();
+      setIsDeleteModalVisible(false);
+      Alert.alert(
+        "Account Deleted",
+        "Your account has been successfully deleted.",
+        [
+          {
+            text: "OK",
+            onPress: async () => {
+              await logout();
             },
-          ],
-        );
-      } else {
-        const errorData = await response.json();
-        Alert.alert("Error", errorData.message || "Something went wrong.");
-      }
+          },
+        ],
+      );
     } catch (error) {
       Alert.alert("Error", "Failed to delete account.");
     }
